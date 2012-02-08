@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -e
+
+############################################################################## ARGS #
+
+if [[ ! $@ =~ (-v|--verbose) ]]; then
+  # silent mode (default)
+  SILENCE="&> /dev/null"
+else
+  # verbose mode
+  SILENCE=
+  VERBOSE=true
+fi
+
+# debug mode
+[[ $@ =~ (-d|--debug) ]] && set -x
+
+############################################################################ CONFIG #
+
+GEM_LOCATION=$0
+DELIVERY_ROOT=$(pwd)
+CONFIG="$DELIVERY_ROOT/.deliver"
+
+. "$GEM_LOCATION/../../libexec/visual"
+. "$GEM_LOCATION/../../libexec/functions"
+
+############################################################################## WORK #
+
+complain_if_interrupted
+load_config
+start_output
+
+run 'prepare' "Preparing repository"
+run 'update' "Updating remote code"
+
+# TODO
+# Stop right here if app is up-to-date
+
+run 'setup' "Setting up app"
+run 'boot' 'Booting app'
+
+finalize

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# http://linuxtidbits.wordpress.com/2008/08/11/output-color-on-bash-scripts/
+# SPINNER http://fitnr.com/showing-a-bash-spinner.html
+#
+txtund=$(tput sgr 0 1)          # Underline
+txtbld=$(tput bold)             # Bold
+bldred=${txtbld}$(tput setaf 1) #  red
+bldgrn=${txtbld}$(tput setaf 2) #  green
+bldylw=${txtbld}$(tput setaf 3) #  yellow
+bldwht=${txtbld}$(tput setaf 7) #  white
+txtred=$(tput setaf 1)          # Red
+txtgrn=$(tput setaf 2)          # Green
+txtylw=$(tput setaf 3)          # Yellow
+txtblu=$(tput setaf 4)          # Blue
+txtmgt=$(tput setaf 5)          # Magenta
+txtcyn=$(tput setaf 6)          # Cyan
+txtwht=$(tput setaf 7)          # White
+txtrst=$(tput sgr0)             # Reset
+info=${bldwht}*${txtrst}        # Feedback
+pass=${bldblu}*${txtrst}
+warn=${bldred}*${txtrst}
+ques=${bldblu}?${txtrst}
+
+
