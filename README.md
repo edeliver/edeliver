@@ -8,10 +8,11 @@ to work around it too often for my taste.
 
 heroku solves the deployment process bang on.
 
-This gem brings the same heroku-style deploys convenience to a regular VPS,
-{cloud-provider} instance or even bare metal (if you're that hard core).
+This command-line utility brings the same heroku-style deploys convenience to a
+regular VPS, {cloud-provider} instance or even bare metal (if you're that hard
+core).
 
-At [GoSquared](http://www.gosquared.com/), we use this gem to deploy Ruby, PHP
+At [GoSquared](http://www.gosquared.com/), we use this utility to deploy Ruby, PHP
 and node.js applications. Here's a Ruby app being deployed:
 
 <img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" />
@@ -133,10 +134,8 @@ For full debugging mode:
 
 ## 4 ROADMAP
 
-The gem is pretty much bare bones as it stands. It's just enough to solve our
-deployment woes. It's bash only (even if it was released as a Ruby gem). I can
-imagine Ruby being added with the post-deploy hooks feature, but until we cross
-that bridge, bash gets the job done.
+The utility is pretty much bare bones as it stands. It's just enough to solve our
+deployment woes.
 
 * revise the `PORT` option with something more scalable
 * multi-server deploys
