@@ -33,7 +33,7 @@ Your server is running Ubuntu, preferably 10.04 LTS. Ubuntu + upstart are by no
 means the holy grail, but they work very well for me. Feel free to share your
 love for other distros & service managers via pull requests.
 
-### 1.2 SSH logins
+### 1.2 Your user
 
 Your local username can gain sudo privileges on the server without being
 prompted for a password. Don't login with root. Don't use password logins.
@@ -109,7 +109,7 @@ Here's a `.deliver` example:
     REMOTE="$USER@$SERVER"  # You will be performing most remote tasks as this user,
                             # e.g. git pushing, bundling etc.
                             # Tasks requiring sudo privileges will be performed as
-                            # your local user. See 1. from ASSUMPTIONS.
+                            # your local user. See 1.2 from ASSUMPTIONS.
 
 
 
