@@ -14,7 +14,7 @@ This gem brings the same heroku-style deploys convenience to a regular VPS,
 At [GoSquared](http://www.gosquared.com/), we use this gem to deploy Ruby, PHP
 and node.js applications. Here's a Ruby app being deployed:
 
-<img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" width="978" height="542" />
+<img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" />
 
 
 
