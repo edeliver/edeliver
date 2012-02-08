@@ -79,12 +79,14 @@ running on Heroku](http://devcenter.heroku.com/articles/procfile).
 ### 2.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
     $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
-    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc # if using zsh
+    # if using zsh
+    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
 
 ### 2.3 Source your shell profile
 
     $ . ~/.bash_profile
-    $ . ~/.zshrc # if using zsh
+    # if using zsh
+    $ . ~/.zshrc 
 
 ### 2.4 .deliver app config
 
@@ -122,13 +124,11 @@ file, run:
 
 If you want a more verbose output:
 
-    $ deliver -v
-    $ deliver --verbose # same as above
+    $ deliver -v | --verbose
 
 For full debugging mode:
 
-    $ deliver -d
-    $ deliver --debug # same as above
+    $ deliver -d | --debug
 
 
 
