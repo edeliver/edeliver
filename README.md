@@ -88,7 +88,7 @@ running on Heroku](http://devcenter.heroku.com/articles/procfile).
     # if using zsh
     $ . ~/.zshrc 
 
-### 2.4 .deliver app config
+### 2.4 Personalize
 
 There are no fancy generators, you will need to create a `.deliver` file
 manually in the root folder of the app that you want delivering. For those of
