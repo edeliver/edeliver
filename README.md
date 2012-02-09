@@ -127,7 +127,7 @@ file, run:
 <table>
   <tr>
     <th>-v, --version</th>
-    <td>current version</td>
+    <td>display current version and exits</td>
   </tr>
   <tr>
     <th>-V, --verbose</th>
@@ -135,7 +135,7 @@ file, run:
   </tr>
   <tr>
     <th>-D, --debug</th>
-    <td>shows the deliver script as it is being run</td>
+    <td>shows the entire code as it is being run</td>
   </tr>
 </table>
 
