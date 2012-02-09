@@ -4,7 +4,7 @@
 # it will exit 2 == SIGINT (Interrupt)
 # http://steve-parker.org/sh/trap.shtml
 #
-function complain_if_interrupted {
+complain_if_interrupted() {
   trap "exit 2" 1 2 3 13 15
 }
 
