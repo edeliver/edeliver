@@ -72,7 +72,7 @@ start_output() {
 # Initialize the remote repository if missing
 # Ensure we have a local deploy branch which points to our remote repository
 #
-prepare() {
+initialize() {
   ssh $REMOTE "
     if [ ! -d $DEPLOY_TO ]; then
       mkdir $DEPLOY_TO
@@ -89,7 +89,7 @@ prepare() {
 
 # Update remote repository
 #
-update() {
+push() {
   eval "git push deploy master $SILENCE"
 }
 

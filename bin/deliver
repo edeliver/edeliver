@@ -15,8 +15,8 @@ complain_if_interrupted
 load_app_config
 start_output
 
-run 'prepare' "Preparing repository"
-run 'update' "Updating remote code"
+run 'initialize' "Initializing deploy"
+run 'push' "Pushing new commits"
 
 # TODO
 # Stop right here if app is up-to-date
