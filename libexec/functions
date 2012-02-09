@@ -11,7 +11,7 @@ complain_if_interrupted() {
 # Something went very wrong, kill the script
 #
 error() {
-  echo -e "\n$bldred$1$txtrst\n"
+  echo "$txtred$1$txtrst"
   exit 1
 }
 
