@@ -57,7 +57,7 @@ down to configuring the user's bash environment.
 ### 1.4 [RVM](http://beginrescueend.com/)
 
 You have rvm installed on the server that you'll be delivering your code to. I
-use only system-wide setups in productioon. Yes, you've guessed it, use
+use only system-wide setups in production. Yes, you've guessed it, use
 [rvm-cookbook](https://github.com/gchef/rvm-cookbook) for the best experience.
 
 ps: rbenv support is on the roadmap. If you want it right now, fork away.
@@ -99,7 +99,7 @@ Here's a `.deliver` example:
 
     APP="squirrel"          # You know, the shipit one
 
-    USER="$APP"             # Can be anything really, but it would be nice if you stuck to this convetion
+    USER="$APP"             # Can be anything really, but it would be nice if you stuck to this convention
 
     PORT=7000               # The TCP port on which your app will be listening on (think reverse-proxies)
                             # Not at all scalable, will be revised not before long
