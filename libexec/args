@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+interpret_args() {
+  verbose
+  debug
+  version
+}
+
+# Run in verbose mode
+#
+verbose() {
+  if [[ ! $ARGS =~ (-V|--verbose) ]]; then
+    # silent mode (default)
+    SILENCE="&> /dev/null"
+  else
+    # verbose mode
+    SILENCE=
+    VERBOSE=true
+  fi
+}
+
+# Run in debug mode
+#
+debug() {
+  if [[ $ARGS =~ (-D|--debug) ]]; then
+    set -x
+  fi
+}
+
+# Display the current version and exit
+#
+version() {
+  if [[ $ARGS =~ (-v|--version) ]]; then
+    echo "deliver v$VERSION ($HOMEPAGE)"
+    exit 0
+  fi
+}
