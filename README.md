@@ -6,11 +6,9 @@ in for a treat.
 git-deploy works pretty well, but it's still not seamless and you end up having
 to work around it too often for my taste.
 
-heroku solves the deployment process bang on.
-
-This command-line utility brings the same heroku-style deploys convenience to a
-regular VPS, {cloud-provider} instance or even bare metal (if you're that hard
-core).
+heroku solves the deployment process bang on. This command-line utility brings
+the same heroku-style deploys convenience to a regular VPS, {cloud-provider}
+instance or even bare metal (if you're that hard core).
 
 At [GoSquared](http://www.gosquared.com/), we use this utility to deploy Ruby, PHP
 and node.js applications. Here's a Ruby app being deployed:
@@ -21,19 +19,19 @@ and node.js applications. Here's a Ruby app being deployed:
 
 ## 1 ASSUMPTIONS
 
-These are all good assumptions which have been bread over the years from
+These are all good conventions which have been bread over the years from
 administrating many different infrastructure setups. You can disregard
-everything here and go back to your existing deployment process. If you can't
-be bothered to submit a pull request with a better solution, I will show an
-equal interest in your opinions.
+everything here and go back to your existing deployment process. Or, you can
+fork, add your improvements and contribute towards a modern and efficient
+deployment tool that just works.
 
 ### 1.1 Ubuntu
 
 Your server is running Ubuntu, preferably 10.04 LTS. Ubuntu + upstart are by no
-means the holy grail, but they work very well for me. Feel free to share your
-love for other distros & service managers via pull requests.
+means the holy grail, but they work very well. Feel free to share your love for
+other distros & service managers via pull requests.
 
-### 1.2 Your user
+### 1.2 Remote logins and privileges
 
 Your local username can gain sudo privileges on the server without being
 prompted for a password. Don't login with root. Don't use password logins.
@@ -41,31 +39,34 @@ prompted for a password. Don't login with root. Don't use password logins.
 If you're using chef to manage your servers
 [sudo-cookbook](https://github.com/opscode/cookbooks/tree/master/sudo) &
 [ssh-cookbook](https://github.com/gchef/ssh-cookbook) will work right out of
-the box, you won't even have to think about it.
+the box.
 
-### 1.3 App user
+### 1.3 Every app gets its own system user
 
 A system user has been created for the app that you'll be delivering. I
 personally prefer the same name as the app itself. You should be able to log in
 as this user, without any password.
 
-If you've been inspired enough to choose chef,
+If you're already using chef,
 [bootstrap-cookbook](https://github.com/gchef/bootstrap-cookbook) with the
-`ruby_apps` recipe will just work. It handles the entire rvm integration, even
-down to configuring the user's bash environment.
+`ruby_apps` recipe will set everything up for you. It handles the entire rvm
+integration, even down to configuring the user's bash environment.
 
 ### 1.4 [RVM](http://beginrescueend.com/)
 
 You have rvm installed on the server that you'll be delivering your code to. I
-use only system-wide setups in production. Yes, you've guessed it, use
+prefer system-wide setups in production. Yes, you've guessed it, use chef's
 [rvm-cookbook](https://github.com/gchef/rvm-cookbook) for the best experience.
 
 ps: rbenv support is on the roadmap. If you want it right now, fork away.
 
 ### 1.5 [Foreman](https://github.com/ddollar/foreman)
 
-You can painlessly scale your services from your app, [just as if you were
-running on Heroku](http://devcenter.heroku.com/articles/procfile).
+Every Ruby app should have this. It allows you to painlessly scale your app
+components, [just as if you were running on
+Heroku](http://devcenter.heroku.com/articles/procfile). A server-side foreman
+would be even nicer, something that will take care of node.js, or any other
+type of app. Already on the roadmap.
 
 
 
@@ -73,8 +74,7 @@ running on Heroku](http://devcenter.heroku.com/articles/procfile).
 
 ### 2.1 Check out deliver into `~/.deliver`.
 
-    $ cd
-    $ git clone git://github.com/gerhard/deliver.git .deliver
+    $ git clone git://github.com/gerhard/deliver.git ~/.deliver
 
 ### 2.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
@@ -91,9 +91,8 @@ running on Heroku](http://devcenter.heroku.com/articles/procfile).
 ### 2.4 Personalize
 
 There are no fancy generators, you will need to create a `.deliver` file
-manually in the root folder of the app that you want delivering. For those of
-you that didn't notice it yet, there's no `Deliverfile` *faux pas* going on
-either.
+manually in the root folder of the app that you want delivering. Yes, you got
+that right, there's no [`Loudfile` *faux pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
 
 Here's a `.deliver` example:
 
@@ -122,21 +121,32 @@ file, run:
 
     $ deliver
 
-If you want a more verbose output:
+### 3.1 Options
 
-    $ deliver -v | --verbose
-
-For full debugging mode:
-
-    $ deliver -d | --debug
+<table>
+  <tr>
+    <td>-v, --version</th>
+    <td>current version</td>
+  </tr>
+  <tr>
+    <th>-V, --verbose</th>
+    <td>doesn't suppress the output of commands</td>
+  </tr>
+  <tr>
+    <th>-D, --debug</th>
+    <td>shows the deliver script as it is being run</td>
+  </tr>
+</table>
 
 
 
 ## 4 ROADMAP
 
-The utility is pretty much bare bones as it stands. It's just enough to solve our
-deployment woes.
+The utility has just enough to solve our deployment woes. It's still missing a
+few important features which will be added as the need arises. In no particular
+order:
 
+* multiple apps in a single repository
 * revise the `PORT` option with something more scalable
 * multi-server deploys
 * don't run the full deploy if nothing has changed
@@ -145,6 +155,7 @@ deployment woes.
   * Graphite
 * rbenv integration (not a priority for me personally)
 * better error handling (particularly when remote tasks fail)
+* system-wide foreman supporting both node.js & Ruby apps (anything else, fork away)
 
 
 
