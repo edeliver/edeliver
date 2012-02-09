@@ -126,7 +126,7 @@ file, run:
 
 <table>
   <tr>
-    <td>-v, --version</th>
+    <th>-v, --version</th>
     <td>current version</td>
   </tr>
   <tr>
