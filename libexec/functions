@@ -30,11 +30,11 @@ success() {
 
 # Loads the .deliver file
 #
-load_config() {
-  if [ ! -f $CONFIG ]; then
-    error "Could not find $CONFIG, can't run without one"
+load_app_config() {
+  if [ ! -f $APP_CONFIG ]; then
+    error "Could not find local .deliver"
   else
-    . $CONFIG
+    . $APP_CONFIG
   fi
 }
 
