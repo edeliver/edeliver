@@ -2,33 +2,17 @@
 
 set -e
 
-############################################################################## ARGS #
+UTILITY_PATH=$0
 
-if [[ ! $@ =~ (-v|--verbose) ]]; then
-  # silent mode (default)
-  SILENCE="&> /dev/null"
-else
-  # verbose mode
-  SILENCE=
-  VERBOSE=true
-fi
+. "$UTILITY_PATH/../../libexec/config"
+. "$UTILITY_PATH/../../libexec/args"
+. "$UTILITY_PATH/../../libexec/style"
+. "$UTILITY_PATH/../../libexec/functions"
 
-# debug mode
-[[ $@ =~ (-d|--debug) ]] && set -x
-
-############################################################################ CONFIG #
-
-GEM_LOCATION=$0
-DELIVERY_ROOT=$(pwd)
-CONFIG="$DELIVERY_ROOT/.deliver"
-
-. "$GEM_LOCATION/../../libexec/visual"
-. "$GEM_LOCATION/../../libexec/functions"
-
-############################################################################## WORK #
+interpret_args
 
 complain_if_interrupted
-load_config
+load_app_config
 start_output
 
 run 'prepare' "Preparing repository"
