@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+VERSION="0.2.0"
+HOMEPAGE="https://github.com/gerhard/deliver"
+
+ARGS=$@
+
+DELIVERY_ROOT=$(pwd)
+APP_CONFIG="$DELIVERY_ROOT/.deliver"
