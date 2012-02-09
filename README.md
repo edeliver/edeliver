@@ -91,8 +91,9 @@ type of app. Already on the roadmap.
 ### 2.4 Personalize
 
 There are no fancy generators, you will need to create a `.deliver` file
-manually in the root folder of the app that you want delivering. Yes, you got
-that right, there's no [`Loudfile` *faux pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
+manually in the root folder of the app that you want delivering. Yes, your
+observation is correct, there's no [`Loudfile` *faux
+pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
 
 Here's a `.deliver` example:
 
