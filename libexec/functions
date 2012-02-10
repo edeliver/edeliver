@@ -73,6 +73,7 @@ start_output() {
 #
 check() {
   ssh $REMOTE "
+    set -e
     if [ ! -d $DEPLOY_TO ]; then
       mkdir $DEPLOY_TO
       cd $DEPLOY_TO
@@ -112,6 +113,7 @@ setup() {
 #
 launch() {
   ssh $SERVER "
+    set -e
     if [[ \$(sudo initctl list | awk '/'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
     fi
