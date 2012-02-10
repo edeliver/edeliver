@@ -14,7 +14,6 @@ verbose() {
     SILENCE="&> /dev/null"
   else
     # verbose mode
-    SILENCE=
     VERBOSE=true
   fi
 }

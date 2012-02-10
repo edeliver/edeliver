@@ -68,11 +68,10 @@ progress() {
 start_output() {
   echo ""
 }
-
-# Initialize the remote repository if missing
-# Ensure we have a local deploy branch which points to our remote repository
+# Ensure remote repository is set up correctly
+# And that we have a local deploy branch pointing to the remote repository
 #
-initialize() {
+check() {
   ssh $REMOTE "
     if [ ! -d $DEPLOY_TO ]; then
       mkdir $DEPLOY_TO
@@ -111,7 +110,7 @@ setup() {
 
 # Start the app via upstart
 #
-boot() {
+launch() {
   ssh $SERVER "
     if [[ \$(sudo initctl list | awk '/'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
