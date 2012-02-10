@@ -32,7 +32,7 @@ success() {
 #
 load_app_config() {
   if [ ! -f $APP_CONFIG ]; then
-    error "Could not find local .deliver"
+    error "Could not find a .deliver file in the current directory"
   else
     . $APP_CONFIG
   fi
@@ -64,12 +64,14 @@ progress() {
   fi
 }
 
-# Start the output
+# Start the output with an empty line (looks better with spacing)
+#
 start_output() {
   echo ""
 }
-# Ensure remote repository is set up correctly
-# And that we have a local deploy branch pointing to the remote repository
+
+# Ensure remote repository is set up correctly,
+# And that we have a local deploy branch pointing to it
 #
 check() {
   ssh $REMOTE "
@@ -87,7 +89,7 @@ check() {
   fi
 }
 
-# Update remote repository
+# Push all commits to remote repository
 #
 push() {
   eval "git push deploy master $SILENCE"
@@ -122,7 +124,7 @@ launch() {
   "
 }
 
-# Deploy was a success!
+# If we reach this step, the deploy was most likely a success
 #
 finalize() {
   echo "$bldgrn"
@@ -130,7 +132,8 @@ finalize() {
   echo "$txtrst"
 }
 
-# Wrapper to either run the commands verbosely or silently
+# Wrapper to either run the command verbosely, inline,
+# or silently, in the background
 #
 run() {
   if [ $VERBOSE ]; then
