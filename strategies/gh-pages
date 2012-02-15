@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Pushes locally generated content to Github Pages.
+#
+run() {
+  __run 'generate' "Generating content"
+  __run 'check' "Checking repository"
+  __run 'push' "Pushing new commits"
+  __run 'cleanup' "Cleaning up"
+}
+
+# If there is a local bin/generate executable, it will run it,
+# otherwise it will default to rake generate
+#
+generate() {
+  local generate_cmd="$DELIVERY_ROOT/bin/generate"
+  if [ -x $generate_cmd ]; then
+    $generate_cmd
+  else
+    __exec "rake generate"
+  fi 
+}
+
+# Ensure that we have gh-pages branch,
+# Prep the locally generated content
+#
+check() {
+  __exec "git symbolic-ref HEAD refs/heads/gh-pages"
+  __exec "rm .git/index"
+  __exec "git clean -fd"
+  mv gh-pages/* .
+  rm -fr gh-pages
+}
+
+# Move all files from the generated folder into root folder,
+# commit and push
+#
+push() {
+  git add .
+  if [[ ! $(git status) =~ "nothing to commit" ]]; then
+    __exec "git commit -a -m 'Generated new content'"
+    __exec "git push origin gh-pages"
+  fi
+}
+
+cleanup() {
+  __exec "git checkout -f master"
+}
