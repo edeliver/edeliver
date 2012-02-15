@@ -1,4 +1,4 @@
-Born out of frustration with the current Ruby deployment practices.
+Born out of frustration with current Ruby deployment practices.
 
 Capistrano is a workhorse, but if you combine it with rvm and bundler, you're
 in for a treat.
@@ -6,9 +6,11 @@ in for a treat.
 git-deploy works pretty well, but it's still not seamless and you end up having
 to work around it too often for my taste.
 
-heroku solves the deployment process bang on. This command-line utility brings
-the same heroku-style deploys convenience to a regular VPS, {cloud-provider}
-instance or even bare metal (if you're that hard core).
+heroku solves the deployment process bang on.
+
+This command-line utility brings the same heroku-style deploys convenience to a
+regular VPS, {cloud-provider} instance or even bare metal (if you're that hard
+core).
 
 At [GoSquared](http://www.gosquared.com/), we use this utility to deploy Ruby, PHP
 and node.js applications. Here's a Ruby app being deployed:
@@ -20,21 +22,24 @@ and node.js applications. Here's a Ruby app being deployed:
 ## 1 ASSUMPTIONS
 
 These are all good conventions which have been bread over the years from
-administrating many different infrastructure setups. You can disregard
-everything here and go back to your existing deployment process. Or, you can
-fork, add your improvements and contribute towards a modern and efficient
-deployment tool that just works.
+orchestrating many different infrastructure setups. You can disregard
+everything here and go back to your existing deployment process. Alternatively,
+you can fork, add your improvements and contribute towards a modern and
+efficient deployment tool that just works.
 
 ### 1.1 Ubuntu
 
-Your server is running Ubuntu, preferably 10.04 LTS. Ubuntu + upstart are by no
-means the holy grail, but they work very well. Feel free to share your love for
-other distros & service managers via pull requests.
+Your server is running Ubuntu, preferably 10.04 LTS.
+
+Ubuntu + upstart are by no means the holy grail, but they work very well. Feel
+free to share your love for other distros & service managers via pull requests.
 
 ### 1.2 Remote logins and privileges
 
 Your local username can gain sudo privileges on the server without being
-prompted for a password. Don't login with root. Don't use password logins.
+prompted for a password.
+
+**Don't login with root. Don't use password logins.**
 
 If you're using chef to manage your servers
 [sudo-cookbook](https://github.com/opscode/cookbooks/tree/master/sudo) &
@@ -50,7 +55,8 @@ as this user, without any password.
 If you're already using chef,
 [bootstrap-cookbook](https://github.com/gchef/bootstrap-cookbook) with the
 `ruby_apps` recipe will set everything up for you. It handles the entire rvm
-integration, even down to configuring the user's bash environment.
+integration, even down to configuring the user's bash environment. This is
+ruby-only for the time being, but there are plans to make it language agnostic.
 
 ### 1.4 [RVM](http://beginrescueend.com/)
 
@@ -95,23 +101,8 @@ manually in the root folder of the app that you want delivering. Yes, your
 observation is correct, there's no [`Loudfile` *faux
 pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
 
-Here's a `.deliver` example:
-
-    APP="squirrel"          # You know, the shipit one
-
-    USER="$APP"             # Can be anything really, but it would be nice if you stuck to this convention
-
-    PORT=7000               # The TCP port on which your app will be listening on (think reverse-proxies)
-                            # Not at all scalable, will be revised not before long
-
-    DEPLOY_TO="~$USER/app"  # The location where the app will be 'git pushed' to
-
-    SERVER="shipit"         # The hostname or IP where the app will be delivered
-
-    REMOTE="$USER@$SERVER"  # You will be performing most remote tasks as this user,
-                            # e.g. git pushing, bundling etc.
-                            # Tasks requiring sudo privileges will be performed as
-                            # your local user. See 1.2 from ASSUMPTIONS.
+Before you can create a `.deliver` file, you will need to read about the
+supported strategies.
 
 
 
@@ -122,12 +113,42 @@ file, run:
 
     $ deliver
 
+Deliver will use the ruby strategy by default. If you want to use a different
+one, define it in your `.deliver` file. Alternatively, pass it as the first
+argument:
+
+    $ deliver gh-pages
+
+As a note, the `STRATEGY` value in the `.deliver` file will overwrite any
+argument.
+
+To see a list of available strategies:
+
+    $ deliver -s
+    # the more verbose version of the above
+    $ deliver --strategies
+
+<table>
+  <tr>
+    <th>default</th>
+    <td>rvm and foreman exporting to upstart</td>
+  </tr>
+  <tr>
+    <th>gh-pages</th>
+    <td>pushes content generated in gh-pages dir to gh-pages branch</td>
+  </tr>
+</table>
+
 ### 3.1 Options
 
 <table>
   <tr>
     <th>-v, --version</th>
     <td>display current version and exits</td>
+  </tr>
+  <tr>
+    <th>-s, --strategies</th>
+    <td>displays supported strategies</td>
   </tr>
   <tr>
     <th>-V, --verbose</th>
@@ -147,6 +168,7 @@ The utility has just enough to solve our deployment woes. It's still missing a
 few important features which will be added as the need arises. In no particular
 order:
 
+* <strike>gh-pages deploys</strike>
 * multiple apps in a single repository
 * revise the `PORT` option with something more scalable
 * multi-server deploys
