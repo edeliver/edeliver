@@ -168,7 +168,7 @@ The utility has just enough to solve our deployment woes. It's still missing a
 few important features which will be added as the need arises. In no particular
 order:
 
-* <strike>gh-pages deploys</strike>
+* <del>gh-pages deploys</del> [DONE](/gerhard/deliver/commit/1cd43f7)
 * multiple apps in a single repository
 * revise the `PORT` option with something more scalable
 * multi-server deploys
