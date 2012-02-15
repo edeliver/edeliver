@@ -39,7 +39,7 @@ check() {
 # Push all commits to remote repository
 #
 push() {
-  eval "git push deploy master $SILENCE"
+  __exec "git push deploy master"
 }
 
 # Install/update all gems via bundler
