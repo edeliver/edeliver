@@ -2,12 +2,12 @@
 
 set -e
 
-BASE_PATH=$0
+BASE_PATH="$0/../.."
 
-. "$BASE_PATH/../../libexec/config"
-. "$BASE_PATH/../../libexec/args"
-. "$BASE_PATH/../../libexec/style"
-. "$BASE_PATH/../../libexec/functions"
+. "$BASE_PATH/libexec/style"
+. "$BASE_PATH/libexec/config"
+. "$BASE_PATH/libexec/args"
+. "$BASE_PATH/libexec/common"
 
 interpret_args
 
