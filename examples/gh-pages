@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+APP="squirrel meets jekyll"   # used for the final success message
+                              # Not really required
+
+STRATEGY="gh-pages"           # This keeps the deliver command simple, otherwise you had
+                              # to run:
+                              #
+                              #     $ deliver gh-pages
+                              #
+                              # A local .deliver file would still need to be present though.
+                              # Might remove this requirement when the proper guards will
+                              # be in place

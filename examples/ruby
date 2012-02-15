@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# STRATEGY="ruby"         # There's no need for this, the default STRATEGY is ruby
+
+APP="squirrel"            # You know, the shipit one
+
+USER="$APP"               # Can be anything really, but it would be nice if you
+                          # stuck to this convention
+
+PORT=7000                 # The TCP port on which your app will be listening on (think reverse-proxies)
+                          # Not at all scalable, will be revised not before long
+
+DELIVER_REMOTE="deliver"  # The name of the remote repository where this app
+                          # will be delivered to
+
+DELIVER_TO="~$USER/app"  # The location where this app will be 'git pushed' to
+
+SERVER="shipit"           # The hostname or IP where this app will be delivered
+
+REMOTE="$USER@$SERVER"    # You will be performing most remote tasks as this user,
+                          # e.g. git pushing, bundling etc.
+                          # Tasks requiring sudo privileges will be performed as
+                          # your local user
