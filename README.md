@@ -18,86 +18,28 @@ and node.js applications. Here's a Ruby app being deployed:
 <img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" />
 
 
+## 1 INSTALLATION
 
-## 1 ASSUMPTIONS
-
-These are all good conventions which have been bread over the years from
-orchestrating many different infrastructure setups. You can disregard
-everything here and go back to your existing deployment process. Alternatively,
-you can fork, add your improvements and contribute towards a modern and
-efficient deployment tool that just works.
-
-### 1.1 Ubuntu
-
-Your server is running Ubuntu, preferably 10.04 LTS.
-
-Ubuntu + upstart are by no means the holy grail, but they work very well. Feel
-free to share your love for other distros & service managers via pull requests.
-
-### 1.2 Remote logins and privileges
-
-Your local username can gain sudo privileges on the server without being
-prompted for a password.
-
-**Don't login with root. Don't use password logins.**
-
-If you're using chef to manage your servers
-[sudo-cookbook](https://github.com/opscode/cookbooks/tree/master/sudo) &
-[ssh-cookbook](https://github.com/gchef/ssh-cookbook) will work right out of
-the box.
-
-### 1.3 Every app gets its own system user
-
-A system user has been created for the app that you'll be delivering. I
-personally prefer the same name as the app itself. You should be able to log in
-as this user, without any password.
-
-If you're already using chef,
-[bootstrap-cookbook](https://github.com/gchef/bootstrap-cookbook) with the
-`ruby_apps` recipe will set everything up for you. It handles the entire rvm
-integration, even down to configuring the user's bash environment. This is
-ruby-only for the time being, but there are plans to make it language agnostic.
-
-### 1.4 [RVM](http://beginrescueend.com/)
-
-You have rvm installed on the server that you'll be delivering your code to. I
-prefer system-wide setups in production. Yes, you've guessed it, use chef's
-[rvm-cookbook](https://github.com/gchef/rvm-cookbook) for the best experience.
-
-ps: rbenv support is on the roadmap. If you want it right now, fork away.
-
-### 1.5 [Foreman](https://github.com/ddollar/foreman)
-
-Every Ruby app should have this. It allows you to painlessly scale your app
-components, [just as if you were running on
-Heroku](http://devcenter.heroku.com/articles/procfile). A server-side foreman
-would be even nicer, something that will take care of node.js, or any other
-type of app. Already on the roadmap.
-
-
-
-## 2 INSTALLATION
-
-### 2.1 Check out deliver into `~/.deliver`.
+### 1.1 Check out deliver into `~/.deliver`.
 
     $ git clone git://github.com/gerhard/deliver.git ~/.deliver
 
-### 2.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
+### 1.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
     $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
     # if using zsh
     $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
 
-### 2.3 Source your shell profile
+### 1.3 Source your shell profile
 
     $ . ~/.bash_profile
     # if using zsh
     $ . ~/.zshrc 
 
-### 2.4 Personalize
+### 1.4 Personalize
 
 There are no fancy generators, you will need to create a `.deliver` file
-manually in the root folder of the app that you want delivering. Yes, your
+manually in the app's root folder that you want delivering. Yes, your
 observation is correct, there's no [`Loudfile` *faux
 pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
 
@@ -106,21 +48,14 @@ supported strategies.
 
 
 
-## 3 USAGE
+## 2 USAGE
 
-From the root of your project which has been configured via the `.deliver`
-file, run:
+From the root of your project, run:
 
     $ deliver
 
 Deliver will use the ruby strategy by default. If you want to use a different
-one, define it in your `.deliver` file. Alternatively, pass it as the first
-argument:
-
-    $ deliver gh-pages
-
-As a note, the `STRATEGY` value in the `.deliver` file will overwrite any
-argument.
+one, define it in your `.deliver` file.
 
 To see a list of available strategies:
 
@@ -128,18 +63,9 @@ To see a list of available strategies:
     # the more verbose version of the above
     $ deliver --strategies
 
-<table>
-  <tr>
-    <th>default</th>
-    <td>rvm and foreman exporting to upstart</td>
-  </tr>
-  <tr>
-    <th>gh-pages</th>
-    <td>pushes content generated in gh-pages dir to gh-pages branch</td>
-  </tr>
-</table>
+[Read more about deliver strategies](strategies)
 
-### 3.1 Options
+### 2.1 Options
 
 <table>
   <tr>
@@ -162,7 +88,7 @@ To see a list of available strategies:
 
 
 
-## 4 ROADMAP
+## 3 ROADMAP
 
 The utility has just enough to solve our deployment woes. It's still missing a
 few important features which will be added as the need arises. In no particular
@@ -182,7 +108,7 @@ order:
 
 
 
-## 5 LICENSE
+## 4 LICENSE
 
 (The MIT license)
 
