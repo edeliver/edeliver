@@ -4,6 +4,7 @@ interpret_args() {
   debug
   verbose
   version
+  strategies
 }
 
 # Run in verbose mode
@@ -31,6 +32,15 @@ debug() {
 version() {
   if [[ $ARGS =~ (-v|--version) ]]; then
     echo "deliver v$VERSION ($HOMEPAGE)"
+    exit 0
+  fi
+}
+
+# Displays the existing deliver strategies
+#
+strategies() {
+  if [[ $ARGS =~ (-s|--strategies) ]]; then
+    echo "$STRATEGIES"
     exit 0
   fi
 }

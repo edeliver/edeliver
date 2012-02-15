@@ -2,26 +2,20 @@
 
 set -e
 
-BASE_PATH=$0
+BASE_PATH="$0/../.."
 
-. "$BASE_PATH/../../libexec/config"
-. "$BASE_PATH/../../libexec/args"
-. "$BASE_PATH/../../libexec/style"
-. "$BASE_PATH/../../libexec/functions"
+. "$BASE_PATH/libexec/style"
+. "$BASE_PATH/libexec/config"
+. "$BASE_PATH/libexec/args"
+. "$BASE_PATH/libexec/common"
 
 interpret_args
 
 complain_if_interrupted
+
 load_app_config
-start_output
+load_strategy
 
-run 'check' "Checking repository"
-run 'push' "Pushing new commits"
-
-# TODO
-# Stop right here if app is up-to-date
-
-run 'setup' "Setting up app"
-run 'launch' 'Launching app'
-
-finalize
+begin
+run
+finish

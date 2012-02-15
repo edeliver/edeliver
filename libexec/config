@@ -1,9 +1,21 @@
 #!/usr/bin/env bash
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 HOMEPAGE="https://github.com/gerhard/deliver"
 
 ARGS=$@
 
+STRATEGY=${1:-"ruby"}
+
 DELIVERY_ROOT=$(pwd)
 APP_CONFIG="$DELIVERY_ROOT/.deliver"
+
+# Defaults - ensuring consistency across versions
+DELIVER_REMOTE="deliver"
+DELIVER_TO="~$USER/app"
+
+STRATEGIES="
+$txtbld ruby $txtrst      - rvm and foreman exporting to upstart
+
+$txtbld gh-pages $txtrst  - plain git push
+"
