@@ -9,9 +9,10 @@ argument specified on the command line.
 
 If you want to implement your own strategy, fork away. Currently, deliver only
 works with strategies defined in the local `strategies` directory, but with
-very little effort it can support any strategy specific to your own setup.
+very little effort it can support any strategy specific to your setup.
+
 Ideally, there will be core strategies which will reside with the project, then
-custom ones which will stay withing your app's repository. This is not
+custom ones which will stay within your app's repository. This is not
 revolutionary, Capistrano is using the same concept for SCMs.
 
 
@@ -77,7 +78,7 @@ type of app. Already on the roadmap.
 
 ## 2 gh-pages
 
-pushes content generated in gh-pages directory to gh-pages branch
+**generates content into a local gh-pages directory, then commits and pushes to gh-pages branch**
 
 Use this when you have a static site or documentation for your project (rocco,
 docco etc.) which you host on [github:pages](http://pages.github.com/).
@@ -85,7 +86,7 @@ docco etc.) which you host on [github:pages](http://pages.github.com/).
 You can handle the generation via your own custom `bin/generate` command,
 otherwise it will default to `rake generate`.
 
-As an example, this is a rake task that handles rocco generation for a ruby
+As an example, here is a rake task that handles rocco generation for a ruby
 gem:
 
     require 'rdiscount'
@@ -101,9 +102,8 @@ gem:
         cp chef-extensions.html index.html
       }
     end
-    # Aliases for docs task
-    task :doc => :docs
+    # Alias for docs task
     task :generate => :docs
 
-With this strategy, whenever I want to update the existing documentation, I
-just run `deliver`.
+With this strategy, whenever I want to update this gem's documentation, I just
+run `deliver`.
