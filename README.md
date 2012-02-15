@@ -63,7 +63,7 @@ To see a list of available strategies:
     # the more verbose version of the above
     $ deliver --strategies
 
-[Read more about deliver strategies](strategies)
+[Read more about deliver strategies](deliver/tree/master/strategies)
 
 ### 2.1 Options
 
