@@ -70,11 +70,11 @@ To see a list of available strategies:
 <table>
   <tr>
     <th>-v, --version</th>
-    <td>display current version and exits</td>
+    <td>current version</td>
   </tr>
   <tr>
     <th>-s, --strategies</th>
-    <td>displays supported strategies</td>
+    <td>supported strategies</td>
   </tr>
   <tr>
     <th>-V, --verbose</th>
