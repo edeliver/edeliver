@@ -2,7 +2,7 @@
 
 set -e
 
-BASE_PATH="$0/../.."
+BASE_PATH="$(dirname $0)/.."
 
 . "$BASE_PATH/libexec/style"
 . "$BASE_PATH/libexec/config"
