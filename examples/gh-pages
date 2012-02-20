@@ -8,6 +8,11 @@ STRATEGY="gh-pages"           # This keeps the deliver command simple,
                               #
                               #     $ deliver gh-pages
                               #
-                              # A local .deliver file would still need to be present though.
-                              # Might remove this requirement when proper guards will
-                              # be in place
+                              # Arguments aren't working properly yet, will
+                              # need to improve args parsing
+                              #
+                              # A local .deliver file would still need to be
+                              # present though.
+                              #
+                              # Might remove this  requirement when proper guards
+                              # will be in place

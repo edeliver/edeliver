@@ -5,7 +5,7 @@ HOMEPAGE="https://github.com/gerhard/deliver"
 
 ARGS=$@
 
-STRATEGY=${1:-"ruby"}
+STRATEGY="ruby"
 
 DELIVERY_ROOT=$(pwd)
 APP_CONFIG="$DELIVERY_ROOT/.deliver"
