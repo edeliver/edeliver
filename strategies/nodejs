@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# This function must be present since deliver will call it directly
+# Everything inside it or around it are only limited by your imagination : )
+#
+run() {
+  __run 'check' "Checking repository"
+  __run 'push' "Pushing new commits"
+
+  # TODO
+  # Stop right here if app is up-to-date
+
+  __run 'setup' "Setting up app"
+  __run 'launch' 'Launching app'
+}
+
+# Ensure remote repository is set up correctly,
+# And that we have a local remote pointing to it
+#
+check() {
+  ssh $REMOTE "
+    set -e
+    if [ ! -d $DELIVER_TO ]; then
+      mkdir $DELIVER_TO
+      cd $DELIVER_TO
+      git init $SILENCE
+      git config receive.denyCurrentBranch ignore
+    fi
+  "
+  if [[ ! $(git remote -v) =~ "$REMOTE:$DELIVER_TO" ]]; then
+    [[ $(git remote -v) =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
+  fi
+}
+
+# Push all commits to remote repository
+#
+push() {
+  __exec "git push $DELIVER_REMOTE master"
+}
+
+# Install/update all gems via bundler
+# Export upstart jobs via foreman
+#
+setup() {
+  ssh $REMOTE "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    git reset --hard master $SILENCE
+    cd $DELIVER_TO $SILENCE
+    npm install $SILENCE
+    foreman export upstart tmp -u $USER -a $APP -p $PORT $SILENCE
+  "
+}
+
+# Start the app via upstart
+#
+launch() {
+  ssh $SERVER "
+    set -e
+    if [[ \$(sudo initctl list | awk '/'$APP' / { print \$0 }') =~ 'run' ]]; then
+      sudo stop $APP $SILENCE
+    fi
+    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
+    sudo start $APP $SILENCE
+  "
+}
