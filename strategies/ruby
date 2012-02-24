@@ -39,7 +39,7 @@ check() {
 # Push all commits to remote repository
 #
 push() {
-  __exec "git push deploy master"
+  __exec "git push $DELIVER_REMOTE master"
 }
 
 # Install/update all gems via bundler
