@@ -30,8 +30,9 @@ check() {
       git config receive.denyCurrentBranch ignore
     fi
   "
-  if [[ ! $(git remote -v) =~ "$REMOTE:$DELIVER_TO" ]]; then
-    [[ $(git remote -v) =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+  local git_remote="$(git remote -v)"
+  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
+    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
     git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
   fi
 }
