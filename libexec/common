@@ -19,6 +19,7 @@ error() {
 #
 fail() {
   echo -e "$bldred FAIL $txtrst\n"
+  echo -e "Try running the command in verbose mode (-V)\n"
   exit 1
 }
 
