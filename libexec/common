@@ -8,14 +8,14 @@ complain_if_interrupted() {
   trap "exit 2" 1 2 3 13 15
 }
 
-# Something went very wrong, kill the script
+# Specific failure, fail the whole script
 #
 error() {
   echo "$txtred$1$txtrst"
   exit 1
 }
 
-# If a command fails, fail the whole script
+# Command failed, fail the whole script
 #
 fail() {
   echo -e "$bldred FAIL $txtrst\n"
@@ -23,7 +23,7 @@ fail() {
   exit 1
 }
 
-# Successful command
+# Command was successful
 #
 success() {
   echo "$bldgrn DONE $txtrst"
@@ -53,8 +53,7 @@ __progress() {
     sleep 0.5
   done
 
-  # This is blocking
-  # Try to actually benefit from the async nature of bg jobs
+  # Wait until command finishes, otherwise fail
   wait $pid || fail
   status=$?
 
