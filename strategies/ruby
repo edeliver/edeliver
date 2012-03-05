@@ -67,6 +67,7 @@ launch() {
     if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
     fi
+    sudo rm -f /etc/init/$APP*
     sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
     sudo start $APP $SILENCE
   "
