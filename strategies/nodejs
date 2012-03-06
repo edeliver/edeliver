@@ -57,7 +57,7 @@ setup() {
 # Start the app via upstart
 #
 launch() {
-  ssh $SERVER "
+  ssh $REMOTE "
     set -e
     if [[ \$(sudo initctl list | awk '/'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
