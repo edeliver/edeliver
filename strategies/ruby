@@ -30,8 +30,9 @@ check() {
       git config receive.denyCurrentBranch ignore
     fi
   "
-  if [[ ! $(git remote -v) =~ "$REMOTE:$DELIVER_TO" ]]; then
-    [[ $(git remote -v) =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+  local git_remote="$(git remote -v)"
+  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
+    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
     git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
   fi
 }
@@ -39,7 +40,7 @@ check() {
 # Push all commits to remote repository
 #
 push() {
-  __exec "git push deploy master"
+  __exec "git push $DELIVER_REMOTE master"
 }
 
 # Install/update all gems via bundler
@@ -63,9 +64,10 @@ setup() {
 launch() {
   ssh $SERVER "
     set -e
-    if [[ \$(sudo initctl list | awk '/'$APP' / { print \$0 }') =~ 'run' ]]; then
+    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
     fi
+    sudo rm -f /etc/init/$APP*
     sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
     sudo start $APP $SILENCE
   "
