@@ -1,1 +1,1 @@
-rvm --create use 1.9.3-perf@deliver
+rvm --create use 1.9.3
