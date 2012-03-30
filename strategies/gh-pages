@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # Pushes locally generated content to Github Pages.
-#
+
+register_strategy 'gh-pages' "git pushes locally generated content to Github Pages"
+
 run() {
   __run 'generate' "Generating content"
   __run 'check' "Checking repository"

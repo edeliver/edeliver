@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+VERSION="1.0.0.beta1"
+HOMEPAGE="https://github.com/gerhard/deliver"
+
+ARGS=$@
+
+DELIVERY_ROOT=$(pwd)
+APP_CONFIG="$DELIVERY_ROOT/.deliver/config"
+
+DELIVER_REMOTE="deliver"

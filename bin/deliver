@@ -5,7 +5,7 @@ set -e
 BASE_PATH="$(dirname $0)/.."
 
 . "$BASE_PATH/libexec/style"
-. "$BASE_PATH/libexec/config"
+. "$BASE_PATH/libexec/defaults"
 . "$BASE_PATH/libexec/args"
 . "$BASE_PATH/libexec/common"
 
@@ -14,8 +14,11 @@ interpret_args
 complain_if_interrupted
 
 load_app_config
-load_strategy
+default_app_config
+apply_super_configs
+load_strategy_or_list_available_strategies
 
+# Run the loaded strategy
 begin
 run
 finish
