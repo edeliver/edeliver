@@ -19,19 +19,21 @@ describe 'args' do
     it "-s" do
       output = shell("deliver -s")
       output.must_match "ruby"
-      output.must_match "github-pages"
+      output.must_match "gh-pages"
+      output.must_match "nodejs"
     end
 
     it "--strategies" do
       output = shell("deliver --strategies")
       output.must_match "ruby"
-      output.must_match "github-pages"
+      output.must_match "gh-pages"
+      output.must_match "nodejs"
     end
   end
 
   describe "specifying a strategy via args" do
     it "returns an error if strategy does not exist" do
-      shell("deliver foobar").must_match /This strategy does not exist/
+      shell("deliver foobar").must_match /strategy does not exist/
     end
   end
 end
