@@ -1,7 +1,8 @@
-source "http://www.rubygems.org"
+source 'http://www.rubygems.org'
 
-gem "colorize", "~> 0.5.8"
-gem "guard-minitest"
-gem "minitest", "~> 2.10.0"
-gem "pry"
-gem "turn", "~> 0.8.3"
+gem 'colorize', '~> 0.5.8'
+gem 'guard-minitest', '~> 0.5.0'
+gem 'minitest', '~> 2.11.4'
+gem 'pry', '~> 0.9.8.4'
+gem 'rake', '~> 0.9.2.2'
+gem 'turn', '~> 0.9.4'
