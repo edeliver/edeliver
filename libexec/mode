@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+__runtime_mode() {
+  debug
+  verbose
+  version
+}
+
+# Run in debug mode
+#
+debug() {
+  if [[ $ARGS =~ (-D|--debug) ]]; then
+    set -x
+  fi
+}
+
+# Run in verbose mode
+#
+verbose() {
+  if [[ ! $ARGS =~ (-V|--verbose) ]]; then
+    # silent mode (default)
+    SILENCE="&> /dev/null"
+  else
+    # verbose mode
+    VERBOSE=true
+  fi
+}
+
+# Version mode only
+#
+version() {
+  if [[ $ARGS =~ (-v|--version) ]]; then
+    echo -e "\n${txtbld}deliver v$VERSION$txtrst | $HOMEPAGE\n"
+    exit 0
+  fi
+}

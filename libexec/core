@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+# If script doesn't run all the way to the end,
+# it will exit 2 == SIGINT (Interrupt)
+# http://steve-parker.org/sh/trap.shtml
+#
+__complain_if_interrupted() {
+  trap "exit 2" 1 2 3 13 15
+}
+
+# If STRATEGY or SERVER are specified at the time of invoking, hang onto them
+# until we're ready to overwrite everything set from other sources
+#
+__capture_runtime_configs() {
+  RUNTIME_STRATEGY=$STRATEGY
+  RUNTIME_SERVER=$SERVER
+}
+
+# If STRATEGY or SERVER are specified at the time of invoking, overwrite
+# anything that has been set from other sources
+#
+__apply_runtime_configs() {
+  if [ $RUNTIME_STRATEGY ]; then
+    STRATEGY="$RUNTIME_STRATEGY"
+  fi
+  if [ $RUNTIME_SERVER ]; then
+    SERVER="$RUNTIME_SERVER"
+    REMOTE="$APP_USER@$RUNTIME_SERVER"
+  fi
+}
+
+# Loads the .deliver file
+#
+__load_app_config() {
+  if [ ! -f "$APP_CONFIG" ]; then
+    error "Could not find a .deliver/config file in the current directory"
+  else
+    . "$APP_CONFIG"
+  fi
+}
+
+# Ensures all required configs are set, tries to be helpful by adding some
+# sane defaults
+#
+__default_app_config() {
+  . "$BASE_PATH/libexec/app_config"
+}
+
+# Progress indicator when running commands in the background
+#
+__progress() {
+  local message=$1
+  local style=${2:$txtwht}
+  # Last process to have gone in the background (in this context),
+  # is our command
+  pid=$!
+
+  echo -en "$style$message"
+
+  # If the pid exists, the process is running; use . as status indicators
+  while [ $(ps -eo pid | grep $pid) ]; do
+    printf '.'
+    sleep 0.5
+  done
+
+  # Wait until command finishes, otherwise fail
+  wait $pid || fail
+  # Grab the command's exit code
+  status=$?
+
+  # Anything but 0 means that it failed
+  if [ $status = 0 ]; then
+    success
+  else
+    fail
+  fi
+}
+
+# Wrapper to either run the command verbosely (inline),
+# or silently (in the background)
+#
+__run() {
+  if [ $VERBOSE ]; then
+    echo -e "$bldylw\n$2$txtrst"
+    eval $1
+  else
+    (eval $1) &
+    __progress "$2"
+  fi
+}
+
+# Used internally, to wrap commands which need $SILENCE
+#
+__exec() {
+  eval "$1 $SILENCE"
+}

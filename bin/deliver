@@ -4,21 +4,31 @@ set -e
 
 BASE_PATH="$(dirname $0)/.."
 
-. "$BASE_PATH/libexec/style"
+# All functions starting with __ are private ones
+# You can overwrite them, but ideally they should be left alone.
+# Remember Demeter http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
+
+. "$BASE_PATH/libexec/output"
+. "$BASE_PATH/libexec/states"
 . "$BASE_PATH/libexec/defaults"
-. "$BASE_PATH/libexec/args"
-. "$BASE_PATH/libexec/common"
+. "$BASE_PATH/libexec/mode"
+__runtime_mode
 
-interpret_args
+. "$BASE_PATH/libexec/core"
 
-complain_if_interrupted
+__complain_if_interrupted
+__capture_runtime_configs
 
-load_app_config
-default_app_config
-apply_super_configs
-load_strategy_or_list_available_strategies
+. "$BASE_PATH/libexec/strategy"
+
+__load_app_config
+__default_app_config
+__apply_runtime_configs
+
+__load_strategy_or_list_available_strategies
 
 # Run the loaded strategy
+# Can be overwritten by each strategy, think custom output
 begin
 run
 finish

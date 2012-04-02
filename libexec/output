@@ -21,3 +21,35 @@ info=${bldwht}*${txtrst}        # Feedback
 pass=${bldblu}*${txtrst}
 warn=${bldred}*${txtrst}
 ques=${bldblu}?${txtrst}
+
+# Displays arg as an error message, red and sad
+#
+error_message() {
+  echo -e "$bldred$@$txtrst"
+}
+
+# Displays arg as a hint message, yellow and optimistic
+#
+hint_message() {
+  echo -e "$txtylw$@$txtrst"
+}
+
+# Displays arg as a success message, green and cheerful
+#
+success_message() {
+  echo -e "$bldgrn$@$txtrst"
+}
+
+# Start the output with an empty line. It just looks better with spacing.
+#
+begin() {
+  echo ""
+}
+
+# If we reach this step, delivery was successfull
+#
+finish() {
+  echo "$bldgrn"
+  echo "$APP deployed" | tr '[:lower:]' '[:upper:]'
+  echo "$txtrst"
+}
