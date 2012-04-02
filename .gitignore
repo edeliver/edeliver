@@ -1,4 +1,1 @@
-*.gem
-.bundle
-Gemfile.lock
-pkg/*
+.gitignore
