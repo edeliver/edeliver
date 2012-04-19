@@ -33,7 +33,7 @@ __apply_runtime_configs() {
 #
 __load_app_config() {
   if [ ! -f "$APP_CONFIG" ]; then
-    error "Could not find a .deliver/config file in the current directory"
+    error "$APP_CONFIG missing"
   else
     . "$APP_CONFIG"
   fi
