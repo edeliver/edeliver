@@ -11,8 +11,7 @@ BASE_PATH="$(dirname $0)/.."
 . "$BASE_PATH/libexec/output"
 . "$BASE_PATH/libexec/states"
 . "$BASE_PATH/libexec/defaults"
-. "$BASE_PATH/libexec/mode"
-__runtime_mode
+. "$BASE_PATH/libexec/init"
 
 . "$BASE_PATH/libexec/core"
 

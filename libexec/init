@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+__version() {
+  echo -e "\n${txtbld}deliver v$VERSION$txtrst | $HOMEPAGE\n"
+  exit 0
+}
+
+while (( "$#" )); do
+  arg="$1"; shift
+
+  case "$arg" in
+    "-D" | "--debug")
+      set -x ;;
+    "-V" | "--verbose")
+      VERBOSE=true
+      SILENCE="" ;;
+    "-v" | "--version")
+      __version ;;
+    *) # ignore everything else
+      true ;;
+  esac
+done

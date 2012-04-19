@@ -9,3 +9,5 @@ DELIVERY_ROOT=$(pwd)
 APP_CONFIG="$DELIVERY_ROOT/.deliver/config"
 
 DELIVER_REMOTE="deliver"
+
+SILENCE="&> /dev/null"
