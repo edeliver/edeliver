@@ -1,7 +1,7 @@
 Deliver takes your local code and sets it up in production. A cross
-between Capistrano, git-deploy and heroku deploys, but language
-agnostic. At [GoSquared] [2], we use this utility
-to deploy Ruby and node.js applications. An example:
+between Capistrano, git-deploy and heroku deploys, but language agnostic
+with no dependencies (other than a modern shell). At [GoSquared] [2], we
+use this utility to deploy Ruby and node.js applications. An example:
 
 ![deliver] [1]
 
