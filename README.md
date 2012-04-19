@@ -1,50 +1,53 @@
-Born out of frustration with current Ruby deployment practices.
+Deliver takes your local code and sets it up in production. A cross
+between Capistrano, git-deploy and heroku deploys, but language
+agnostic. At [GoSquared] [2], we use this utility
+to deploy Ruby and node.js applications. An example:
 
-Capistrano is a workhorse, but if you combine it with rvm and bundler, you're
-in for a treat.
+![deliver] [1]
 
-git-deploy works pretty well, but it's still not seamless and you end up having
-to work around it too often for my taste.
+Deliver strategies set this utility apart from everything else. By
+default it comes with the default strategies:
 
-heroku solves the deployment process bang on.
+  * [ruby] [3]
 
-This command-line utility brings the same heroku-style deploys convenience to a
-regular VPS, {cloud-provider} instance or even bare metal (if you're that hard
-core).
+  * [nodejs] [4]
 
-At [GoSquared](http://www.gosquared.com/), we use this utility to deploy Ruby, PHP
-and node.js applications. Here's a Ruby app being deployed:
+  * [gh-pages] [5]
 
-<img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" />
+You can also add your own, custom strategies. [Read more about deliver
+strategies.] [6]
 
 
 ## 1 INSTALLATION
 
 ### 1.1 Check out deliver into `~/.deliver`.
 
-    $ git clone git://github.com/gerhard/deliver.git ~/.deliver
+```shell
+$ git clone git://github.com/gerhard/deliver.git ~/.deliver
+```
 
 ### 1.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
-    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
-    # if using zsh
-    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
+```shell
+$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
+# if using zsh
+$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
+```
 
 ### 1.3 Source your shell profile
 
-    $ . ~/.bash_profile
-    # if using zsh
-    $ . ~/.zshrc 
+```shell
+$ . ~/.bash_profile
+# if using zsh
+$ . ~/.zshrc 
+```
 
 ### 1.4 Personalize
 
-There are no fancy generators, you will need to create a `.deliver` file
-manually in the app's root folder that you want delivering. Yes, your
-observation is correct, there's no [`Loudfile` *faux
-pas*](http://blog.hasmanythrough.com/2011/12/1/i-heard-you-liked-files).
+There are no generators or initializers, you will need to create a
+`.deliver` dir in the app's root folder that you want to deliver.
 
-Before you can create a `.deliver` file, you will need to read about the
-supported strategies.
+[Config examples] [7], strategy-specific.
 
 
 
@@ -55,15 +58,15 @@ From the root of your project, run:
     $ deliver
 
 Deliver will use the ruby strategy by default. If you want to use a different
-one, define it in your `.deliver` file.
+one, define it in your `.deliver/config` file.
 
 To see a list of available strategies:
 
-    $ deliver -s
-    # the more verbose version of the above
-    $ deliver --strategies
+```shell
+$ deliver -s|--strategies
+```
 
-[Read more about deliver strategies](deliver/tree/master/strategies)
+[Read more about deliver strategies] [6]
 
 ### 2.1 Options
 
@@ -88,27 +91,7 @@ To see a list of available strategies:
 
 
 
-## 3 ROADMAP
-
-The utility has just enough to solve our deployment woes. It's still missing a
-few important features which will be added as the need arises. In no particular
-order:
-
-* <del>gh-pages deploys</del> [DONE](/gerhard/deliver/commit/1cd43f7)
-* multiple apps in a single repository
-* revise the `PORT` option with something more scalable
-* multi-server deploys
-* don't run the full deploy if nothing has changed
-* Post deploy hooks:
-  * Campfire
-  * Graphite
-* rbenv integration (not a priority for me personally)
-* better error handling (particularly when remote tasks fail)
-* system-wide foreman supporting both node.js & Ruby apps (anything else, fork away)
-
-
-
-## 4 LICENSE
+## 3 LICENSE
 
 (The MIT license)
 
@@ -131,3 +114,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+[1]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
+[2]: http://www.gosquared.com/
+[3]: master/strategies/ruby
+[4]: master/strategies/nodejs
+[5]: master/strategies/gh-pages
+[6]: master/strategies
+[7]: master/examples
