@@ -5,8 +5,8 @@ to deploy Ruby and node.js applications. An example:
 
 ![deliver] [1]
 
-Deliver strategies set this utility apart from everything else. By
-default it comes with the default strategies:
+Strategies is what sets this utility apart from everything else. It
+comes with these by default:
 
   * [ruby] [3]
 
@@ -14,7 +14,7 @@ default it comes with the default strategies:
 
   * [gh-pages] [5]
 
-You can also add your own, custom strategies. [Read more about deliver
+You can also add your own, project-specific strategies. [Read more about deliver
 strategies.] [6]
 
 
@@ -22,13 +22,13 @@ strategies.] [6]
 
 ### 1.1 Check out deliver into `~/.deliver`.
 
-```shell
+```bash
 $ git clone git://github.com/gerhard/deliver.git ~/.deliver
 ```
 
 ### 1.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
-```shell
+```bash
 $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
 # if using zsh
 $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
@@ -36,7 +36,7 @@ $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc
 
 ### 1.3 Source your shell profile
 
-```shell
+```bash
 $ . ~/.bash_profile
 # if using zsh
 $ . ~/.zshrc 
@@ -55,39 +55,26 @@ There are no generators or initializers, you will need to create a
 
 From the root of your project, run:
 
-    $ deliver
+```bash
+$ deliver
+```
 
 Deliver will use the ruby strategy by default. If you want to use a different
 one, define it in your `.deliver/config` file.
 
 To see a list of available strategies:
 
-```shell
+```bash
 $ deliver -s|--strategies
 ```
 
 [Read more about deliver strategies] [6]
 
-### 2.1 Options
+To see all supported options and actions:
 
-<table>
-  <tr>
-    <th>-v, --version</th>
-    <td>current version</td>
-  </tr>
-  <tr>
-    <th>-s, --strategies</th>
-    <td>supported strategies</td>
-  </tr>
-  <tr>
-    <th>-V, --verbose</th>
-    <td>doesn't suppress the output of commands</td>
-  </tr>
-  <tr>
-    <th>-D, --debug</th>
-    <td>shows the entire code as it is being run</td>
-  </tr>
-</table>
+```bash
+$ deliver -h|--help
+```
 
 
 
