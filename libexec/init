@@ -8,7 +8,7 @@ __help() {
   __version
   echo -e "  Deliver takes your local code and sets it up in production. A
   cross between Capistrano, git-deploy and heroku deploys, but language
-  agnostic.
+  agnostic with no dependencies (other than a modern shell).
 
 ${txtbld}USAGE${txtrst}
 
@@ -27,6 +27,12 @@ ${txtbld}USAGE${txtrst}
   defined in your .deliver/config file. Equally, a STRATEGY env variable
   will overwrite all subsequent values (except the runtime strategy).
 
+  If you want to test your app first in a local VM (or in a staging
+  environment) before you push it into production, you can always overwrite
+  the .deliver/config SERVER value with a runtime one:
+
+    SERVER=ruby-1-local deliver
+
 ${txtbld}OPTIONS${txtrst}
 
   -v, --version     Shows the version and exits.
@@ -43,22 +49,28 @@ ${txtbld}OPTIONS${txtrst}
 "
 }
 
-while (( "$#" )); do
-  arg="$1"; shift
+while (( $# ))
+do
+  arg="$1" && shift
 
-  case "$arg" in
-    "-D" | "--debug")
-      set -x ;;
-    "-V" | "--verbose")
+  case "${arg}" in
+    (-D|--debug)
+      set -x
+    ;;
+    (-V|--verbose)
       VERBOSE=true
-      SILENCE="" ;;
-    "-h" | "--help")
+      SILENCE=""
+    ;;
+    (-h|--help)
       __help
-      exit 0 ;;
-    "-v" | "--version")
+      exit 0
+    ;;
+    (-v|--version)
       __version
-      exit 0 ;;
-    *) # ignore everything else
-      true ;;
+      exit 0
+    ;;
+    (*)
+      hint_message "Unknown argument ${arg} ignored"
+    ;;
   esac
 done

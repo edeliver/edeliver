@@ -15,6 +15,22 @@ describe 'args' do
     end
   end
 
+  describe "help" do
+    it "-h" do
+      shell("deliver -h").must_match "USAGE"
+    end
+
+    it "--help" do
+      shell("deliver -h").must_match "USAGE"
+    end
+  end
+
+  describe "unknown argument" do
+    it "-s" do
+      shell("deliver -s").must_match "Unknown argument -s"
+    end
+  end
+
   describe "strategies" do
     it "-s" do
       output = shell("deliver -s")
