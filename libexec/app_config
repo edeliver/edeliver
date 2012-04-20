@@ -2,7 +2,8 @@
 
 # Your app must run under this user. All files will be created as this user.
 #
-if [ -z "$APP_USER" ]; then
+if [ -z "$APP_USER" ]
+then
   APP_USER="$APP"
 fi
 
@@ -11,18 +12,21 @@ fi
 # by overwriting this value on a per app basis, but I would strongly disagree.
 # The flexibility is here if you really must.
 #
-if [ -z "$DELIVER_TO" ]; then
+if [ -z "$DELIVER_TO" ]
+then
   DELIVER_TO="~$APP_USER/app"
 fi
 
 # It's no secret, Ruby is my darling, hence it's the default deliver strategy.
 #
-if [ -z "$STRATEGY" ]; then
+if [ -z "$STRATEGY" ]
+then
   STRATEGY="ruby"
 fi
 
 # If a remote is not set, it will default to the app's user & server
 #
-if [ -z "$REMOTE" ]; then
+if [ -z "$REMOTE" ]
+then
   REMOTE="$APP_USER@$SERVER"
 fi

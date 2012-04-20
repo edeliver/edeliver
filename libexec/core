@@ -20,10 +20,13 @@ __capture_runtime_configs() {
 # anything that has been set from other sources
 #
 __apply_runtime_configs() {
-  if [ $RUNTIME_STRATEGY ]; then
+  if [ $RUNTIME_STRATEGY ]
+  then
     STRATEGY="$RUNTIME_STRATEGY"
   fi
-  if [ $RUNTIME_SERVER ]; then
+
+  if [ $RUNTIME_SERVER ]
+  then
     SERVER="$RUNTIME_SERVER"
     REMOTE="$APP_USER@$RUNTIME_SERVER"
   fi
@@ -32,7 +35,8 @@ __apply_runtime_configs() {
 # Loads the .deliver file
 #
 __load_app_config() {
-  if [ ! -f "$APP_CONFIG" ]; then
+  if [ ! -f "$APP_CONFIG" ]
+  then
     error "$APP_CONFIG missing"
   else
     . "$APP_CONFIG"
@@ -58,7 +62,8 @@ __progress() {
   echo -en "$style$message"
 
   # If the pid exists, the process is running; use . as status indicators
-  while [ $(ps -eo pid | grep $pid) ]; do
+  while [ $(ps -eo pid | grep $pid) ]
+  do
     printf '.'
     sleep 0.5
   done
@@ -69,7 +74,8 @@ __progress() {
   status=$?
 
   # Anything but 0 means that it failed
-  if [ $status = 0 ]; then
+  if [ $status = 0 ]
+  then
     success
   else
     fail
@@ -80,7 +86,8 @@ __progress() {
 # or silently (in the background)
 #
 __run() {
-  if [ $VERBOSE ]; then
+  if [ $VERBOSE ]
+  then
     echo -e "$bldylw\n$2$txtrst"
     eval $1
   else
