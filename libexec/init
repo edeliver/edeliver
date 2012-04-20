@@ -8,7 +8,7 @@ __help() {
   __version
   echo -e "  Deliver takes your local code and sets it up in production. A
   cross between Capistrano, git-deploy and heroku deploys, but language
-  agnostic with no dependencies (other than a modern shell).
+  agnostic with no dependencies (other than bash or zsh).
 
 ${txtbld}USAGE${txtrst}
 
