@@ -5,9 +5,10 @@ HOMEPAGE="https://github.com/gerhard/deliver"
 
 ARGS=$@
 
-DELIVERY_ROOT=$(pwd)
-APP_CONFIG="$DELIVERY_ROOT/.deliver/config"
+APP_ROOT=$(pwd)
+APP_CONFIG="$APP_ROOT/.deliver/config"
 
-DELIVER_REMOTE="deliver"
+GIT_REMOTE="deliver"
+DELIVER_REMOTE=$GIT_REMOTE # legacy
 
 SILENCE="&> /dev/null"

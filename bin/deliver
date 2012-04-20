@@ -6,7 +6,7 @@ BASE_PATH="$(dirname $0)/.."
 
 # All functions starting with __ are private ones
 # You can overwrite them, but ideally they should be left alone.
-# Remember Demeter http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
+# Remember Demeter: http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
 
 . "$BASE_PATH/libexec/output"
 . "$BASE_PATH/libexec/states"
