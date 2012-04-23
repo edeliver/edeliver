@@ -69,6 +69,9 @@ do
       __version
       exit 0
     ;;
+    (-s|--strategies)
+      hint_message "Refactor strategies"
+    ;;
     (*)
       hint_message "Unknown argument ${arg} ignored"
     ;;
