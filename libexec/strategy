@@ -35,8 +35,8 @@ __load_strategy_or_list_available_strategies() {
   # You can now have a per-project strategy. I wanted to avoid a new
   # Capistrano, but this feature is super useful.If you have a private
   # strategy that can be open sourced, by all means, submit a pull request.
-  if [ -d "$DELIVERY_ROOT/.deliver/strategies" ]; then
-    strategies_path="$strategies_path $DELIVERY_ROOT/.deliver/strategies"
+  if [ -d "$APP_ROOT/.deliver/strategies" ]; then
+    strategies_path="$strategies_path $APP_ROOT/.deliver/strategies"
   fi
 
   # Find all files in both the public & private strategies folders

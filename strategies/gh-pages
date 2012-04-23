@@ -15,7 +15,7 @@ run() {
 # otherwise it will default to rake generate
 #
 generate() {
-  local generate_cmd="$DELIVERY_ROOT/bin/generate"
+  local generate_cmd="$APP_ROOT/bin/generate"
   if [ -x $generate_cmd ]; then
     $generate_cmd
   else
