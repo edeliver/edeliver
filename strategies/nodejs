@@ -53,7 +53,7 @@ setup() {
     git reset --hard master $SILENCE
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
-    foreman export upstart tmp -u $APP_USER -a $APP $SILENCE
+    foreman export upstart tmp -u $APP_USER -a $APP -p $PORT $SILENCE
   "
 }
 

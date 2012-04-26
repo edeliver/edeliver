@@ -59,7 +59,7 @@ setup() {
     rvm rvmrc trust $DELIVER_TO $SILENCE
     cd $DELIVER_TO $SILENCE
     bundle install --deployment --without development test $SILENCE
-    bundle exec foreman export upstart tmp -u $APP_USER -a $APP $SILENCE
+    bundle exec foreman export upstart tmp -u $APP_USER -a $APP -p $PORT $SILENCE
   "
 }
 
