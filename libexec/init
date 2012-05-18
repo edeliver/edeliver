@@ -21,7 +21,7 @@ __available_strategies() {
 
 while (( $# ))
 do
-  local arg="$1" && shift
+  arg="$1" && shift
   case "${arg}" in
     (-C|--compact)
       MODE="compact"
