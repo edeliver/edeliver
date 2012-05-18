@@ -30,7 +30,7 @@ generate() {
   then
     $generate_cmd
   else
-    if [ -z "$ROCCO_FILES" ]
+    if [ ! -z "$ROCCO_FILES" ]
     then
       set -f # disables file globbing
       __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
