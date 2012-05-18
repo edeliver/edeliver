@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Ensure remote repository is set up correctly
+# TESTING: SSH locally and set up app, delete folder when finished
+#
+init_app_remotely() {
+  local git_remote="$(git remote -v)"
+
+  ssh $APP_USER@$SERVER "
+    set -e
+    if [ ! -d $DELIVER_TO ]; then
+      mkdir $DELIVER_TO
+      cd $DELIVER_TO
+      git init $SILENCE
+      git config receive.denyCurrentBranch ignore
+    fi
+  "
+  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
+    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
+  fi
+}

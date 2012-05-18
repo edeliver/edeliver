@@ -1,55 +1,72 @@
 require_relative './test_helper'
 
-describe 'args' do
-  describe "version" do
-    before do
-      @version_format = /v\d\.\d\.\d/
-    end
+class TestDeliverArgs < MiniTest::Unit::TestCase
+  @version_format = /v\d\.\d\.\d/
 
-    it "-v" do
-      shell("deliver -v").must_match @version_format
-    end
+  deliver(
+    :args   => "-v",
+    :output => @version_format
+  )
 
-    it "--version" do
-      shell("deliver --version").must_match @version_format
-    end
-  end
+  deliver(
+    :args   => "--version",
+    :output => @version_format
+  )
 
-  describe "help" do
-    it "-h" do
-      shell("deliver -h").must_match "USAGE"
-    end
+  deliver(
+    :args   => "-h",
+    :output => "Deliver Manual"
+  )
 
-    it "--help" do
-      shell("deliver -h").must_match "USAGE"
-    end
-  end
+  deliver(
+    :args   => "--help",
+    :output => "Deliver Manual"
+  )
 
-  describe "unknown argument" do
-    it "-s" do
-      shell("deliver -s").must_match "Unknown argument -s"
-    end
-  end
+  deliver(
+    :args   => "-0",
+    :output => "Unknown argument -0"
+  )
 
-  describe "strategies" do
-    it "-s" do
-      output = shell("deliver -s")
-      output.must_match "ruby"
-      output.must_match "gh-pages"
-      output.must_match "nodejs"
-    end
+  @strategies = "gh-pages.*nodejs.*ruby"
 
-    it "--strategies" do
-      output = shell("deliver --strategies")
-      output.must_match "ruby"
-      output.must_match "gh-pages"
-      output.must_match "nodejs"
-    end
-  end
+  deliver(
+    :args   => "strategies",
+    :output => /#{@strategies}/m
+  )
 
-  describe "specifying a strategy via args" do
-    it "returns an error if strategy does not exist" do
-      shell("deliver foobar").must_match /strategy does not exist/
-    end
-  end
+  deliver(
+    :args   => "-s foobar",
+    :output => /strategy does not exist.*#{@strategies}/m,
+    :status => 1
+  )
+
+  deliver(
+    :args   => "check",
+    :output => %r{
+      APP.+deliver.+
+      APP_ROOT.+deliver.+
+      STRATEGY.+ruby.+
+      CAN'T.DELIVER
+    }xm,
+    :status => 1
+  )
+
+  deliver(
+    :vars   => "SERVER='localhost'",
+    :args   => "check",
+    :output => %r{
+      APP.+deliver.+
+      APP_ROOT.+deliver.+
+      STRATEGY.+ruby.+
+      SERVER.+localhost.+
+      READY.TO.DELIVER
+    }xm
+  )
+
+  deliver(
+    :output => %r{
+      ssh.+\$APP_USER@\$SERVER
+    }xm
+  )
 end

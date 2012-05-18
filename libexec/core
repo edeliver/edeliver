@@ -8,38 +8,42 @@ __complain_if_interrupted() {
   trap "exit 2" 1 2 3 13 15
 }
 
-# If STRATEGY or SERVER are specified at the time of invoking, hang onto them
+# If these values are specified at the runtime, hang onto them
 # until we're ready to overwrite everything set from other sources
 #
 __capture_runtime_configs() {
   RUNTIME_STRATEGY=$STRATEGY
-  RUNTIME_SERVER=$SERVER
+  RUNTIME_SERVERS=$(echo "$SERVER $SERVERS" | tr ',' ' ')
 }
 
-# If STRATEGY or SERVER are specified at the time of invoking, overwrite
+# If STRATEGY or SERVERS are specified at the time of invoking, overwrite
 # anything that has been set from other sources
 #
 __apply_runtime_configs() {
-  if [ $RUNTIME_STRATEGY ]
+  if [ ! -z "$RUNTIME_STRATEGY" ]
   then
     STRATEGY="$RUNTIME_STRATEGY"
   fi
 
-  if [ $RUNTIME_SERVER ]
+  if [ ! -z "$RUNTIME_SERVERS" ]
   then
-    SERVER="$RUNTIME_SERVER"
-    REMOTE="$APP_USER@$RUNTIME_SERVER"
+    SERVERS="$RUNTIME_SERVERS"
   fi
 }
 
-# Loads the .deliver file
+# Loads the .deliver config file if it exists
+# This is now optional. All config values can be passed at runtime, or, even
+# better you can create a project-specific deploy (or even cap deploy) which is
+# just a function calling deliver behind the scenes. Imagine the following:
+#
+#   deploy() {
+#     APP=awesome SERVER=ruby-1 PORT=5000 deliver
+#   }
 #
 __load_app_config() {
-  if [ ! -f "$APP_CONFIG" ]
+  if [ -f "$APP_CONFIG" ]
   then
-    error "$APP_CONFIG missing"
-  else
-    . "$APP_CONFIG"
+    source "$APP_CONFIG"
   fi
 }
 
@@ -47,17 +51,102 @@ __load_app_config() {
 # sane defaults
 #
 __default_app_config() {
-  . "$BASE_PATH/libexec/app_config"
+  source "$BASE_PATH/libexec/app_config"
+}
+
+# Builds an index of all available strategies
+#
+__find_all_strategies() {
+  local strategies_path=""
+
+  # There are strategies that came with deliver itself...
+  if [ -d "$BASE_PATH/strategies" ]; then
+    strategies_path="$strategies_path $BASE_PATH/strategies"
+  fi
+  # Per-project strategies.
+  if [ -d "$APP_ROOT/.deliver/strategies" ]; then
+    strategies_path="$strategies_path $APP_ROOT/.deliver/strategies"
+  fi
+
+  STRATEGIES=$(find $strategies_path -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
+  for strategy in $STRATEGIES
+  do
+    STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
+  done
+}
+
+# Load the correct strategy
+#
+__load_strategy() {
+  for strategy in $STRATEGIES
+  do
+    [[ ! $strategy =~ $STRATEGY ]] && continue
+    source "$strategy" && strategy_loaded=true && break
+  done
+
+  if [ -z "$strategy_loaded" ]
+  then
+    error_message "\n'$STRATEGY' strategy does not exist"
+    __available_strategies
+    exit 1
+  fi
+}
+
+__check_config() {
+  if [ ! -z "$CHECK" ]
+  then
+    set -f # disables file globbing
+    local configs=("$REQUIRED_VARS $STRATEGY_VARS")
+
+    echo ""
+
+    for config in $configs
+    do
+      local config_value=$(echo $(eval echo \$$config))
+      if [ -z "$config_value" ]
+      then
+        local config_text="${txtred}"
+        local check_failed=true
+      else
+        local config_text="${txtgrn}"
+      fi
+      # http://unstableme.blogspot.co.uk/2009/07/text-alignment-with-awk-printf-function.html
+      # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
+      # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
+      # http://wiki.bash-hackers.org/commands/builtin/printf
+      printf "%-20s\t%s\n" "${config_text}$config" "$config_value${txtrst}"
+    done
+
+    if [ $(which parallel | grep -c "/") = 0 ]
+    then
+      local check_failed=true
+      echo -e "\n${txtred}Can't find GNU parallel in your \$PATH. Have you installed it?${txtrst}"
+    fi
+
+    if [ ! -z "$check_failed" ]
+    then
+      echo -e "\n${bldred}CAN'T DELIVER, WE'RE MISSING A FEW THINGS${txtrst}\n"
+    else
+      echo -e "\n${bldgrn}YOU'RE READY TO DELIVER!${txtrst}\n"
+    fi
+    set +f # enables file globbing
+
+    exit 0
+  fi
 }
 
 # Progress indicator when running commands in the background
+# http://www.theiling.de/projects/bar.html#examples
+# http://moblog.bradleyit.com/2010/02/simple-bash-progress-bar-function.html
+# http://www.catonmat.net/blog/unix-utilities-pipe-viewer/ & http://www.ivarch.com/programs/quickref/pv.shtml
+# http://fitnr.com/showing-a-bash-spinner.html
 #
 __progress() {
   local message=$1
   local style=${2:$txtwht}
   # Last process to have gone in the background (in this context),
   # is our command
-  pid=$!
+  local pid=$!
 
   echo -en "$style$message"
 
@@ -71,7 +160,7 @@ __progress() {
   # Wait until command finishes, otherwise fail
   wait $pid || fail
   # Grab the command's exit code
-  status=$?
+  local status=$?
 
   # Anything but 0 means that it failed
   if [ $status = 0 ]
@@ -86,18 +175,35 @@ __progress() {
 # or silently (in the background)
 #
 __run() {
-  if [ $VERBOSE ]
-  then
-    echo -e "$bldylw\n$2$txtrst"
-    eval $1
-  else
-    (eval $1) &
-    __progress "$2"
-  fi
+  case "${MODE}" in
+    (compact)
+      (eval $1) &
+      __progress "$2"
+    ;;
+    (verbose|debug)
+      echo -e "$bldylw\n$2$txtrst"
+      eval $1
+    ;;
+    (test)
+      #printf '%q' $(declare -f $1)
+      echo -e $(declare -f $1)
+    ;;
+  esac
 }
 
-# Used internally, to wrap commands which need $SILENCE
+# Mode aware:
+# * COMPACT - silences tasks
+# * TEST - captures all tasks, no local or remote changes
 #
 __exec() {
   eval "$1 $SILENCE"
+}
+
+# Multi-host & mode aware:
+# * TEST - captures all tasks, no remote changes
+__remote() {
+  if [ $MODE = "test" ]
+  then
+    DRY_RUN="$DRY_RUN $1"
+  fi
 }

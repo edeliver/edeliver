@@ -2,31 +2,58 @@
 
 # Pushes locally generated content to Github Pages.
 
-register_strategy 'gh-pages' "git pushes locally generated content to Github Pages"
+STRATEGY_VARS="ROCCO_FILES"
 
+# By default, we assume a rubygem structure where only lib has any code worth
+# parsing.
+if [ -z "$ROCCO_FILES" ]
+then
+  set -f # disables file globbing
+  ROCCO_FILES="./**/*.rb"
+  set +f # enables file globbing
+fi
+
+# This function must be present since deliver will call it directly
+# Everything inside it or around it are only limited by your imagination : )
+#
 run() {
-  __run 'generate' "Generating content"
-  __run 'check' "Checking repository"
-  __run 'push' "Pushing new commits"
-  __run 'cleanup' "Cleaning up"
+  __run 'generate'  "Generating rocco documentation"
+  __run 'prepare'   "Preparing gh-pages branch"
+  __run 'push'      "Pushing to remote"
+  __run 'cleanup'   "Cleaning up"
 }
 
 # If there is a local bin/generate executable, it will run it,
-# otherwise it will default to rake generate
+# otherwise it will default to the standard rocco command.
+# 
 #
 generate() {
-  local generate_cmd="$APP_ROOT/bin/generate"
-  if [ -x $generate_cmd ]; then
+  local generate_cmd="$APP_ROOT/bin/rocco"
+  if [ -x $generate_cmd ]
+  then
     $generate_cmd
   else
-    __exec "rake generate"
-  fi 
+    set -f # disables file globbing
+    __exec "bundle exec rocco -o gh-pages $ROCCO_FILES"
+    set +f # enables file globbing
+    __exec "cd gh-pages"
+    __exec "find . -type d -depth 1 | while read dir
+            do
+              mv $dir/* .
+              rm -fr $dir
+            done
+            "
+    if [ -e "$APP.html" ]
+    then
+      __exec "mv $APP.html index.html"
+    fi
+  fi
 }
 
 # Ensure that we have gh-pages branch,
 # Prep the locally generated content
 #
-check() {
+prepare() {
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
   __exec "git clean -fd"
@@ -40,7 +67,7 @@ check() {
 push() {
   git add .
   if [[ ! $(git status) =~ "nothing to commit" ]]; then
-    __exec "git commit -a -m 'Generated new content'"
+    __exec "git commit -a -m 'Re-generated rocco files"
     __exec "git push origin gh-pages"
   fi
 }

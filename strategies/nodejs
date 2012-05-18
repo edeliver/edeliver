@@ -3,8 +3,9 @@
 # Heavily inspired by the Ruby strategy.
 # It uses git push, rvm & foreman to generate upstart jobs
 
-register_strategy 'nodejs' "npm & foreman exporting nodejs services to upstart"
-
+# This function must be present since deliver will call it directly
+# Everything inside it or around it are only limited by your imagination : )
+#
 run() {
   __run 'check' "Checking repository"
   __run 'push' "Pushing new commits"

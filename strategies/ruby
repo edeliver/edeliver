@@ -5,40 +5,20 @@
 # Not the most flexible one, but it comes with good defaults
 # Use it as a starting point for your strategy
 
-register_strategy 'ruby' "rvm & foreman exporting ruby services to upstart"
+STRATEGY_VARS="APP_USER DELIVER_TO SERVER"
 
 # This function must be present since deliver will call it directly
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  __run 'check' "Checking repository"
-  __run 'push' "Pushing new commits"
+  __run 'init_app_remotely' "Checking repository"
+  #__run 'push' "Pushing new commits"
 
   # TODO
   # Stop right here if app is up-to-date
 
-  __run 'setup' "Setting up"
-  __run 'launch' "Launching"
-}
-
-# Ensure remote repository is set up correctly,
-# And that we have a local remote pointing to it
-#
-check() {
-  ssh $REMOTE "
-    set -e
-    if [ ! -d $DELIVER_TO ]; then
-      mkdir $DELIVER_TO
-      cd $DELIVER_TO
-      git init $SILENCE
-      git config receive.denyCurrentBranch ignore
-    fi
-  "
-  local git_remote="$(git remote -v)"
-  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
-    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
-    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
-  fi
+  #__run 'setup' "Setting up"
+  #__run 'launch' "Launching"
 }
 
 # Push all commits to remote repository
@@ -51,7 +31,7 @@ push() {
 # Export upstart jobs via foreman
 #
 setup() {
-  ssh $REMOTE "
+  ssh $APP_USER@$SERVER "
     set -e
     . .profile
     cd $DELIVER_TO $SILENCE
