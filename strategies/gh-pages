@@ -30,6 +30,7 @@ is_clean() {
 Either stash or commit before re-running this command.
 I don't want you to lose any uncommitted changes, will stop here.
 "
+    CLEAN_EXIT=true
   fi
 }
 

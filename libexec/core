@@ -135,6 +135,15 @@ __check_config() {
   fi
 }
 
+# Nothing bad happened, but the function is requesting a clean exit
+#
+__clean_exit() {
+  if [ ! -z "$CLEAN_EXIT" ]
+  then
+    exit 0
+  fi
+}
+
 # Progress indicator when running commands in the background
 # http://www.theiling.de/projects/bar.html#examples
 # http://moblog.bradleyit.com/2010/02/simple-bash-progress-bar-function.html
@@ -153,6 +162,7 @@ __progress() {
   # If the pid exists, the process is running; use . as status indicators
   while [ $(ps -eo pid | grep $pid) ]
   do
+    __clean_exit
     printf '.'
     sleep 0.5
   done
@@ -183,6 +193,8 @@ __run() {
     (verbose|debug)
       echo -e "$bldylw\n$2$txtrst"
       eval $1
+      __clean_exit
+      #Clean exit support for commands running under __run
     ;;
     (test)
       #printf '%q' $(declare -f $1)
