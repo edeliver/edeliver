@@ -199,11 +199,11 @@ __exec() {
   eval "$1 $SILENCE"
 }
 
-# Multi-host & mode aware:
-# * TEST - captures all tasks, no remote changes
+# Multi-host & mode aware
+#
 __remote() {
-  if [ $MODE = "test" ]
+  if [ ! $MODE = "test" ]
   then
-    DRY_RUN="$DRY_RUN $1"
+    ssh $APP_USER@$SERVER $1
   fi
 }

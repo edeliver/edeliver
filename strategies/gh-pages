@@ -13,17 +13,17 @@ fi
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  __run 'is_clean'  "Checking local repository"
+  __run 'gitstatus' "Checking local repository"
   __run 'generate'  "Generating content"
   __run 'prepare'   "Preparing gh-pages branch"
   __run 'push'      "Pushing to github:pages"
   __run 'cleanup'   "Cleaning up"
 }
 
-# If working directory isn't clean, all changes will be lost
-# We really DON'T want that
+# If working directory isn't clean, all changes will be lost if this strategy
+# runs all the way to the end. I would be very annoyed if that happened.
 #
-is_clean() {
+gitstatus() {
   if [ $(git status | grep -c "working directory clean") = 0 ]
   then
     error "\n\nYour working directory is not clean.

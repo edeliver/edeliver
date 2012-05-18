@@ -40,7 +40,8 @@ success_message() {
   echo -e "$bldgrn$@$txtrst"
 }
 
-# Start the output with an empty line. It just looks better with spacing.
+# Start each strategy's output with an empty line.
+# It just looks better with spacing.
 #
 begin() {
   echo ""
@@ -50,6 +51,6 @@ begin() {
 #
 finish() {
   echo "$bldgrn"
-  echo "$APP delivered" | tr '[:lower:]' '[:upper:]'
+  echo "$APP delivered with $STRATEGY" | tr '[:lower:]' '[:upper:]'
   echo "$txtrst"
 }

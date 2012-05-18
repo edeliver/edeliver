@@ -13,16 +13,16 @@ class MiniTest::Unit::TestCase
     }.merge(opts)
 
 
-    command = "#{options[:vars]} deliver #{options[:args]} -T".strip
+    command = "#{options[:vars]} deliver #{options[:args]} -T".strip.squeeze(' ')
 
     result = OpenStruct.new(
       :output => %x{#{command}}.chomp,
       :status => $?.exitstatus
     )
 
-    test_name = "test_#{options[:args].gsub(/[-\s]/,'')}"
+    name = options[:args].gsub(/[-\s]/,'')
 
-    define_method test_name do
+    define_method "test_#{name}" do
       puts command.cyan
       assert_match(options[:output], result.output)
       assert_equal(options[:status], result.status)

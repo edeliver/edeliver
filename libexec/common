@@ -6,7 +6,7 @@
 init_app_remotely() {
   local git_remote="$(git remote -v)"
 
-  ssh $APP_USER@$SERVER "
+  __remote "
     set -e
     if [ ! -d $DELIVER_TO ]; then
       mkdir $DELIVER_TO
@@ -15,6 +15,7 @@ init_app_remotely() {
       git config receive.denyCurrentBranch ignore
     fi
   "
+
   if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
     [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
     git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO

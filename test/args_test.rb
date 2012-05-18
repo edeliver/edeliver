@@ -63,10 +63,4 @@ class TestDeliverArgs < MiniTest::Unit::TestCase
       READY.TO.DELIVER
     }xm
   )
-
-  deliver(
-    :output => %r{
-      ssh.+\$APP_USER@\$SERVER
-    }xm
-  )
 end
