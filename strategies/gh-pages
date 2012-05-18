@@ -2,15 +2,11 @@
 
 # Pushes locally generated content to Github Pages.
 
-STRATEGY_VARS="ROCCO_FILES"
+STRATEGY_VARS="GH_PAGES_DIR"
 
-# By default, we assume a rubygem structure where only lib has any code worth
-# parsing.
-if [ -z "$ROCCO_FILES" ]
+if [ -z "$GH_PAGES_DIR" ]
 then
-  set -f # disables file globbing
-  ROCCO_FILES="./**/*.rb"
-  set +f # enables file globbing
+  GH_PAGES_DIR="gh-pages"
 fi
 
 # This function must be present since deliver will call it directly
@@ -28,24 +24,28 @@ run() {
 # 
 #
 generate() {
-  local generate_cmd="$APP_ROOT/bin/rocco"
+  local generate_cmd="$APP_ROOT/bin/generate"
+
   if [ -x $generate_cmd ]
   then
     $generate_cmd
   else
-    set -f # disables file globbing
-    __exec "bundle exec rocco -o gh-pages $ROCCO_FILES"
-    set +f # enables file globbing
-    __exec "cd gh-pages"
+    if [ -z "$ROCCO_FILES" ]
+    then
+      set -f # disables file globbing
+      __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
+      set +f # enables file globbing
+    fi
+    __exec "cd $GH_PAGES_DIR"
     __exec "find . -type d -depth 1 | while read dir
             do
               mv $dir/* .
               rm -fr $dir
             done
             "
-    if [ -e "$APP.html" ]
+    if [ -e "$APP*.html" ]
     then
-      __exec "mv $APP.html index.html"
+      __exec "mv $APP*.html index.html"
     fi
   fi
 }
@@ -57,8 +57,8 @@ prepare() {
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
   __exec "git clean -fd"
-  mv gh-pages/* .
-  rm -fr gh-pages
+  mv $GH_PAGES_DIR/* .
+  rm -fr $GH_PAGES_DIR
 }
 
 # Move all files from the generated folder into root folder,
@@ -67,7 +67,7 @@ prepare() {
 push() {
   git add .
   if [[ ! $(git status) =~ "nothing to commit" ]]; then
-    __exec "git commit -a -m 'Re-generated rocco files"
+    __exec "git commit -a -m 'Generated github:pages via deliver'"
     __exec "git push origin gh-pages"
   fi
 }

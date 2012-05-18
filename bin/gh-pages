@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+GH_PAGES_DIR="man" deliver -s gh-pages
