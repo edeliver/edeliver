@@ -13,9 +13,9 @@ fi
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  __run 'generate'  "Generating rocco documentation"
+  __run 'generate'  "Generating content"
   __run 'prepare'   "Preparing gh-pages branch"
-  __run 'push'      "Pushing to remote"
+  __run 'push'      "Pushing to github:pages"
   __run 'cleanup'   "Cleaning up"
 }
 
