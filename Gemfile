@@ -1,8 +1,11 @@
 source 'http://www.rubygems.org'
 
-gem 'colorize', '~> 0.5.8'
-gem 'guard-minitest', '~> 0.5.0'
-gem 'minitest', '~> 2.11.4'
-gem 'pry', '~> 0.9.8.4'
-gem 'rake', '~> 0.9.2.2'
-gem 'turn', '~> 0.9.4'
+group :development do
+  gem 'colorize', '~> 0.5.8'
+  gem 'guard-minitest', '~> 0.5.0'
+  gem 'minitest', '~> 3.0.0'
+  gem 'pry', '~> 0.9.8'
+  gem 'rake', '~> 0.9.2'
+  gem 'ronn', '~> 0.7.3'
+  gem 'turn', '~> 0.9.5'
+end
