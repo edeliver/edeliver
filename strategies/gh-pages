@@ -6,7 +6,7 @@ STRATEGY_VARS="GH_PAGES_DIR"
 
 if [ -z "$GH_PAGES_DIR" ]
 then
-  GH_PAGES_DIR="gh-pages"
+  export GH_PAGES_DIR="gh-pages"
 fi
 
 # This function must be present since deliver will call it directly
