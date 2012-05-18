@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+HOSTS="nginx-1,nginx-2"
+
+# http://www.gnu.org/software/parallel/man.html#example__running_the_same_command_on_remote_computers
+echo "||| PARALLEL |||"
+time parallel --tag --nonall -S $HOSTS 'df -h'
+
+echo -e "\n\n... SEQUENTIAL ..."
+time ssh nginx-1 -T 'df -h'
+time ssh nginx-2 -T 'df -h'
