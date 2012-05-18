@@ -24,11 +24,11 @@ run() {
 # 
 #
 generate() {
-  local generate_cmd="$APP_ROOT/bin/generate"
+  local ghpages_cmd="$APP_ROOT/bin/gh-pages"
 
-  if [ -x $generate_cmd ]
+  if [ -x $ghpages_cmd ]
   then
-    $generate_cmd
+    $ghpages_cmd
   else
     if [ ! -z "$ROCCO_FILES" ]
     then
