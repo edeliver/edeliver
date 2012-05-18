@@ -13,8 +13,7 @@ fi
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  __run 'is_clean'   "Checking local repository"
-  __run 'ignore_generated_content' ""
+  __run 'is_clean'  "Checking local repository"
   __run 'generate'  "Generating content"
   __run 'prepare'   "Preparing gh-pages branch"
   __run 'push'      "Pushing to github:pages"
@@ -23,6 +22,7 @@ run() {
 
 # If working directory isn't clean, all changes will be lost
 # We really DON'T want that
+#
 is_clean() {
   if [ $(git status | grep -c "working directory clean") = 0 ]
   then
@@ -32,21 +32,20 @@ is_clean() {
   fi
 }
 
-# If GH_PAGES_DIR is not ignored, it won't survive 'git clean -fd'
+# If there is a local bin/generate executable, it will run it,
+# otherwise it will default to the standard rocco command.
 #
-ignore_generated_content() {
+generate() {
+  local git_head=$(git symbolic-ref HEAD)
+  CURRENT_GIT_BRANCH=${git_head##*/}
+
+  # If GH_PAGES_DIR is not ignored, it won't survive 'git clean -fd'
   if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
   then
     echo $GH_PAGES_DIR >> .gitignore
     __exec "git commit -a -m 'Ignoring content generated for github:pages'"
   fi
-}
 
-# If there is a local bin/generate executable, it will run it,
-# otherwise it will default to the standard rocco command.
-# 
-#
-generate() {
   local ghpages_cmd="$APP_ROOT/bin/gh-pages"
 
   if [ -x $ghpages_cmd ]
@@ -91,10 +90,13 @@ push() {
   git add .
   if [[ ! $(git status) =~ "nothing to commit" ]]; then
     __exec "git commit -a -m 'Generated github:pages via deliver'"
-    __exec "git push origin gh-pages"
+    __exec "git push origin -f gh-pages"
   fi
 }
 
+# Clean up after ourselves, switch back to the initial git branch
+#
 cleanup() {
-  __exec "git checkout -f master"
+  unset GH_PAGES_DIR
+  __exec "git checkout -f $CURRENT_GIT_BRANCH"
 }
