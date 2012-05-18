@@ -13,10 +13,19 @@ fi
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
+  __run 'ignore_generated_content' ""
   __run 'generate'  "Generating content"
   __run 'prepare'   "Preparing gh-pages branch"
   __run 'push'      "Pushing to github:pages"
   __run 'cleanup'   "Cleaning up"
+}
+
+ignore_generated_content() {
+  if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
+  then
+    echo $GH_PAGES_DIR >> .gitignore
+    __exec "git commit -a -m 'Ignoring content generated for github:pages'"
+  fi
 }
 
 # If there is a local bin/generate executable, it will run it,
