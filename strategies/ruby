@@ -5,7 +5,7 @@
 # Not the most flexible one, but it comes with good defaults
 # Use it as a starting point for your strategy
 
-STRATEGY_VARS="APP_USER DELIVER_TO SERVER"
+STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 
 # This function must be present since deliver will call it directly
 # Everything inside it or around it are only limited by your imagination : )

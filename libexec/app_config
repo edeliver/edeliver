@@ -33,3 +33,7 @@ if [ -z "$REMOTE" ]
 then
   REMOTE="$APP_USER@$SERVER"
 fi
+
+# From the time when deliver was single-server
+#
+SERVERS="$SERVER $SERVERS"

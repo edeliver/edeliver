@@ -59,7 +59,7 @@ class TestDeliverArgs < MiniTest::Unit::TestCase
       APP.+deliver.+
       APP_ROOT.+deliver.+
       STRATEGY.+ruby.+
-      SERVER.+localhost.+
+      SERVERS.+[^,]localhost[^,].+
       READY.TO.DELIVER
     }xm
   )

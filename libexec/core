@@ -13,7 +13,7 @@ __complain_if_interrupted() {
 #
 __capture_runtime_configs() {
   RUNTIME_STRATEGY=$STRATEGY
-  RUNTIME_SERVERS=$(echo "$SERVER $SERVERS" | tr ',' ' ')
+  RUNTIME_SERVERS=$(echo "$SERVER $SERVERS" | tr ' ' ',')
 }
 
 # If STRATEGY or SERVERS are specified at the time of invoking, overwrite
@@ -25,7 +25,9 @@ __apply_runtime_configs() {
     STRATEGY="$RUNTIME_STRATEGY"
   fi
 
-  if [ ! -z "$RUNTIME_SERVERS" ]
+  # The tr when joining $SERVER with $SERVERS
+  # Review this
+  if [ ! "$RUNTIME_SERVERS" = ',' ]
   then
     SERVERS="$RUNTIME_SERVERS"
   fi
@@ -93,6 +95,9 @@ __load_strategy() {
 }
 
 __check_config() {
+  # Ensure these are in the correct format
+  SERVERS=$(echo $SERVERS | sed 's/^,//' | sed 's/,$//')
+
   if [ ! -z "$CHECK" ]
   then
     set -f # disables file globbing
