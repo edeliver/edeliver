@@ -101,9 +101,17 @@ __load_strategy() {
   fi
 }
 
-__check_config() {
-  # Ensure these are in the correct format
-  SERVERS=$(echo $SERVERS | sed 's/^,//' | sed 's/,$//')
+# Appends app user to all hosts so that we can log in with this user
+# on specific remote tasks. Formats all servers in a format parallel can work with.
+#
+__remote_hosts() {
+  for server in $SERVERS
+  do
+    SERVERS_APP_USER="$SERVERS_APP_USER,$APP_USER@$server"
+  done
+  SERVERS=$(__parallel_friendly $SERVERS)
+  SERVERS_APP_USER=$(__parallel_friendly $SERVERS_APP_USER)
+}
 
   if [ ! -z "$CHECK" ]
   then
