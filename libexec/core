@@ -27,14 +27,14 @@ __capture_runtime_configs() {
 # anything that has been set from other sources
 #
 __apply_runtime_configs() {
-  if [ ! -z "$RUNTIME_STRATEGY" ]
+  if [ -n "$RUNTIME_STRATEGY" ]
   then
     STRATEGY="$RUNTIME_STRATEGY"
   fi
 
   # The tr when joining $SERVER with $SERVERS
   # Review this
-  if [ ! "$RUNTIME_SERVERS" = ',' ]
+  if [ -n "${RUNTIME_SERVERS/ /}" ]
   then
     SERVERS="$RUNTIME_SERVERS"
   fi
