@@ -113,6 +113,7 @@ __remote_hosts() {
   SERVERS_APP_USER=$(__parallel_friendly $SERVERS_APP_USER)
 }
 
+__check_config() {
   if [ ! -z "$CHECK" ]
   then
     set -f # disables file globbing
