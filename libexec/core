@@ -225,6 +225,9 @@ __exec() {
 __remote() {
   if [ ! $MODE = "test" ]
   then
-    ssh $APP_USER@$SERVER $1
+    local _command=$1
+    local _hosts=${2:-"$SERVERS_APP_USER"}
+
+    parallel --tag --nonall -S $_hosts $_command
   fi
 }

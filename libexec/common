@@ -16,8 +16,8 @@ init_app_remotely() {
     fi
   "
 
-  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
-    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
-    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
-  fi
+  #if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
+    #[[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
+    #git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
+  #fi
 }
