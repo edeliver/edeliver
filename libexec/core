@@ -8,12 +8,19 @@ __complain_if_interrupted() {
   trap "exit 2" 1 2 3 13 15
 }
 
+# Ensures args (in this case hosts) are in a format that parallel understands
+# e.g. " ruby-1 ruby-2" -> "ruby-1,ruby-2"
+#
+__parallel_friendly() {
+  echo $@ | tr ' ' ',' | sed 's/^,//' | sed 's/,$//'
+}
+
 # If these values are specified at the runtime, hang onto them
 # until we're ready to overwrite everything set from other sources
 #
 __capture_runtime_configs() {
   RUNTIME_STRATEGY=$STRATEGY
-  RUNTIME_SERVERS=$(echo "$SERVER $SERVERS" | tr ' ' ',')
+  RUNTIME_SERVERS=$(__parallel_friendly "$SERVER $SERVERS")
 }
 
 # If STRATEGY or SERVERS are specified at the time of invoking, overwrite

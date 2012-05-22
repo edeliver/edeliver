@@ -36,4 +36,4 @@ fi
 
 # From the time when deliver was single-server
 #
-SERVERS="$SERVER $SERVERS"
+SERVERS=$(__parallel_friendly "$SERVER $SERVERS")
