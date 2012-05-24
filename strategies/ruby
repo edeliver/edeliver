@@ -44,7 +44,7 @@ check() {
 # Push all commits to remote repository
 #
 push() {
-  __exec "git push -f $DELIVER_REMOTE master"
+  __exec "git push -f $DELIVER_REMOTE $BRANCH"
 }
 
 # Install/update all gems via bundler
@@ -55,7 +55,7 @@ setup() {
     set -e
     . .profile
     cd $DELIVER_TO $SILENCE
-    git reset --hard master $SILENCE
+    git reset --hard $BRANCH $SILENCE
     rvm rvmrc trust $DELIVER_TO $SILENCE
     cd $DELIVER_TO $SILENCE
     bundle install --deployment --without development test $SILENCE

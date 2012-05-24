@@ -17,6 +17,13 @@ then
   DELIVER_TO="~$APP_USER/app"
 fi
 
+# Configure which branch to push remotely
+#
+if [ -z "$BRANCH" ]
+then
+  BRANCH="master"
+fi
+
 # It's no secret, Ruby is my darling, hence it's the default deliver strategy.
 #
 if [ -z "$STRATEGY" ]
