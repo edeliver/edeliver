@@ -21,7 +21,6 @@ run() {
 #
 check() {
   ssh $REMOTE "
-    set -e
     if [ ! -d $DELIVER_TO ]; then
       mkdir $DELIVER_TO
       cd $DELIVER_TO
@@ -47,7 +46,6 @@ push() {
 #
 setup() {
   ssh $REMOTE "
-    set -e
     . .profile
     cd $DELIVER_TO $SILENCE
     git reset --hard $BRANCH $SILENCE
@@ -70,7 +68,6 @@ launch() {
   # privileges to deliver an app. In retrospect, it's a bit crazy to be
   # completely honest.
   ssh $SERVER "
-    set -e
     if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
       sudo stop $APP $SILENCE
     fi
