@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "DELIVER" "1" "May 2012" "Deliver 1.0.0" "Deliver Manual"
+.TH "DELIVER" "1" "June 2012" "Deliver 1.0.0" "Deliver Manual"
 .
 .SH "NAME"
 \fBdeliver\fR \- takes your code into production
@@ -18,29 +18,7 @@
 .br
 .
 .SH "DESCRIPTION"
-Deliver is a truly distributed deployment tool with no preferences for a programming language or versioning system\. It only cares about having enough info in the shell environment to do its job\. Why add Ruby or Python wrappers when bash is the most obvious choice for the job?
-.
-.P
-Deliver has a single dependency: GNU parallel \fIhttp://www\.gnu\.org/software/parallel/man\.html#description\fR\. This is required so that remote jobs can be executed on multiple hosts in parallel\.
-.
-.SH "RUNNING MODES"
-You can set a default mode via the MODE environment variable\. The mode option will overrwrite any environment variable\. This is helpful when compact mode is enough for most people on your team, yet some more technical users want to see a more detailed output\.
-.
-.TP
-\fB\-C\fR, \fB\-\-compact\fR (or \fBMODE=compact\fR)
-\fIThis is the default mode\fR\. It will only show the description and progress of each running task, on a per\-host basis\. Both standard and error output will be silenced\.
-.
-.TP
-\fB\-V\fR, \fB\-\-verbose\fR (or \fBMODE=verbose\fR)
-Will not silence output of the running task\. Great for troubleshooting or getting feedback from all tasks\.
-.
-.TP
-\fB\-D\fR, \fB\-\-debug\fR (or \fBMODE=debug\fR)
-Runs the entire script in standard shell debug mode, shows every line of bash that gets executed along with the task output\. Well suited when writing your own strategies or customizing existing ones\.
-.
-.TP
-\fB\-T\fR, \fB\-\-test\fR (or \fBMODE=test\fR)
-Similar to a dry\-run\. Will output each command that is going to run with no local or remote changes\. If you want full visibility into the final system commands that get generated, use this mode\. You can even send the resulting commands to a file and run it, without even invoking deliver\. If you want to lock this down, add it to your repository and have everyone on your team use that when deploying\.
+Deliver is a truly distributed deployment tool with virtually no dependencies\. It only cares about having enough info in the shell environment to do its job\. Why add Ruby or Python wrappers on top of system commands when bash was built for this one task?
 .
 .SH "STRATEGIES"
 \fBdeliver strategies\fR will list all available strategies\. The default strategies make certain assumptions, but they are fully modular and customizable\.
@@ -64,5 +42,30 @@ How many times did you find yourself copying that rake task which generates and 
 .SH "CHECK"
 \fBdeliver check\fR will ensure that everything is set up correctly\. You can also use this to see your final configuration\.
 .
+.SH "RUNNING MODES"
+You can set a default mode via the MODE environment variable\. The running mode as a command option will always overwrite the MODE variable\.
+.
+.P
+For example, you can have a \fBMODE=verbose\fR in your \fB\.deliver/config\fR file, but when running deliver with the \fB\-\-debug\fR option, the MODE for that one run will be \fIverbose\fR\.
+.
+.TP
+\fB\-C\fR, \fB\-\-compact\fR (or \fBMODE=compact\fR)
+Only shows the description and progress of each running task, on a per\-host basis\. Both standard and error output will be silenced\. \fIThis is the default mode\fR
+.
+.TP
+\fB\-V\fR, \fB\-\-verbose\fR (or \fBMODE=verbose\fR)
+Will not silence output of the running task\. Great for troubleshooting or getting feedback from all tasks\.
+.
+.TP
+\fB\-D\fR, \fB\-\-debug\fR (or \fBMODE=debug\fR)
+Runs the entire script in standard shell debug mode, shows every line of bash that gets executed along with the task output\. Well suited when writing your own strategies or customizing existing ones\.
+.
+.TP
+\fB\-T\fR, \fB\-\-test\fR (or \fBMODE=test\fR)
+Similar to a dry\-run\. Will output each command that is going to run with no local or remote changes\. If you want full visibility into the final system commands that get generated, use this mode\.
+.
+.IP
+If you want tigther control over your deployment process, you can have everyone on the team using the generated commands rather than using deliver directly\.
+.
 .SH "COPYRIGHT"
-Deliver is Copyright (C) 2012 Gerhard Lazu \fIhttp://gerhardlazu\.com\fR\.
+Deliver is Copyright (C) 2012 Gerhard Lazu \fIhttp://twitter\.com/gerhardlazu\fR

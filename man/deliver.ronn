@@ -7,24 +7,48 @@ deliver(1) -- takes your code into production
 `deliver [-s strategy]` <br />
 
 ## DESCRIPTION
-Deliver is a truly distributed deployment tool with no preferences for a
-programming language or versioning system. It only cares about having enough
-info in the shell environment to do its job. Why add Ruby or Python wrappers
-when bash is the most obvious choice for the job?
+Deliver is a truly distributed deployment tool with virtually no dependencies.
+It only cares about having enough info in the shell environment to do its job.
+Why add Ruby or Python wrappers on top of system commands when bash was built
+for this one task?
 
-Deliver has a single dependency: [GNU parallel] [1]. This is required so that
-remote jobs can be executed on multiple hosts in parallel.
+## STRATEGIES
+`deliver strategies` will list all available strategies. The default strategies
+make certain assumptions, but they are fully modular and customizable.
+
+  * `ruby`:
+    [Foreman][1]-aware, uses upstart by default. Works seamlessly with
+    [rvm][2]. _This is the default strategy_
+
+  * `nodejs`:
+    Heavily inspired by the ruby strategy, also foreman-aware, defaults to
+    upstart.
+
+  * `gh-pages`:
+    How many times did you find yourself copying that rake task which generates
+    and publishes to [github:pages][3] your project's [docco][4] or [rocco][5]?
+    With deliver, just run `deliver -s gh-pages` from the app's root path.
+
+### Customizing a default strategy?
+
+### Creating a new strategy?
+
+## CHECK
+`deliver check` will ensure that everything is set up correctly. You can also
+use this to see your final configuration.
 
 ## RUNNING MODES
-You can set a default mode via the MODE environment variable. The mode option
-will overrwrite any environment variable. This is helpful when compact mode is
-enough for most people on your team, yet some more technical users want to see
-a more detailed output.
+You can set a default mode via the MODE environment variable. The running mode
+as a command option will always overwrite the MODE variable.
+
+For example, you can have a `MODE=verbose` in your `.deliver/config` file, but
+when running deliver with the `--debug` option, the MODE for that one run will
+be *verbose*.
 
   * `-C`, `--compact` (or `MODE=compact`):
-    _This is the default mode_. It will only show the description and progress of
-    each running task, on a per-host basis. Both standard and error output will be
-    silenced.
+    Only shows the description and progress of each running task, on a per-host
+    basis. Both standard and error output will be silenced. _This is the default
+    mode_
 
   * `-V`, `--verbose` (or `MODE=verbose`):
     Will not silence output of the running task. Great for troubleshooting or
@@ -38,48 +62,21 @@ a more detailed output.
   * `-T`, `--test` (or `MODE=test`):
     Similar to a dry-run. Will output each command that is going to run with no
     local or remote changes. If you want full visibility into the final system
-    commands that get generated, use this mode. You can even send the resulting
-    commands to a file and run it, without even invoking deliver.  If you want to
-    lock this down, add it to your repository and have everyone on your team use
-    that when deploying.
+    commands that get generated, use this mode.
 
-
-## STRATEGIES
-`deliver strategies` will list all available strategies. The default strategies
-make certain assumptions, but they are fully modular and customizable.
-
-  * `ruby`:
-    [Foreman][2]-aware, uses upstart by default. Works seamlessly with
-    [rvm][5]. _This is the default strategy_
-
-  * `nodejs`:
-    Heavily inspired by the ruby strategy, also foreman-aware, defaults to
-    upstart.
-
-  * `gh-pages`:
-    How many times did you find yourself copying that rake task which generates
-    and publishes to [github:pages][6] your project's [docco][3] or [rocco][4]?
-    With deliver, just run `deliver -s gh-pages` from the app's root path.
-
-### Customizing a default strategy?
-
-### Creating a new strategy?
-
-
-## CHECK
-`deliver check` will ensure that everything is set up correctly. You can also
-use this to see your final configuration.
+    If you want tigther control over your deployment process, you can have
+    everyone on the team using the generated commands rather than using deliver
+    directly.
 
 ## COPYRIGHT
-Deliver is Copyright (C) 2012 [Gerhard Lazu][7].
+Deliver is Copyright (C) 2012 [Gerhard Lazu][6]
 
-[1]: http://www.gnu.org/software/parallel/man.html#description
-[2]: https://github.com/ddollar/foreman
-[3]: https://github.com/jashkenas/docco
-[4]: https://github.com/rtomayko/rocco
-[5]: https://rvm.io/
-[6]: http://pages.github.com/
-[7]: http://gerhardlazu.com
+[1]: https://github.com/ddollar/foreman
+[2]: https://rvm.io/
+[3]: http://pages.github.com/
+[4]: https://github.com/jashkenas/docco
+[5]: https://github.com/rtomayko/rocco
+[6]: http://twitter.com/gerhardlazu
 
 <!--
 With no options, it will run in compact mode and will use the STRATEGY from

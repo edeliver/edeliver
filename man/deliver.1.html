@@ -62,9 +62,9 @@
     <a href="#NAME">NAME</a>
     <a href="#SYNOPSIS">SYNOPSIS</a>
     <a href="#DESCRIPTION">DESCRIPTION</a>
-    <a href="#RUNNING-MODES">RUNNING MODES</a>
     <a href="#STRATEGIES">STRATEGIES</a>
     <a href="#CHECK">CHECK</a>
+    <a href="#RUNNING-MODES">RUNNING MODES</a>
     <a href="#COPYRIGHT">COPYRIGHT</a>
   </div>
 
@@ -87,38 +87,10 @@
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
 
-<p>Deliver is a truly distributed deployment tool with no preferences for a
-programming language or versioning system. It only cares about having enough
-info in the shell environment to do its job. Why add Ruby or Python wrappers
-when bash is the most obvious choice for the job?</p>
-
-<p>Deliver has a single dependency: <a href="http://www.gnu.org/software/parallel/man.html#description">GNU parallel</a>. This is required so that
-remote jobs can be executed on multiple hosts in parallel.</p>
-
-<h2 id="RUNNING-MODES">RUNNING MODES</h2>
-
-<p>You can set a default mode via the MODE environment variable. The mode option
-will overrwrite any environment variable. This is helpful when compact mode is
-enough for most people on your team, yet some more technical users want to see
-a more detailed output.</p>
-
-<dl>
-<dt><code>-C</code>, <code>--compact</code> (or <code>MODE=compact</code>)</dt><dd><p><em>This is the default mode</em>. It will only show the description and progress of
-each running task, on a per-host basis. Both standard and error output will be
-silenced.</p></dd>
-<dt><code>-V</code>, <code>--verbose</code> (or <code>MODE=verbose</code>)</dt><dd><p>Will not silence output of the running task. Great for troubleshooting or
-getting feedback from all tasks.</p></dd>
-<dt><code>-D</code>, <code>--debug</code> (or <code>MODE=debug</code>)</dt><dd><p>Runs the entire script in standard shell debug mode, shows every line of
-bash that gets executed along with the task output. Well suited when writing
-your own strategies or customizing existing ones.</p></dd>
-<dt><code>-T</code>, <code>--test</code> (or <code>MODE=test</code>)</dt><dd><p>Similar to a dry-run. Will output each command that is going to run with no
-local or remote changes. If you want full visibility into the final system
-commands that get generated, use this mode. You can even send the resulting
-commands to a file and run it, without even invoking deliver.  If you want to
-lock this down, add it to your repository and have everyone on your team use
-that when deploying.</p></dd>
-</dl>
-
+<p>Deliver is a truly distributed deployment tool with virtually no dependencies.
+It only cares about having enough info in the shell environment to do its job.
+Why add Ruby or Python wrappers on top of system commands when bash was built
+for this one task?</p>
 
 <h2 id="STRATEGIES">STRATEGIES</h2>
 
@@ -145,9 +117,37 @@ With deliver, just run <code>deliver -s gh-pages</code> from the app's root path
 <p><code>deliver check</code> will ensure that everything is set up correctly. You can also
 use this to see your final configuration.</p>
 
+<h2 id="RUNNING-MODES">RUNNING MODES</h2>
+
+<p>You can set a default mode via the MODE environment variable. The running mode
+as a command option will always overwrite the MODE variable.</p>
+
+<p>For example, you can have a <code>MODE=verbose</code> in your <code>.deliver/config</code> file, but
+when running deliver with the <code>--debug</code> option, the MODE for that one run will
+be <em>verbose</em>.</p>
+
+<dl>
+<dt><code>-C</code>, <code>--compact</code> (or <code>MODE=compact</code>)</dt><dd><p>Only shows the description and progress of each running task, on a per-host
+basis. Both standard and error output will be silenced. <em>This is the default
+mode</em></p></dd>
+<dt><code>-V</code>, <code>--verbose</code> (or <code>MODE=verbose</code>)</dt><dd><p>Will not silence output of the running task. Great for troubleshooting or
+getting feedback from all tasks.</p></dd>
+<dt><code>-D</code>, <code>--debug</code> (or <code>MODE=debug</code>)</dt><dd><p>Runs the entire script in standard shell debug mode, shows every line of
+bash that gets executed along with the task output. Well suited when writing
+your own strategies or customizing existing ones.</p></dd>
+<dt><code>-T</code>, <code>--test</code> (or <code>MODE=test</code>)</dt><dd><p>Similar to a dry-run. Will output each command that is going to run with no
+local or remote changes. If you want full visibility into the final system
+commands that get generated, use this mode.</p>
+
+<p>If you want tigther control over your deployment process, you can have
+everyone on the team using the generated commands rather than using deliver
+directly.</p></dd>
+</dl>
+
+
 <h2 id="COPYRIGHT">COPYRIGHT</h2>
 
-<p>Deliver is Copyright (C) 2012 <a href="http://gerhardlazu.com">Gerhard Lazu</a>.</p>
+<p>Deliver is Copyright (C) 2012 <a href="http://twitter.com/gerhardlazu">Gerhard Lazu</a></p>
 
 <!--
 With no options, it will run in compact mode and will use the STRATEGY from
@@ -191,7 +191,7 @@ configured correctly:
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>Deliver 1.0.0</li>
-    <li class='tc'>May 2012</li>
+    <li class='tc'>June 2012</li>
     <li class='tr'>deliver(1)</li>
   </ol>
 
