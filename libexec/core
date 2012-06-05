@@ -8,11 +8,11 @@ __complain_if_interrupted() {
   trap "exit 2" 1 2 3 13 15
 }
 
-# Ensures args (in this case hosts) are in a format that parallel understands
-# e.g. " ruby-1 ruby-2" -> "ruby-1,ruby-2"
+# Ensures args (in this case hosts) are space separated so that we can easily loop over them
+# e.g. " ruby-1,ruby-2 " -> "ruby-1 ruby-2"
 #
-__parallel_friendly() {
-  echo $@ | tr ' ' ',' | sed 's/^,//' | sed 's/,$//'
+__remote_friendly() {
+  echo $@ | tr ',' ' ' | sed 's/^ //' | sed 's/ $//'
 }
 
 # If these values are specified at the runtime, hang onto them
@@ -20,7 +20,7 @@ __parallel_friendly() {
 #
 __capture_runtime_configs() {
   RUNTIME_STRATEGY=$STRATEGY
-  RUNTIME_SERVERS=$(__parallel_friendly "$SERVER $SERVERS")
+  RUNTIME_SERVERS=$(__remote_friendly "$SERVER $SERVERS")
 }
 
 # If STRATEGY or SERVERS are specified at the time of invoking, overwrite
@@ -32,9 +32,7 @@ __apply_runtime_configs() {
     STRATEGY="$RUNTIME_STRATEGY"
   fi
 
-  # The tr when joining $SERVER with $SERVERS
-  # Review this
-  if [ -n "${RUNTIME_SERVERS/ /}" ]
+  if [ -n "$RUNTIME_SERVERS" ]
   then
     SERVERS="$RUNTIME_SERVERS"
   fi
@@ -109,8 +107,8 @@ __remote_hosts() {
   do
     SERVERS_APP_USER="$SERVERS_APP_USER,$APP_USER@$server"
   done
-  SERVERS=$(__parallel_friendly $SERVERS)
-  SERVERS_APP_USER=$(__parallel_friendly $SERVERS_APP_USER)
+  SERVERS=$(__remote_friendly $SERVERS)
+  SERVERS_APP_USER=$(__remote_friendly $SERVERS_APP_USER)
 }
 
 __check_config() {
@@ -137,12 +135,6 @@ __check_config() {
       # http://wiki.bash-hackers.org/commands/builtin/printf
       printf "%-20s\t%s\n" "${config_text}$config" "$config_value${txtrst}"
     done
-
-    if [ $(which parallel | grep -c "/") = 0 ]
-    then
-      local check_failed=true
-      echo -e "\n${txtred}Can't find GNU parallel in your \$PATH. Have you installed it?${txtrst}"
-    fi
 
     if [ ! -z "$check_failed" ]
     then
@@ -220,14 +212,35 @@ __exec() {
   eval "$1 $SILENCE"
 }
 
+# Checks if a remote command has exited with a non-zero status
+#
+__remote_failed() {
+  local _status="$1"
+  if [ ! "$_status" = 0 ]
+  then
+    error "FAILED!\n$remote_command"
+  fi
+}
+
 # Multi-host & mode aware
 #
 __remote() {
-  if [ ! $MODE = "test" ]
+  if [ ! "$MODE" = "test" ]
   then
-    local _command=$1
-    local _hosts=${2:-"$SERVERS_APP_USER"}
+    remote_command="$1"
+    local _hosts="${2:-"$SERVERS_APP_USER"}"
+    local _remote_pids=()
 
-    parallel --tag --nonall -S $_hosts $_command
+    for _host in $_hosts
+    do
+      ssh -o ConnectTimeout=2 "$_host" "$remote_command $SILENCE" &
+      _remote_pids+=("$!")
+    done
+
+    for _pid in "${_remote_pids[@]}"
+    do
+      wait "$_pid"
+      __remote_failed "$?"
+    done
   fi
 }
