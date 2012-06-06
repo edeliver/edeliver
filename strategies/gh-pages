@@ -37,7 +37,7 @@ gitstatus() {
 #
 generate() {
   local git_head=$(git symbolic-ref HEAD)
-  CURRENT_GIT_BRANCH=${git_head##*/}
+  echo "${git_head##*/}" > /tmp/current_git_branch
 
   # If GH_PAGES_DIR is not ignored, it won't survive 'git clean -fd'
   if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
@@ -98,5 +98,6 @@ push() {
 #
 cleanup() {
   unset GH_PAGES_DIR
-  __exec "git checkout -f $CURRENT_GIT_BRANCH"
+  __exec "git checkout -f $(cat /tmp/current_git_branch)"
+  rm /tmp/current_git_branch
 }
