@@ -199,7 +199,9 @@ __run() {
     ;;
     (test)
       #printf '%q' $(declare -f $1)
+      IFS='%'
       echo -e $(declare -f $1)
+      unset IFS
     ;;
   esac
 }
