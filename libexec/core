@@ -180,7 +180,7 @@ __progress() {
   then
     success
   else
-    fail
+    error "FAILED. Re-run in verbose or debug mode."
   fi
 }
 
