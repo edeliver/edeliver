@@ -6,6 +6,15 @@
 init_app_remotely() {
   local git_remote="$(git remote -v)"
 
+  for _host in $SERVERS_APP_USER
+  do
+    local _remote_url="$_host:$DELIVER_TO"
+    if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
+      [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
+      git remote add "$_host" "$_remote_url"
+    fi
+  done
+
   __remote "
     set -e
     if [ ! -d $DELIVER_TO ]; then
@@ -15,9 +24,87 @@ init_app_remotely() {
       git config receive.denyCurrentBranch ignore
     fi
   "
+}
 
-  #if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
-    #[[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
-    #git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
-  #fi
+# Push all commits to all hosts
+#
+git_push() {
+  background_task_pids=()
+  background_tasks=()
+
+  for _host in $SERVERS_APP_USER
+  do
+    git push -f $_host $BRANCH &
+    background_task_pids+=("$!")
+    background_tasks+=("git push -f $_host $BRANCH")
+  done
+
+  __monitor_background_tasks
+}
+
+git_reset_remote() {
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git reset --hard $BRANCH $SILENCE
+  "
+}
+
+git_submodules() {
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git submodule init $SILENCE
+    git submodule update $SILENCE
+  "
+}
+
+rvmrc_trust() {
+  __remote "
+    set -e
+    . .profile
+    rvm rvmrc trust $DELIVER_TO $SILENCE
+  "
+}
+
+
+bundle_install() {
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    bundle install --local --deployment --without development test $SILENCE
+  "
+}
+
+foreman_export() {
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    bundle exec foreman export upstart tmp -u $APP_USER -a $APP $SILENCE
+  "
+}
+
+# Start the app via upstart
+#
+upstart() {
+  # This is a bit of a gotcha, so give it a few seconds.  All other commands
+  # are run via $REMOTE, which uses the username under which the app runs. This
+  # last command, because of the sudo dependency, will use your local $USER.
+  # You should be able to log in with $USER to the remote server, and you
+  # should be able to run sudo without needing a password.
+  #
+  # I will be tackling this shortly, your really shouldn't neeed sudo
+  # privileges to deliver an app. In retrospect, it's a bit crazy to be
+  # completely honest.
+  __remote "
+    set -e
+    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
+      sudo stop $APP $SILENCE
+    fi
+    sudo rm -f /etc/init/$APP*
+    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
+    sudo start $APP $SILENCE
+  " "$SERVERS"
 }

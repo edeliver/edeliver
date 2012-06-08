@@ -10,8 +10,11 @@ APP_ROOT=$(pwd)
 APP=$(basename $APP_ROOT)
 APP_CONFIG="$APP_ROOT/.deliver/config"
 
+BRANCH="master"
 GIT_REMOTE="deliver"
 DELIVER_REMOTE=$GIT_REMOTE # legacy
+
+SSH_TIMEOUT=3
 
 REQUIRED_VARS="APP APP_ROOT STRATEGY"
 

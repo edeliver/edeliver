@@ -12,56 +12,15 @@ STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 #
 run() {
   __run 'init_app_remotely' "Checking repository"
-  #__run 'push' "Pushing new commits"
+  __run 'git_push' "Pushing new commits"
 
   # TODO
   # Stop right here if app is up-to-date
 
-  #__run 'setup' "Setting up"
-  #__run 'launch' "Launching"
-}
-
-# Push all commits to remote repository
-#
-push() {
-  __exec "git push -f $DELIVER_REMOTE master"
-}
-
-# Install/update all gems via bundler
-# Export upstart jobs via foreman
-#
-setup() {
-  ssh $APP_USER@$SERVER "
-    set -e
-    . .profile
-    cd $DELIVER_TO $SILENCE
-    git reset --hard master $SILENCE
-    rvm rvmrc trust $DELIVER_TO $SILENCE
-    cd $DELIVER_TO $SILENCE
-    bundle install --deployment --without development test $SILENCE
-    bundle exec foreman export upstart tmp -u $APP_USER -a $APP $SILENCE
-  "
-}
-
-# Start the app via upstart
-#
-launch() {
-  # This is a bit of a gotcha, so give it a few seconds.  All other commands
-  # are run via $REMOTE, which uses the username under which the app runs. This
-  # last command, because of the sudo dependency, will use your local $USER.
-  # You should be able to log in with $USER to the remote server, and you
-  # should be able to run sudo without needing a password.
-  #
-  # I will be tackling this shortly, your really shouldn't neeed sudo
-  # privileges to deliver an app. In retrospect, it's a bit crazy to be
-  # completely honest.
-  ssh $SERVER "
-    set -e
-    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
-      sudo stop $APP $SILENCE
-    fi
-    sudo rm -f /etc/init/$APP*
-    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
-    sudo start $APP $SILENCE
-  "
+  __run 'git_reset_remote' "Resetting remote HEAD"
+  __run 'git_submodules' "Setting up submodules"
+  __run 'rvmrc_trust' "Trusting rvmrc"
+  __run 'bundle_install' "Installing gems"
+  __run 'foreman_export' "Installing gems"
+  __run 'upstart' "Launching"
 }

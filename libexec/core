@@ -214,35 +214,40 @@ __exec() {
   eval "$1 $SILENCE"
 }
 
-# Checks if a remote command has exited with a non-zero status
+# Waits until all background tasks finish successfully
+# If any of them fail, the entire script fails
 #
-__remote_failed() {
-  local _status="$1"
-  if [ ! "$_status" = 0 ]
-  then
-    error "FAILED!\n$remote_command"
-  fi
+__monitor_background_tasks() {
+  for (( i = 0 ; i < "${#background_tasks_pids[@]}" ; i++ ))
+  do
+    wait "${background_tasks_pids[$i]}"
+    if [[ $? != 0 ]]
+    then
+      error "\nFAILED:\n${background_tasks[$i]}"
+    fi
+  done
+
+  unset background_tasks_pids
+  unset background_tasks
 }
 
 # Multi-host & mode aware
 #
 __remote() {
-  if [ ! "$MODE" = "test" ]
+  if [[ $MODE != "test" ]]
   then
-    remote_command="$1"
+    local _remote_task="$1"
     local _hosts="${2:-"$SERVERS_APP_USER"}"
-    local _remote_pids=()
+    background_tasks_pids=()
+    background_tasks=()
 
     for _host in $_hosts
     do
-      ssh -o ConnectTimeout=2 "$_host" "$remote_command $SILENCE" &
-      _remote_pids+=("$!")
+      ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_task $SILENCE" &
+      background_tasks_pids+=("$!")
+      background_tasks+=("ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_task $SILENCE")
     done
 
-    for _pid in "${_remote_pids[@]}"
-    do
-      wait "$_pid"
-      __remote_failed "$?"
-    done
+    __monitor_background_tasks
   fi
 }
