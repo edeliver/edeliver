@@ -12,15 +12,15 @@ __complain_if_interrupted() {
 # e.g. " ruby-1,ruby-2 " -> "ruby-1 ruby-2"
 #
 __remote_friendly() {
-  echo $@ | tr ',' ' ' | sed 's/^ //' | sed 's/ $//'
+  echo "$@" | tr ',' ' ' | sed 's/^ //' | sed 's/ $//'
 }
 
 # If these values are specified at the runtime, hang onto them
 # until we're ready to overwrite everything set from other sources
 #
 __capture_runtime_configs() {
-  RUNTIME_STRATEGY=$STRATEGY
-  RUNTIME_SERVERS=$(__remote_friendly "$SERVER $SERVERS")
+  RUNTIME_STRATEGY="$STRATEGY"
+  RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS")"
 }
 
 # If STRATEGY or SERVERS are specified at the time of invoking, overwrite
@@ -64,18 +64,18 @@ __default_app_config() {
 # Builds an index of all available strategies
 #
 __find_all_strategies() {
-  local strategies_path=""
+  local strategies_path=()
 
-  # There are strategies that came with deliver itself...
+  # There are strategies that came with deliver itself
   if [ -d "$BASE_PATH/strategies" ]; then
-    strategies_path="$strategies_path $BASE_PATH/strategies"
+    strategies_path+=("$BASE_PATH/strategies")
   fi
-  # Per-project strategies.
+  # Per-project strategies
   if [ -d "$APP_ROOT/.deliver/strategies" ]; then
-    strategies_path="$strategies_path $APP_ROOT/.deliver/strategies"
+    strategies_path+=("$APP_ROOT/.deliver/strategies")
   fi
 
-  STRATEGIES=$(find $strategies_path -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
+  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
   for strategy in $STRATEGIES
   do
     STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
@@ -107,8 +107,8 @@ __remote_hosts() {
   do
     SERVERS_APP_USER="$SERVERS_APP_USER,$APP_USER@$server"
   done
-  SERVERS=$(__remote_friendly $SERVERS)
-  SERVERS_APP_USER=$(__remote_friendly $SERVERS_APP_USER)
+  SERVERS="$(__remote_friendly $SERVERS)"
+  SERVERS_APP_USER="$(__remote_friendly $SERVERS_APP_USER)"
 }
 
 __check_config() {
@@ -121,7 +121,7 @@ __check_config() {
 
     for config in $configs
     do
-      local config_value=$(echo $(eval echo \$$config))
+      local config_value="$(echo $(eval echo \$$config))"
       if [ -z "$config_value" ]
       then
         local config_text="${txtred}"
@@ -155,28 +155,28 @@ __check_config() {
 # http://fitnr.com/showing-a-bash-spinner.html
 #
 __progress() {
-  local message=$1
-  local style=${2:$txtwht}
+  local message="$1"
+  local style="${2:"$txtwht"}"
   # Last process to have gone in the background (in this context),
   # is our command
-  local pid=$!
+  local _pid="$!"
 
   echo -en "$style$message"
 
   # If the pid exists, the process is running; use . as status indicators
-  while [ $(ps -eo pid | grep $pid) ]
+  while [[ $(ps -eo pid | grep "$_pid") ]]
   do
     printf '.'
     sleep 0.5
   done
 
   # Wait until command finishes, otherwise fail
-  wait $pid #|| fail
+  wait "$_pid" #|| fail
   # Grab the command's exit code
-  local status=$?
+  local _status="$?"
 
   # Anything but 0 means that it failed
-  if [ $status = 0 ]
+  if [[ $status = 0 ]]
   then
     success
   else
@@ -190,17 +190,17 @@ __progress() {
 __run() {
   case "${MODE}" in
     (compact)
-      (eval $1) &
+      ( "$1" ) &
       __progress "$2"
     ;;
     (verbose|debug)
       echo -e "$bldylw\n$2$txtrst"
-      eval $1
+      eval "$1"
     ;;
     (test)
       #printf '%q' $(declare -f $1)
       IFS='%'
-      echo -e $(declare -f $1)
+      echo -e $(declare -f "$1")
       unset IFS
     ;;
   esac
@@ -218,10 +218,10 @@ __exec() {
 # If any of them fail, the entire script fails
 #
 __monitor_background_tasks() {
-  for (( i = 0 ; i < "${#background_tasks_pids[@]}" ; i++ ))
+  for (( i = 0 ; i < ${#background_tasks_pids[@]} ; i++ ))
   do
-    wait "${background_tasks_pids[$i]}"
-    if [[ $? != 0 ]]
+    wait ${background_tasks_pids[$i]}
+    if [[ "$?" != 0 ]]
     then
       error "\nFAILED:\n${background_tasks[$i]}"
     fi
@@ -231,9 +231,40 @@ __monitor_background_tasks() {
   unset background_tasks
 }
 
+# Runs commands in parallel, as background tasks
+#
+__parallelize() {
+  local _task="$1"
+  local _hosts="${2:-"$SERVERS_APP_USER"}"
+
+  background_task_pids=()
+  background_tasks=()
+
+  for _host in $_hosts
+  do
+    local _logged_task="$(eval echo $_task)"
+    if [[ $MODE = "verbose" ]]
+    then
+      echo "$_logged_task"
+    fi
+
+    ( eval "$_task" ) &
+    # WON'T WORK because it captures eval's pid, not the task's pid
+    # Ideally, I want to stay away from eval
+    background_task_pids+=("$!")
+    background_tasks+=("$_logged_task")
+  done
+
+  __monitor_background_tasks
+}
+
 # Multi-host & mode aware
 #
 __remote() {
+  local _remote_task="$1"
+
+  #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_task\""
+
   if [[ $MODE != "test" ]]
   then
     local _remote_task="$1"

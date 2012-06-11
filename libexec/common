@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Ensure remote repository is set up correctly
-# TESTING: SSH locally and set up app, delete folder when finished
-#
 init_app_remotely() {
   local git_remote="$(git remote -v)"
 
@@ -17,7 +14,8 @@ init_app_remotely() {
 
   __remote "
     set -e
-    if [ ! -d $DELIVER_TO ]; then
+    if [ ! -d $DELIVER_TO ]
+    then
       mkdir $DELIVER_TO
       cd $DELIVER_TO
       git init $SILENCE
@@ -26,17 +24,23 @@ init_app_remotely() {
   "
 }
 
-# Push all commits to all hosts
-#
 git_push() {
+  local _hosts="${2:-"$SERVERS_APP_USER"}"
+
   background_task_pids=()
   background_tasks=()
 
-  for _host in $SERVERS_APP_USER
+  for _host in $_hosts
   do
-    git push -f $_host $BRANCH &
+    local _task="git push -f $_host $BRANCH $SILENCE"
+    if [[ $MODE = "verbose" ]]
+    then
+      echo "$_task"
+    fi
+
+    ( $_task ) &
     background_task_pids+=("$!")
-    background_tasks+=("git push -f $_host $BRANCH")
+    background_tasks+=("$_task")
   done
 
   __monitor_background_tasks
@@ -86,18 +90,13 @@ foreman_export() {
   "
 }
 
-# Start the app via upstart
-#
 upstart() {
-  # This is a bit of a gotcha, so give it a few seconds.  All other commands
-  # are run via $REMOTE, which uses the username under which the app runs. This
-  # last command, because of the sudo dependency, will use your local $USER.
-  # You should be able to log in with $USER to the remote server, and you
+  # This command, because of the sudo dependency, will use your local $USER.
+  # You should be able to log in with $USER to the remote servers, and you
   # should be able to run sudo without needing a password.
   #
   # I will be tackling this shortly, your really shouldn't neeed sudo
-  # privileges to deliver an app. In retrospect, it's a bit crazy to be
-  # completely honest.
+  # privileges to deliver an app. What was I thinking?!?
   __remote "
     set -e
     if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then

@@ -11,16 +11,25 @@ STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  __run 'init_app_remotely' "Checking repository"
-  __run 'git_push' "Pushing new commits"
+  init_app_remotely &&
+  git_push &&
+  git_reset_remote &&
+  git_submodules &&
+  rvmrc_trust &&
+  bundle_install &&
+  foreman_export &&
+  upstart
+
+  #__run 'init_app_remotely' "Checking repository"
+  #__run 'git_push' "Pushing new commits"
 
   # TODO
   # Stop right here if app is up-to-date
 
-  __run 'git_reset_remote' "Resetting remote HEAD"
-  __run 'git_submodules' "Setting up submodules"
-  __run 'rvmrc_trust' "Trusting rvmrc"
-  __run 'bundle_install' "Installing gems"
-  __run 'foreman_export' "Installing gems"
-  __run 'upstart' "Launching"
+  #__run 'git_reset_remote' "Resetting remote HEAD"
+  #__run 'git_submodules' "Setting up submodules"
+  #__run 'rvmrc_trust' "Trusting rvmrc"
+  #__run 'bundle_install' "Installing gems"
+  #__run 'foreman_export' "Installing gems"
+  #__run 'upstart' "Launching"
 }
