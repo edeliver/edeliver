@@ -79,6 +79,15 @@ bundle_install() {
   "
 }
 
+npm_install() {
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    npm install $SILENCE
+  "
+}
+
 foreman_export() {
   local _foreman="bundle exec foreman export upstart tmp --user $APP_USER --app $APP"
   test -n "$PORT" && _foreman="$_foreman --port $PORT"
