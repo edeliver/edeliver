@@ -80,8 +80,9 @@ bundle_install() {
 }
 
 foreman_export() {
-  local _foreman="bundle exec foreman export upstart tmp -u $APP_USER -a $APP"
-  test -n "$PORT" && _foreman="$_foreman -p $PORT"
+  local _foreman="bundle exec foreman export upstart tmp --user $APP_USER --app $APP"
+  test -n "$PORT" && _foreman="$_foreman --port $PORT"
+  test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
 
   __remote "
     set -e
