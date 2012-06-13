@@ -27,21 +27,21 @@ init_app_remotely() {
 git_push() {
   local _hosts="${2:-"$SERVERS_APP_USER"}"
 
-  background_tasks_pids=()
-  background_tasks=()
+  background_jobs_pids=()
+  background_jobs=()
 
   for _host in $_hosts
   do
-    local _background_task="git push -f $_host $BRANCH $SILENCE"
-    __log "BACKGROUND TASK: $_background_task"
-    ( eval "$_background_task" ) &
-    background_tasks_pids+=("$!")
-    background_tasks+=("$_background_task")
+    local _background_job="git push -f $_host $BRANCH $SILENCE"
+    __log "JOB: $_background_job"
+    ( eval "$_background_job" ) &
+    background_jobs_pids+=("$!")
+    background_jobs+=("$_background_job")
   done
 
-  __log "GIT PUSH PIDS: ${background_tasks_pids[@]}"
+  #__log "GIT PUSH PIDS: ${background_jobs_pids[@]}"
 
-  __monitor_background_tasks
+  __monitor_background_jobs
 }
 
 git_reset_remote() {
@@ -80,11 +80,14 @@ bundle_install() {
 }
 
 foreman_export() {
+  local _foreman="bundle exec foreman export upstart tmp -u $APP_USER -a $APP"
+  test -n "$PORT" && _foreman="$_foreman -p $PORT"
+
   __remote "
     set -e
     . .profile
     cd $DELIVER_TO $SILENCE
-    bundle exec foreman export upstart tmp -u $APP_USER -a $APP $SILENCE
+    $_foreman $SILENCE
   "
 }
 

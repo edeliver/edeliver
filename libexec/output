@@ -51,7 +51,7 @@ upcase() {
 #
 begin() {
   local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
-  __status "$_message"
+  echo "$_message"
   __log "$_message"
 }
 
@@ -59,7 +59,7 @@ begin() {
 #
 finish() {
   local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
-  __status "$_message"
+  echo "$_message"
   __log "$_message"
   __log "==========================================================="
   echo "" >> $log_file

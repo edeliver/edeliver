@@ -100,7 +100,7 @@ __load_strategy() {
 }
 
 # Appends app user to all hosts so that we can log in with this user
-# on specific remote tasks. Formats all servers in a format parallel can work with.
+# on specific remote jobs. Formats all servers in a format parallel can work with.
 #
 __remote_hosts() {
   for server in $SERVERS
@@ -207,86 +207,85 @@ __run() {
 }
 
 # Mode aware:
-# * COMPACT - silences tasks
-# * TEST - captures all tasks, no local or remote changes
+# * COMPACT - silences jobs
+# * TEST - captures all jobs, no local or remote changes
 #
 __exec() {
   eval "$1 $SILENCE"
 }
 
-# Waits until all background tasks finish successfully
+# Waits until all background jobs finish successfully
 # If any of them fail, the entire script fails
 #
-__monitor_background_tasks() {
-  for (( i = 0 ; i < ${#background_tasks_pids[@]} ; i++ ))
+__monitor_background_jobs() {
+  for (( i = 0 ; i < ${#background_jobs_pids[@]} ; i++ ))
   do
-    wait ${background_tasks_pids[$i]}
+    wait ${background_jobs_pids[$i]}
     if [[ "$?" != 0 ]]
     then
-      error "\nFAILED:\n${background_tasks[$i]}"
+      error "\nFAILED:\n${background_jobs[$i]}"
     fi
   done
 
-  unset background_tasks_pids
-  unset background_tasks
+  unset background_jobs_pids
+  unset background_jobs
 }
 
-# Runs commands in parallel, as background tasks
+# Runs commands in parallel, as background jobs
 #
 __parallelize() {
-  local _task="$1"
+  local _job="$1"
   local _hosts="${2:-"$SERVERS_APP_USER"}"
 
-  background_task_pids=()
-  background_tasks=()
+  background_job_pids=()
+  background_jobs=()
 
   for _host in $_hosts
   do
-    local _logged_task="$(eval echo $_task)"
+    local _logged_job="$(eval echo $_job)"
     if [[ $MODE = "verbose" ]]
     then
-      echo "$_logged_task"
+      echo "$_logged_job"
     fi
 
-    ( eval "$_task" ) &
-    # WON'T WORK because it captures eval's pid, not the task's pid
+    ( eval "$_job" ) &
+    # WON'T WORK because it captures eval's pid, not the job's pid
     # Ideally, I want to stay away from eval
-    background_task_pids+=("$!")
-    background_tasks+=("$_logged_task")
+    background_job_pids+=("$!")
+    background_jobs+=("$_logged_job")
   done
 
-  __monitor_background_tasks
+  __monitor_background_jobs
 }
 
 # Multi-host & mode aware
 #
 __remote() {
-  local _remote_task="$1"
+  local _remote_job="$1"
 
-  #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_task\""
+  #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_job\""
 
   if [[ $MODE != "test" ]]
   then
-    local _remote_task="$1"
+    local _remote_job="$1"
     local _hosts="${2:-"$SERVERS_APP_USER"}"
-    background_tasks_pids=()
-    background_tasks=()
+    background_jobs_pids=()
+    background_jobs=()
 
-    __log "HOSTS: $_hosts"
-    __log "REMOTE TASK: $_remote_task"
+    __log "${_hosts} : $_remote_job"
 
     for _host in $_hosts
     do
-      ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_task $SILENCE" &
-      background_tasks_pids+=("$!")
-      local _background_task="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_task $SILENCE"
-      #__log "BACKGROUND TASK: $_background_task"
-      background_tasks+=($_background_task)
+      ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+      background_jobs_pids+=("$!")
+      local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
+      #__log "BACKGROUND JOB: $_background_job"
+      background_jobs+=($_background_job)
     done
 
-    #__log "REMOTE PIDS: ${background_tasks_pids[@]}"
+    #__log "REMOTE PIDS: ${background_jobs_pids[@]}"
 
-    __monitor_background_tasks
+    __monitor_background_jobs
   fi
 }
 
@@ -297,13 +296,4 @@ __log() {
   local _line="$(date) ::: $@"
 
   echo "$_line" >> $log_file
-}
-
-# Displays the current status of the utility if running in compact mode
-#
-__status() {
-  if [[ $MODE = "compact" ]]
-  then
-    echo "$@"
-  fi
 }
