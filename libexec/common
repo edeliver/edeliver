@@ -27,21 +27,19 @@ init_app_remotely() {
 git_push() {
   local _hosts="${2:-"$SERVERS_APP_USER"}"
 
-  background_task_pids=()
+  background_tasks_pids=()
   background_tasks=()
 
   for _host in $_hosts
   do
-    local _task="git push -f $_host $BRANCH $SILENCE"
-    if [[ $MODE = "verbose" ]]
-    then
-      echo "$_task"
-    fi
-
-    ( $_task ) &
-    background_task_pids+=("$!")
-    background_tasks+=("$_task")
+    local _background_task="git push -f $_host $BRANCH $SILENCE"
+    __log "BACKGROUND TASK: $_background_task"
+    ( eval "$_background_task" ) &
+    background_tasks_pids+=("$!")
+    background_tasks+=("$_background_task")
   done
+
+  __log "GIT PUSH PIDS: ${background_tasks_pids[@]}"
 
   __monitor_background_tasks
 }

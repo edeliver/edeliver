@@ -40,17 +40,27 @@ success_message() {
   echo -e "$bldgrn$@$txtrst"
 }
 
+# Converts all letters to uppercase
+#
+upcase() {
+  echo "$@" | tr '[:lower:]' '[:upper:]'
+}
+
 # Start each strategy's output with an empty line.
 # It just looks better with spacing.
 #
 begin() {
-  echo ""
+  local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
+  __status "$_message"
+  __log "$_message"
 }
 
 # If we reach this step, delivery was successfull
 #
 finish() {
-  echo "$bldgrn"
-  echo "$APP delivered with $STRATEGY" | tr '[:lower:]' '[:upper:]'
-  echo "$txtrst"
+  local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
+  __status "$_message"
+  __log "$_message"
+  __log "==========================================================="
+  echo "" >> $log_file
 }

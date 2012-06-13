@@ -272,13 +272,38 @@ __remote() {
     background_tasks_pids=()
     background_tasks=()
 
+    __log "HOSTS: $_hosts"
+    __log "REMOTE TASK: $_remote_task"
+
     for _host in $_hosts
     do
       ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_task $SILENCE" &
       background_tasks_pids+=("$!")
-      background_tasks+=("ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_task $SILENCE")
+      local _background_task="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_task $SILENCE"
+      #__log "BACKGROUND TASK: $_background_task"
+      background_tasks+=($_background_task)
     done
 
+    #__log "REMOTE PIDS: ${background_tasks_pids[@]}"
+
     __monitor_background_tasks
+  fi
+}
+
+# Logs all events (including formatting styles) so that people can tail,
+# inspect and use for general debugging.
+#
+__log() {
+  local _line="$(date) ::: $@"
+
+  echo "$_line" >> $log_file
+}
+
+# Displays the current status of the utility if running in compact mode
+#
+__status() {
+  if [[ $MODE = "compact" ]]
+  then
+    echo "$@"
   fi
 }
