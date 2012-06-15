@@ -51,6 +51,12 @@ upcase() {
 #
 begin() {
   local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
+  echo -e "\n$_message\n"
+  __log "$_message"
+}
+
+status() {
+  local _message="${txtylw}----->${txtrst} ${bldwht}$1${txtrst}"
   echo "$_message"
   __log "$_message"
 }

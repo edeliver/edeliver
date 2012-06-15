@@ -3,6 +3,8 @@
 init_app_remotely() {
   local git_remote="$(git remote -v)"
 
+  status "Ensuring remote is ready to accept git pushes"
+
   for _host in $SERVERS_APP_USER
   do
     local _remote_url="$_host:$DELIVER_TO"
@@ -27,6 +29,8 @@ init_app_remotely() {
 git_push() {
   local _hosts="${2:-"$SERVERS_APP_USER"}"
 
+  status "Pushing new commits with git to: $_hosts"
+
   background_jobs_pids=()
   background_jobs=()
 
@@ -45,6 +49,7 @@ git_push() {
 }
 
 git_reset_remote() {
+  status "Resetting remote to $BRANCH branch"
   __remote "
     set -e
     cd $DELIVER_TO $SILENCE
@@ -53,6 +58,7 @@ git_reset_remote() {
 }
 
 git_submodules() {
+  status "Updating all git submodules"
   __remote "
     set -e
     cd $DELIVER_TO $SILENCE
@@ -62,6 +68,7 @@ git_submodules() {
 }
 
 rvmrc_trust() {
+  status "Trusting rvmrc in $DELIVER_TO"
   __remote "
     set -e
     . .profile
@@ -71,6 +78,7 @@ rvmrc_trust() {
 
 
 bundle_install() {
+  status "Installing gems with bundler"
   __remote "
     set -e
     . .profile
@@ -80,6 +88,7 @@ bundle_install() {
 }
 
 npm_install() {
+  status "Installing modules with npm"
   __remote "
     set -e
     . .profile
@@ -89,7 +98,8 @@ npm_install() {
 }
 
 foreman_export() {
-  local _foreman="bundle exec foreman export upstart tmp --user $APP_USER --app $APP"
+  status "Exporting services to $SUPERVISOR"
+  local _foreman="foreman export $SUPERVISOR tmp --user $APP_USER --app $APP"
   test -n "$PORT" && _foreman="$_foreman --port $PORT"
   test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
 
@@ -102,11 +112,12 @@ foreman_export() {
 }
 
 upstart() {
+  status "Launching app with $SUPERVISOR"
   # This command, because of the sudo dependency, will use your local $USER.
   # You should be able to log in with $USER to the remote servers, and you
   # should be able to run sudo without needing a password.
   #
-  # I will be tackling this shortly, your really shouldn't neeed sudo
+  # I will be tackling this shortly, you really shouldn't neeed sudo
   # privileges to deliver an app. What was I thinking?!?
   __remote "
     set -e

@@ -19,17 +19,4 @@ run() {
   bundle_install &&
   foreman_export &&
   upstart
-
-  #__run 'init_app_remotely' "Checking repository"
-  #__run 'git_push' "Pushing new commits"
-
-  # TODO
-  # Stop right here if app is up-to-date
-
-  #__run 'git_reset_remote' "Resetting remote HEAD"
-  #__run 'git_submodules' "Setting up submodules"
-  #__run 'rvmrc_trust' "Trusting rvmrc"
-  #__run 'bundle_install' "Installing gems"
-  #__run 'foreman_export' "Installing gems"
-  #__run 'upstart' "Launching"
 }
