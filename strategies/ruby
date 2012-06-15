@@ -2,8 +2,6 @@
 
 # This is the default deliver strategy.
 # It uses git push, rvm & foreman to generate upstart jobs
-# Not the most flexible one, but it comes with good defaults
-# Use it as a starting point for your strategy
 
 STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 
@@ -11,6 +9,8 @@ STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
+  # TODO
+  # If remote is up-to-date, finish early
   init_app_remotely &&
   git_push &&
   git_reset_remote &&

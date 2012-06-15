@@ -65,7 +65,7 @@ status() {
 #
 finish() {
   local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
-  echo "$_message"
+  echo -e "\n$_message\n"
   __log "$_message"
   __log "==========================================================="
   echo "" >> $log_file

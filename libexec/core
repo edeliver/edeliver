@@ -223,7 +223,7 @@ __monitor_background_jobs() {
     wait ${background_jobs_pids[$i]}
     if [[ "$?" != 0 ]]
     then
-      error "\nFAILED:\n${background_jobs[$i]}"
+      error "\nFAILED:\n${background_jobs[$i]}\n"
     fi
   done
 
@@ -280,7 +280,7 @@ __remote() {
       background_jobs_pids+=("$!")
       local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
       #__log "BACKGROUND JOB: $_background_job"
-      background_jobs+=($_background_job)
+      background_jobs+=("$_background_job")
     done
 
     #__log "REMOTE PIDS: ${background_jobs_pids[@]}"
