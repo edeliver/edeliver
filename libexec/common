@@ -1,110 +1,132 @@
 #!/usr/bin/env bash
 
-# If script doesn't run all the way to the end,
-# it will exit 2 == SIGINT (Interrupt)
-# http://steve-parker.org/sh/trap.shtml
-#
-complain_if_interrupted() {
-  trap "exit 2" 1 2 3 13 15
-}
+init_app_remotely() {
+  local git_remote="$(git remote -v)"
 
-# Specific failure, fail the whole script
-#
-error() {
-  echo "$txtred$1$txtrst"
-  exit 1
-}
+  status "Ensuring remote is ready to accept git pushes"
 
-# Command failed, fail the whole script
-#
-fail() {
-  echo -e "$bldred FAIL $txtrst\n"
-  echo -e "Try running the command in verbose mode (-V)\n"
-  exit 1
-}
-
-# Command was successful
-#
-success() {
-  echo "$bldgrn DONE $txtrst"
-}
-
-# Loads the .deliver file
-#
-load_app_config() {
-  if [ ! -f $APP_CONFIG ]; then
-    error "Could not find a .deliver file in the current directory"
-  else
-    . $APP_CONFIG
-  fi
-}
-
-# Progress indicator when running commands in the background
-#
-__progress() {
-  local message=$1
-  local style=${2:$txtwht}
-  pid=$!
-
-  echo -en "$style$message"
-
-  while [ $(ps -eo pid | grep $pid) ]; do
-    printf '.'
-    sleep 0.5
+  for _host in $SERVERS_APP_USER
+  do
+    local _remote_url="$_host:$DELIVER_TO"
+    if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
+      [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
+      git remote add "$_host" "$_remote_url"
+    fi
   done
 
-  # Wait until command finishes, otherwise fail
-  wait $pid || fail
-  status=$?
-
-  if [ $status = 0 ]; then
-    success
-  else
-    fail
-  fi
+  __remote "
+    set -e
+    if [ ! -d $DELIVER_TO ]
+    then
+      mkdir $DELIVER_TO
+      cd $DELIVER_TO
+      git init $SILENCE
+      git config receive.denyCurrentBranch ignore
+    fi
+  "
 }
 
-# Start the output with an empty line (looks better with spacing)
-#
-begin() {
-  echo ""
+git_push() {
+  local _hosts="${2:-"$SERVERS_APP_USER"}"
+
+  status "Pushing new commits with git to: $_hosts"
+
+  background_jobs_pids=()
+  background_jobs=()
+
+  for _host in $_hosts
+  do
+    local _background_job="git push -f $_host $BRANCH $SILENCE"
+    __log "JOB: $_background_job"
+    ( eval "$_background_job" ) &
+    background_jobs_pids+=("$!")
+    background_jobs+=("$_background_job")
+  done
+
+  #__log "GIT PUSH PIDS: ${background_jobs_pids[@]}"
+
+  __monitor_background_jobs
 }
 
-# Wrapper to either run the command verbosely, inline,
-# or silently, in the background
-#
-__run() {
-  if [ $VERBOSE ]; then
-    echo -e "$bldylw\n$2$txtrst"
-    eval $1
-  else
-    (eval $1) &
-    __progress "$2"
-  fi
+git_reset_remote() {
+  status "Resetting remote to $BRANCH branch"
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git reset --hard $BRANCH $SILENCE
+  "
 }
 
-# If we reach this step, the deploy was most likely a success
-#
-finish() {
-  echo "$bldgrn"
-  echo "$APP deployed" | tr '[:lower:]' '[:upper:]'
-  echo "$txtrst"
+git_submodules() {
+  status "Updating all git submodules"
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git submodule init $SILENCE
+    git submodule sync $SILENCE
+    git submodule update $SILENCE
+  "
 }
 
-# Loads the correct deliver strategy
-#
-load_strategy() {
-  local strategies_path="$BASE_PATH/strategies"
-  local strategies=$(ls $strategies_path)
-  if [[ ! $strategies =~ $STRATEGY ]]; then
-    error "This strategy does not exist. To see a list of strategies, use the -s|--strategies flag."
-  else
-    . "$strategies_path/$STRATEGY"
-  fi
+rvmrc_trust() {
+  status "Trusting rvmrc in $DELIVER_TO"
+  __remote "
+    set -e
+    . .profile
+    rvm rvmrc trust $DELIVER_TO $SILENCE
+  "
 }
 
-# Used internally, to wrap commands which need $SILENCE
-#
-__exec() {
-  eval "$1 $SILENCE"
+
+bundle_install() {
+  status "Installing gems with bundler"
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    bundle install --local --deployment --without development test $SILENCE
+  "
+}
+
+npm_install() {
+  status "Installing modules with npm"
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    npm install $SILENCE
+  "
+}
+
+foreman_export() {
+  status "Exporting services to $SUPERVISOR"
+  local _foreman="foreman export $SUPERVISOR tmp --user $APP_USER --app $APP"
+  test -n "$PORT" && _foreman="$_foreman --port $PORT"
+  test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
+
+  __remote "
+    set -e
+    . .profile
+    cd $DELIVER_TO $SILENCE
+    $_foreman $SILENCE
+  "
+}
+
+upstart() {
+  status "Launching app with $SUPERVISOR"
+  # This command, because of the sudo dependency, will use your local $USER.
+  # You should be able to log in with $USER to the remote servers, and you
+  # should be able to run sudo without needing a password.
+  #
+  # I will be tackling this shortly, you really shouldn't neeed sudo
+  # privileges to deliver an app. What was I thinking?!?
+  __remote "
+    set -e
+    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
+      sudo stop $APP $SILENCE
+    fi
+    sudo rm -f /etc/init/$APP*
+    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
+    sudo start $APP $SILENCE
+  " "$SERVERS"
 }

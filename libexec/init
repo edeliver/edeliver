@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+__version() {
+  echo -e "\n${txtbld}deliver v$VERSION${txtrst} | $HOMEPAGE\n"
+}
+
+__help() {
+  man $BASE_PATH/man/deliver.1
+}
+
+__available_strategies() {
+  echo -e "\n${txtbld}AVAILABLE STRATEGIES${txtrst}\n"
+
+  for strategy in $STRATEGIES_NAME
+  do
+    echo " * $strategy"
+  done
+
+  echo ""
+}
+
+while (( $# ))
+do
+  arg="$1" && shift
+  case "${arg}" in
+    (-C|--compact)
+      MODE="compact"
+    ;;
+    (-D|--debug)
+      MODE="debug"
+    ;;
+    (-V|--verbose)
+      MODE="verbose"
+    ;;
+    (-T|--test)
+      MODE="test"
+    ;;
+    (-h|--help)
+      __help
+      exit 0
+    ;;
+    (-s|--strategy)
+      STRATEGY="$1" && shift
+    ;;
+    (-v|--version)
+      __version
+      exit 0
+    ;;
+    (strategies)
+      __available_strategies
+      exit 0
+    ;;
+    (check)
+      CHECK=true
+    ;;
+    (*)
+      hint_message "Unknown argument ${arg} ignored"
+    ;;
+  esac
+done
+
+case "${MODE}" in
+  (compact)
+    VERBOSE=""
+    SILENCE="&> /dev/null"
+  ;;
+  (verbose)
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (debug)
+    set -x
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (test)
+    TEST=true
+  ;;
+esac

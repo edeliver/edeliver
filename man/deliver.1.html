@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>deliver(1) - takes your code into production</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+  <style type='text/css' media='all'>
+  /* style: toc */
+  .man-navigation {display:block !important;position:fixed;top:0;left:113ex;height:100%;width:100%;padding:48px 0 0 0;border-left:1px solid #dbdbdb;background:#eee}
+  .man-navigation a,.man-navigation a:hover,.man-navigation a:link,.man-navigation a:visited {display:block;margin:0;padding:5px 2px 5px 30px;color:#999;text-decoration:none}
+  .man-navigation a:hover {color:#111;text-decoration:underline}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#STRATEGIES">STRATEGIES</a>
+    <a href="#CHECK">CHECK</a>
+    <a href="#RUNNING-MODES">RUNNING MODES</a>
+    <a href="#COPYRIGHT">COPYRIGHT</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>deliver(1)</li>
+    <li class='tc'>Deliver Manual</li>
+    <li class='tr'>deliver(1)</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>deliver</code> - <span class="man-whatis">takes your code into production</span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>deliver strategies</code> <br />
+<code>deliver check</code> <br />
+<code>deliver [-s strategy]</code> <br /></p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p>Deliver is a truly distributed deployment tool with virtually no dependencies.
+It only cares about having enough info in the shell environment to do its job.
+Why add Ruby or Python wrappers on top of system commands when bash was built
+for this one task?</p>
+
+<h2 id="STRATEGIES">STRATEGIES</h2>
+
+<p><code>deliver strategies</code> will list all available strategies. The default strategies
+make certain assumptions, but they are fully modular and customizable.</p>
+
+<dl>
+<dt class="flush"><code>ruby</code></dt><dd><p><a href="https://github.com/ddollar/foreman">Foreman</a>-aware, uses upstart by default. Works seamlessly with
+<a href="https://rvm.io/">rvm</a>. <em>This is the default strategy</em></p></dd>
+<dt class="flush"><code>nodejs</code></dt><dd><p>Heavily inspired by the ruby strategy, also foreman-aware, defaults to
+upstart.</p></dd>
+<dt><code>gh-pages</code></dt><dd><p>How many times did you find yourself copying that rake task which generates
+and publishes to <a href="http://pages.github.com/">github:pages</a> your project's <a href="https://github.com/jashkenas/docco">docco</a> or <a href="https://github.com/rtomayko/rocco">rocco</a>?
+With deliver, just run <code>deliver -s gh-pages</code> from the app's root path.</p></dd>
+</dl>
+
+
+<h3 id="Customizing-a-default-strategy-">Customizing a default strategy?</h3>
+
+<h3 id="Creating-a-new-strategy-">Creating a new strategy?</h3>
+
+<h2 id="CHECK">CHECK</h2>
+
+<p><code>deliver check</code> will ensure that everything is set up correctly. You can also
+use this to see your final configuration.</p>
+
+<h2 id="RUNNING-MODES">RUNNING MODES</h2>
+
+<p>You can set a default mode via the MODE environment variable. The running mode
+as a command option will always overwrite the MODE variable.</p>
+
+<p>For example, you can have a <code>MODE=verbose</code> in your <code>.deliver/config</code> file, but
+when running deliver with the <code>--debug</code> option, the MODE for that one run will
+be <em>verbose</em>.</p>
+
+<dl>
+<dt><code>-C</code>, <code>--compact</code> (or <code>MODE=compact</code>)</dt><dd><p>Only shows the description and progress of each running task, on a per-host
+basis. Both standard and error output will be silenced. <em>This is the default
+mode</em></p></dd>
+<dt><code>-V</code>, <code>--verbose</code> (or <code>MODE=verbose</code>)</dt><dd><p>Will not silence output of the running task. Great for troubleshooting or
+getting feedback from all tasks.</p></dd>
+<dt><code>-D</code>, <code>--debug</code> (or <code>MODE=debug</code>)</dt><dd><p>Runs the entire script in standard shell debug mode, shows every line of
+bash that gets executed along with the task output. Well suited when writing
+your own strategies or customizing existing ones.</p></dd>
+<dt><code>-T</code>, <code>--test</code> (or <code>MODE=test</code>)</dt><dd><p>Similar to a dry-run. Will output each command that is going to run with no
+local or remote changes. If you want full visibility into the final system
+commands that get generated, use this mode.</p>
+
+<p>If you want tighter control over your deployment process, you can have
+everyone on the team using the generated commands rather than using deliver
+directly.</p></dd>
+</dl>
+
+
+<h2 id="COPYRIGHT">COPYRIGHT</h2>
+
+<p>Deliver is Copyright (C) 2012 <a href="http://twitter.com/gerhardlazu">Gerhard Lazu</a></p>
+
+<!--
+With no options, it will run in compact mode and will use the STRATEGY from
+your runtime env, shell env or .deliver/config file. If you don't define a
+strategy, it will use the ruby one by default.
+
+If your specify a runtime strategy, this overwrite any subsequent configs:
+
+  STRATEGY=gh-pages deliver
+
+The above will use the gh-pages strategy, regardless of what you have
+defined in your .deliver/config file or your shell env.
+
+All settings respect the following priority (lower number takes precedence):
+
+1. Runtime env
+2. Shell env
+3. Deliver config file
+
+This becomes very helpful if you want to deploy your app to a local VM before
+pushing to production. You can invoke deliver with runtime envs without any
+modifications to your .deliver/config file:
+
+  SERVER=ruby-1-localvm deliver
+
+You can also deliver to multiple servers:
+
+  SERVER=ruby-1-local,ruby-2-local deliver
+
+When you're ready to update production, given that you already have the
+correct servers defined in your .deliver/config file, run deliver without any
+runtime variables.
+
+At any point, you can test your deliver setup to see if everything is
+configured correctly:
+-->
+
+
+
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'>Deliver 1.0.0</li>
+    <li class='tc'>June 2012</li>
+    <li class='tr'>deliver(1)</li>
+  </ol>
+
+  </div>
+</body>
+</html>

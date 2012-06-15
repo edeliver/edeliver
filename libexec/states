@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Specific failure, fail the whole script
+#
+error() {
+  IFS='%'
+  error_message $1
+  unset IFS
+  exit 1
+}
+
+# Command failed (not sure why), fail the whole script
+#
+fail() {
+  error_message "\nNot entirely sure why this failed."
+  hint_message "Re-run the command in verbose (-V|--verbose) or debug (-D|--debug) mode to gather more details about the failure."
+  exit 1
+}
+
+# Command was successful
+#
+success() {
+  success_message " DONE"
+}

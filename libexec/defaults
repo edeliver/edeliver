@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+VERSION="1.0.0"
+HOMEPAGE="https://github.com/gerhard/deliver"
+CREATOR="Gerhard Lazu"
+
+ARGS="$@"
+
+APP_ROOT="$(pwd)"
+APP="$(basename $APP_ROOT)"
+APP_CONFIG="$APP_ROOT/.deliver/config"
+
+BRANCH="master"
+GIT_REMOTE="deliver"
+DELIVER_REMOTE="$GIT_REMOTE" # legacy
+
+SSH_TIMEOUT=3
+
+SUPERVISOR="upstart"
+
+REQUIRED_VARS="APP APP_ROOT STRATEGY"
+
+MODE="compact"
+
+log_file="/tmp/deliver-${APP}"

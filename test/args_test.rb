@@ -1,37 +1,66 @@
 require_relative './test_helper'
 
-describe 'args' do
-  describe "version" do
-    before do
-      @version_format = /v\d\.\d\.\d/
-    end
+class TestDeliverArgs < MiniTest::Unit::TestCase
+  @version_format = /v\d\.\d\.\d/
 
-    it "-v" do
-      shell("deliver -v").must_match @version_format
-    end
+  deliver(
+    :args   => "-v",
+    :output => @version_format
+  )
 
-    it "--version" do
-      shell("deliver --version").must_match @version_format
-    end
-  end
+  deliver(
+    :args   => "--version",
+    :output => @version_format
+  )
 
-  describe "strategies" do
-    it "-s" do
-      output = shell("deliver -s")
-      output.must_match "ruby"
-      output.must_match "github-pages"
-    end
+  deliver(
+    :args   => "-h",
+    :output => "Deliver Manual"
+  )
 
-    it "--strategies" do
-      output = shell("deliver --strategies")
-      output.must_match "ruby"
-      output.must_match "github-pages"
-    end
-  end
+  deliver(
+    :args   => "--help",
+    :output => "Deliver Manual"
+  )
 
-  describe "specifying a strategy via args" do
-    it "returns an error if strategy does not exist" do
-      shell("deliver foobar").must_match /This strategy does not exist/
-    end
-  end
+  deliver(
+    :args   => "-0",
+    :output => "Unknown argument -0"
+  )
+
+  @strategies = "gh-pages.*nodejs.*ruby"
+
+  deliver(
+    :args   => "strategies",
+    :output => /#{@strategies}/m
+  )
+
+  deliver(
+    :args   => "-s foobar",
+    :output => /strategy does not exist.*#{@strategies}/m,
+    :status => 1
+  )
+
+  deliver(
+    :args   => "check",
+    :output => %r{
+      APP.+deliver.+
+      APP_ROOT.+deliver.+
+      STRATEGY.+ruby.+
+      CAN'T.DELIVER
+    }xm,
+    :status => 1
+  )
+
+  deliver(
+    :vars   => "SERVER='localhost'",
+    :args   => "check",
+    :output => %r{
+      APP.+deliver.+
+      APP_ROOT.+deliver.+
+      STRATEGY.+ruby.+
+      SERVERS.+[^,]localhost[^,].+
+      READY.TO.DELIVER
+    }xm
+  )
 end

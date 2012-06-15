@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Your app must run under this user. All files will be created as this user.
+#
+if [ -z "$APP_USER" ]
+then
+  APP_USER="$APP"
+fi
+
+# If your app runs under 'foobar' system user, the code will be delivered to
+# '~foobar/app' by default. You can deliver multiple apps under the same user
+# by overwriting this value on a per app basis, but I would discourage this practice.
+# Each app should run under its own system user.
+#
+if [ -z "$DELIVER_TO" ]
+then
+  DELIVER_TO="~$APP_USER/app"
+fi
+
+# Configure which branch to push remotely
+#
+if [ -z "$BRANCH" ]
+then
+  BRANCH="master"
+fi
+
+# It's no secret, Ruby is my darling, hence it's the default deliver strategy.
+#
+if [ -z "$STRATEGY" ]
+then
+  STRATEGY="ruby"
+fi
+
+# If a remote is not set, it will default to the app's user & server
+# NOTE DEPRECATED
+# Now that we support multiple servers, this doesn't make sense anymore.
+# Will be removed as of v1.1
+#
+if [ -z "$REMOTE" ]
+then
+  REMOTE="$APP_USER@$SERVER"
+fi
+
+# From the time when deliver was single-server
+#
+SERVERS=$(__remote_friendly "$SERVER $SERVERS")

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+mkdir -p $GH_PAGES_DIR
+
+cp man/$APP*.html $GH_PAGES_DIR/index.html

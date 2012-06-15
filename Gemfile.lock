@@ -1,0 +1,42 @@
+GEM
+  remote: http://www.rubygems.org/
+  specs:
+    ansi (1.4.2)
+    coderay (1.0.5)
+    colorize (0.5.8)
+    ffi (1.0.11)
+    guard (1.0.1)
+      ffi (>= 0.5.0)
+      thor (~> 0.14.6)
+    guard-minitest (0.5.0)
+      guard (>= 0.4)
+    hpricot (0.8.6)
+    method_source (0.7.1)
+    minitest (3.0.0)
+    mustache (0.99.4)
+    pry (0.9.8.4)
+      coderay (~> 1.0.5)
+      method_source (~> 0.7.1)
+      slop (>= 2.4.4, < 3)
+    rake (0.9.2.2)
+    rdiscount (1.6.8)
+    ronn (0.7.3)
+      hpricot (>= 0.8.2)
+      mustache (>= 0.7.0)
+      rdiscount (>= 1.5.8)
+    slop (2.4.4)
+    thor (0.14.6)
+    turn (0.9.5)
+      ansi
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  colorize (~> 0.5.8)
+  guard-minitest (~> 0.5.0)
+  minitest (~> 3.0.0)
+  pry (~> 0.9.8)
+  rake (~> 0.9.2)
+  ronn (~> 0.7.3)
+  turn (~> 0.9.5)

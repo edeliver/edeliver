@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# http://linuxtidbits.wordpress.com/2008/08/11/output-color-on-bash-scripts/
+# SPINNER http://fitnr.com/showing-a-bash-spinner.html
+#
+txtund=$(tput sgr 0 1)          # Underline
+txtbld=$(tput bold)             # Bold
+bldred=${txtbld}$(tput setaf 1) #  red
+bldgrn=${txtbld}$(tput setaf 2) #  green
+bldylw=${txtbld}$(tput setaf 3) #  yellow
+bldwht=${txtbld}$(tput setaf 7) #  white
+txtred=$(tput setaf 1)          # Red
+txtgrn=$(tput setaf 2)          # Green
+txtylw=$(tput setaf 3)          # Yellow
+txtblu=$(tput setaf 4)          # Blue
+txtmgt=$(tput setaf 5)          # Magenta
+txtcyn=$(tput setaf 6)          # Cyan
+txtwht=$(tput setaf 7)          # White
+txtrst=$(tput sgr0)             # Reset
+info=${bldwht}*${txtrst}        # Feedback
+pass=${bldblu}*${txtrst}
+warn=${bldred}*${txtrst}
+ques=${bldblu}?${txtrst}
+
+# Displays arg as an error message, red and sad
+#
+error_message() {
+  echo -e "$bldred$@$txtrst"
+}
+
+# Displays arg as a hint message, yellow and optimistic
+#
+hint_message() {
+  echo -e "$txtylw$@$txtrst"
+}
+
+# Displays arg as a success message, green and cheerful
+#
+success_message() {
+  echo -e "$bldgrn$@$txtrst"
+}
+
+# Converts all letters to uppercase
+#
+upcase() {
+  echo "$@" | tr '[:lower:]' '[:upper:]'
+}
+
+# Start each strategy's output with an empty line.
+# It just looks better with spacing.
+#
+begin() {
+  local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
+  echo -e "\n$_message\n"
+  __log "$_message"
+}
+
+status() {
+  local _message="${txtylw}----->${txtrst} ${bldwht}$1${txtrst}"
+  echo "$_message"
+  __log "$_message"
+}
+
+# If we reach this step, delivery was successfull
+#
+finish() {
+  local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
+  echo -e "\n$_message\n"
+  __log "$_message"
+  __log "==========================================================="
+  echo "" >> $log_file
+}

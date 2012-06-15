@@ -1,4 +1,2 @@
-*.gem
-.bundle
-Gemfile.lock
-pkg/*
+.deliver
+gh-pages

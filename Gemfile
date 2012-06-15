@@ -1,7 +1,11 @@
-source "http://www.rubygems.org"
+source 'http://www.rubygems.org'
 
-gem "colorize", "~> 0.5.8"
-gem "guard-minitest"
-gem "minitest", "~> 2.10.0"
-gem "pry"
-gem "turn", "~> 0.8.3"
+group :development do
+  gem 'colorize', '~> 0.5.8'
+  gem 'guard-minitest', '~> 0.5.0'
+  gem 'minitest', '~> 3.0.0'
+  gem 'pry', '~> 0.9.8'
+  gem 'rake', '~> 0.9.2'
+  gem 'ronn', '~> 0.7.3'
+  gem 'turn', '~> 0.9.5'
+end

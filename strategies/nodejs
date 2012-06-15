@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
+
+run() {
+  init_app_remotely &&
+  git_push &&
+  git_reset_remote &&
+  git_submodules &&
+  foreman_export &&
+  upstart
+}

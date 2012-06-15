@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+#HOSTS="timeseries@ruby-1-local,timeseries@ruby-2-local"
+hosts="timeseries@ruby-1-local timeseries@ruby-2-local timeseries@ruby-3-local"
+
+# http://www.gnu.org/software/parallel/man.html#example__running_the_same_command_on_remote_computers
+#echo "||| PARALLEL |||"
+#echo "uptime" > /tmp/remote_task
+#echo "date" >> /tmp/remote_task
+
+check_if_failed() {
+  local _status="$1"
+  if [ ! "$_status" = 0 ]
+  then
+    echo "FAILED!"
+    echo $(date)
+    exit 1
+  fi
+}
+
+pids=()
+
+echo $(date)
+
+for host in $hosts
+do
+  ssh -o ConnectTimeout=2 $host "
+set -e
+uptime
+sleep 2
+" &
+  pids+=("$!")
+done
+
+for pid in "${pids[@]}"
+do
+  wait "$pid"
+  check_if_failed "$?"
+done
+
+echo "All is good!"
+exit 0
