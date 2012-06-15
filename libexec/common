@@ -63,6 +63,7 @@ git_submodules() {
     set -e
     cd $DELIVER_TO $SILENCE
     git submodule init $SILENCE
+    git submodule sync $SILENCE
     git submodule update $SILENCE
   "
 }
