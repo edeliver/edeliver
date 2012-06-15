@@ -44,10 +44,18 @@ $ . ~/.zshrc
 
 ### 1.4 Personalize
 
-There are no generators or initializers, you will need to create a
-`.deliver` dir in the app's root folder that you want to deliver.
+There are no generators or initializers, you will need to manually create a
+`.deliver/config` file in the app's root folder that you want to deliver.
 
-[Config examples] [7], strategy-specific.
+This is a good example:
+
+```bash
+#!/usr/bin/env bash
+
+APP="events"
+SERVERS="ruby-1,ruby-2"
+PORT="5000"
+```
 
 
 
@@ -56,8 +64,11 @@ There are no generators or initializers, you will need to create a
 From the root of your project, run:
 
 ```bash
-$ deliver
+$ deliver check
 ```
+
+This will print the most important config settings and ensure that
+deliver has everything that it needs for a successful run. 
 
 Deliver will use the ruby strategy by default. If you want to use a different
 one, define it in your `.deliver/config` file.
@@ -104,8 +115,7 @@ SOFTWARE.
 
 [1]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
 [2]: http://www.gosquared.com/
-[3]: master/strategies/ruby
-[4]: master/strategies/nodejs
-[5]: master/strategies/gh-pages
-[6]: master/strategies
-[7]: master/examples
+[3]: deliver/tree/master/strategies/ruby
+[4]: deliver/tree/master/strategies/nodejs
+[5]: deliver/tree/master/strategies/gh-pages
+[6]: deliver/tree/master/strategies
