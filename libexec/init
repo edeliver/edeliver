@@ -5,75 +5,75 @@ __version() {
 }
 
 __help() {
-  __version
-  echo -e "  Deliver takes your local code and sets it up in production. A
-  cross between Capistrano, git-deploy and heroku deploys, but language
-  agnostic with no dependencies (other than bash or zsh).
+  man $BASE_PATH/man/deliver.1
+}
 
-${txtbld}USAGE${txtrst}
+__available_strategies() {
+  echo -e "\n${txtbld}AVAILABLE STRATEGIES${txtrst}\n"
 
-    deliver [options] [strategy]
+  for strategy in $STRATEGIES_NAME
+  do
+    echo " * $strategy"
+  done
 
-  With no options, it will run in compact mode and will pick up the
-  strategy from your .deliver/config file. If you don't define a strategy,
-  it will use the ruby one by default.
-
-  You can also specify a runtime strategy which will overwrite any
-  subsequent configs:
-
-    STRATEGY=gh-pages deliver
-
-  This will use the gh-pages strategy, regardless of what you have
-  defined in your .deliver/config file. Equally, a STRATEGY env variable
-  will overwrite all subsequent values (except the runtime strategy).
-
-  If you want to test your app first in a local VM (or in a staging
-  environment) before you push it into production, you can always overwrite
-  the .deliver/config SERVER value with a runtime one:
-
-    SERVER=ruby-1-local deliver
-
-${txtbld}OPTIONS${txtrst}
-
-  -v, --version     Shows the version and exits.
-
-  -h, --help        Shows this help.
-
-  -s, --strategies  Lists all available strategies.
-
-  -V, --verbose     Will not silence the output of any commands. Great
-                    for troubleshooting or understanding what is
-                    actually happening behind the scenes.
-
-  -D, --debug       Runs the entire script in standard bash debug mode.
-"
+  echo ""
 }
 
 while (( $# ))
 do
   arg="$1" && shift
-
   case "${arg}" in
+    (-C|--compact)
+      MODE="compact"
+    ;;
     (-D|--debug)
-      set -x
+      MODE="debug"
     ;;
     (-V|--verbose)
-      VERBOSE=true
-      SILENCE=""
+      MODE="verbose"
+    ;;
+    (-T|--test)
+      MODE="test"
     ;;
     (-h|--help)
       __help
       exit 0
     ;;
+    (-s|--strategy)
+      STRATEGY="$1" && shift
+    ;;
     (-v|--version)
       __version
       exit 0
     ;;
-    (-s|--strategies)
-      hint_message "Refactor strategies"
+    (strategies)
+      __available_strategies
+      exit 0
+    ;;
+    (check)
+      CHECK=true
     ;;
     (*)
       hint_message "Unknown argument ${arg} ignored"
     ;;
   esac
 done
+
+case "${MODE}" in
+  (compact)
+    VERBOSE=""
+    SILENCE="&> /dev/null"
+  ;;
+  (verbose)
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (debug)
+    set -x
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (test)
+    TEST=true
+  ;;
+esac

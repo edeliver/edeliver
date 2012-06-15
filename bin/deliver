@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
+# If a specific part fails (I'm thinking mostly remote commands),
+# I will fail the script explicitly, don't want it to just die
+# set -e
 
 BASE_PATH="$(dirname $0)/.."
 
@@ -8,26 +10,32 @@ BASE_PATH="$(dirname $0)/.."
 # You can overwrite them, but ideally they should be left alone.
 # Remember Demeter: http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
 
-. "$BASE_PATH/libexec/output"
-. "$BASE_PATH/libexec/states"
-. "$BASE_PATH/libexec/defaults"
-. "$BASE_PATH/libexec/init"
-
-. "$BASE_PATH/libexec/core"
+source "$BASE_PATH/libexec/output"
+source "$BASE_PATH/libexec/states"
+source "$BASE_PATH/libexec/defaults"
+source "$BASE_PATH/libexec/core"
+source "$BASE_PATH/libexec/common"
 
 __complain_if_interrupted
 __capture_runtime_configs
+__find_all_strategies
 
-. "$BASE_PATH/libexec/strategy"
+source "$BASE_PATH/libexec/init"
 
 __load_app_config
 __default_app_config
 __apply_runtime_configs
+__load_strategy
+__remote_hosts
 
-__load_strategy_or_list_available_strategies
+__check_config
 
 # Run the loaded strategy
-# Can be overwritten by each strategy, think custom output
-begin
+# Can be overwritten by each strategy, e.g. custom output
+# When testing, only output the commands which would be run
+#
+[ ! $MODE = "test" ] && begin
 run
-finish
+[ ! $MODE = "test" ] && finish
+
+exit 0

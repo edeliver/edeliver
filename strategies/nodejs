@@ -1,78 +1,12 @@
 #!/usr/bin/env bash
 
-# Heavily inspired by the Ruby strategy.
-# It uses git push, rvm & foreman to generate upstart jobs
-
-register_strategy 'nodejs' "npm & foreman exporting nodejs services to upstart"
+STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
 
 run() {
-  __run 'check' "Checking repository"
-  __run 'push' "Pushing new commits"
-
-  # TODO
-  # Stop right here if app is up-to-date
-
-  __run 'setup' "Setting up"
-  __run 'launch' "Launching"
-}
-
-# Ensure remote repository is set up correctly,
-# And that we have a local remote pointing to it
-#
-check() {
-  ssh $REMOTE "
-    if [ ! -d $DELIVER_TO ]; then
-      mkdir $DELIVER_TO
-      cd $DELIVER_TO
-      git init $SILENCE
-      git config receive.denyCurrentBranch ignore
-    fi
-  "
-  local git_remote="$(git remote -v)"
-  if [[ ! $git_remote =~ "$REMOTE:$DELIVER_TO" ]] || [[ ! $git_remote =~ $DELIVER_REMOTE ]]; then
-    [[ $git_remote =~ $DELIVER_REMOTE ]] && git remote rm $DELIVER_REMOTE
-    git remote add $DELIVER_REMOTE $REMOTE:$DELIVER_TO
-  fi
-}
-
-# Push all commits to remote repository
-#
-push() {
-  __exec "git push -f $DELIVER_REMOTE $BRANCH"
-}
-
-# Install/update all gems via bundler
-# Export upstart jobs via foreman
-#
-setup() {
-  ssh $REMOTE "
-    . .profile
-    cd $DELIVER_TO $SILENCE
-    git reset --hard $BRANCH $SILENCE
-    cd $DELIVER_TO $SILENCE
-    npm install $SILENCE
-    foreman export upstart tmp -u $APP_USER -a $APP -p $PORT $SILENCE
-  "
-}
-
-# Start the app via upstart
-#
-launch() {
-  # This is a bit of a gotcha, so give it a few seconds.  All other commands
-  # are run via $REMOTE, which uses the username under which the app runs. This
-  # last command, because of the sudo dependency, will use your local $USER.
-  # You should be able to log in with $USER to the remote server, and you
-  # should be able to run sudo without needing a password.
-  #
-  # I will be tackling this shortly, your really shouldn't neeed sudo
-  # privileges to deliver an app. In retrospect, it's a bit crazy to be
-  # completely honest.
-  ssh $SERVER "
-    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
-      sudo stop $APP $SILENCE
-    fi
-    sudo rm -f /etc/init/$APP*
-    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
-    sudo start $APP $SILENCE
-  "
+  init_app_remotely &&
+  git_push &&
+  git_reset_remote &&
+  git_submodules &&
+  foreman_export &&
+  upstart
 }

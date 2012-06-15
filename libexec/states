@@ -3,7 +3,9 @@
 # Specific failure, fail the whole script
 #
 error() {
+  IFS='%'
   error_message $1
+  unset IFS
   exit 1
 }
 
