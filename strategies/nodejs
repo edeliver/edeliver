@@ -7,6 +7,7 @@ run() {
   git_push &&
   git_reset_remote &&
   git_submodules &&
+  npm_install &&
   foreman_export &&
   upstart
 }
