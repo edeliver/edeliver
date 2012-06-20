@@ -10,7 +10,7 @@ then
 fi
 
 run() {
-  gitstatus &&
+  #gitstatus &&
   generate &&
   prepare &&
   push &&
@@ -42,9 +42,9 @@ generate() {
   echo "${git_head##*/}" > /tmp/deliver_gh_pages_current_git_branch
 
   # If GH_PAGES_DIR is not ignored, it won't survive 'git clean -fd'
-  if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
+  if [ $(egrep -c -e "^$GH_PAGES_DIR/*" .gitignore) = 0 ]
   then
-    echo $GH_PAGES_DIR >> .gitignore
+    echo "$GH_PAGES_DIR/*" >> .gitignore
     __exec "git commit -a -m 'Ignoring content generated for github:pages'"
   fi
 
