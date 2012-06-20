@@ -64,6 +64,12 @@ git_submodules() {
     cd $DELIVER_TO $SILENCE
     git submodule init $SILENCE
     git submodule sync $SILENCE
+    cat .gitmodules | awk -F'[@:]' '
+    /url/ {
+      command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts\"
+      system(command)
+      close(command)
+    }'
     git submodule update $SILENCE
   "
 }
