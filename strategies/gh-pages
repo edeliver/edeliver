@@ -10,7 +10,7 @@ then
 fi
 
 run() {
-  #gitstatus &&
+  gitstatus &&
   generate &&
   prepare &&
   push &&
