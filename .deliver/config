@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+GH_PAGES_EXEC="$APP_ROOT/man/gh-pages"
+STRATEGY="gh-pages"
