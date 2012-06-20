@@ -7,17 +7,17 @@ Capistrano was just infuriating when you added rvm and bundler into the
 mix, git-deploy is great for single server, but what if you're running a
 bunch of auto-scaled clusters (Ruby, node.js etc.)?
 
-At GoSquared, the place where deliver started, each of us is free to use
+At [GoSquared] [1], the place where deliver started, each of us is free to use
 their own programming language. As long as the service exposes an API
 and has decent test coverage, anything goes. Yes, **even** PHP.
 
-Delivering a ruby service to multiple hosts:
+Delivering a nodejs service to multiple hosts:
 
-![deliver] [2]
+![deliver nodejs service to multiple hosts] [2]
 
-Delivering deliver to gh-pages:
+Delivering deliver to [github:pages] [8] (very inception-esque):
 
-![deliver] [7]
+![deliver deliver to github:pages] [7]
 
 Strategies is what sets this utility apart from everything else. By
 default, it comes with:
@@ -81,6 +81,8 @@ From the root of your project, run:
 $ deliver check
 ```
 
+![deliver check] [9]
+
 This will print the most important config settings and ensure that
 deliver has everything that it needs for a successful run. 
 
@@ -128,9 +130,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 [1]: http://www.gosquared.com/
-[2]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
+[2]: http://c2990942.r42.cf0.rackcdn.com/deliver-nodejs.png
 [3]: deliver/tree/master/strategies/ruby
 [4]: deliver/tree/master/strategies/nodejs
 [5]: deliver/tree/master/strategies/gh-pages
 [6]: deliver/tree/master/strategies
-[7]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
+[7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
+[8]: http://gerhard.github.com/deliver
+[9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
