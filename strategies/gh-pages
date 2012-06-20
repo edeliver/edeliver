@@ -23,11 +23,13 @@ run() {
 gitstatus() {
   status "Checking local repository"
 
-  test $(git status | grep -c "working directory clean") = 0 && error "
+  if [ $(git status | grep -c "working directory clean") = 0 ]
+  then
+    error "
 Your working directory is not clean.
 Either stash or commit before re-running this command.
-I don't want you to lose any uncommitted changes, will stop here.
-"
+I don't want you to lose any uncommitted changes, will stop here.\n"
+  fi
 }
 
 # If GH_PAGES_EXEC is set, it will run it,
