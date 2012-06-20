@@ -45,31 +45,31 @@ generate() {
   if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
   then
     echo $GH_PAGES_DIR >> .gitignore
-    git commit -a -m 'Ignoring content generated for github:pages'
+    __exec "git commit -a -m 'Ignoring content generated for github:pages'"
   fi
 
   if [ -n "$GH_PAGES_EXEC" ] && [ -x $GH_PAGES_EXEC ]
   then
-    $GH_PAGES_EXEC
+    __exec "$GH_PAGES_EXEC"
   else
     if [ -n "$ROCCO_FILES" ]
     then
       set -f # disables file globbing
-      bundle exec rocco -o "$GH_PAGES_DIR" "$ROCCO_FILES"
+      __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
       set +f # enables file globbing
     fi
 
-    cd "$GH_PAGES_DIR"
+    cd $GH_PAGES_DIR
 
-    find . -type d -depth 1 | while read dir
+    __exec "find . -type d -depth 1 | while read dir
     do
       mv $dir/* .
       rm -fr $dir
-    done
+    done"
 
     if [ -e "$APP*.html" ]
     then
-      mv "$APP*.html" index.html
+      __exec "mv $APP*.html index.html"
     fi
   fi
 }
@@ -80,11 +80,11 @@ generate() {
 prepare() {
   status "Preparing gh-pages branch"
 
-  git symbolic-ref HEAD refs/heads/gh-pages
-  rm .git/index
-  git clean -fd
-  mv "$GH_PAGES_DIR/*" .
-  rm -fr "$GH_PAGES_DIR"
+  __exec "git symbolic-ref HEAD refs/heads/gh-pages"
+  __exec "rm .git/index"
+  __exec "git clean -fd"
+  __exec "mv $GH_PAGES_DIR/* ."
+  __exec "rm -fr $GH_PAGES_DIR"
 }
 
 # Move all files from the generated folder into root folder,
@@ -93,10 +93,10 @@ prepare() {
 push() {
   status "Pushing to github:pages"
 
-  git add .
+  __exec "git add ."
   if [[ ! $(git status) =~ "nothing to commit" ]]; then
-    git commit -a -m 'Generated github:pages via deliver'
-    git push origin -f gh-pages
+    __exec "git commit -a -m 'Generated github:pages via deliver'"
+    __exec "git push origin -f gh-pages"
   fi
 }
 
@@ -106,6 +106,6 @@ cleanup() {
   status "Cleaning up"
 
   unset GH_PAGES_DIR
-  git checkout -f $(cat /tmp/deliver_gh_pages_current_git_branch)
-  rm /tmp/deliver_gh_pages_current_git_branch
+  __exec "git checkout -f $(cat /tmp/deliver_gh_pages_current_git_branch)"
+  __exec "rm /tmp/deliver_gh_pages_current_git_branch"
 }
