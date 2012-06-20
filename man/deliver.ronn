@@ -7,10 +7,10 @@ deliver(1) -- takes your code into production
 `deliver [-s strategy]` <br />
 
 ## DESCRIPTION
-Deliver is a truly distributed deployment tool with virtually no dependencies.
-It only cares about having enough info in the shell environment to do its job.
-Why add Ruby or Python wrappers on top of system commands when bash was built
-for this very task?
+Deliver is a pure bash deployment tool with virtually no dependencies.  It only
+cares about having enough info in the shell environment to do its job. Why add
+Ruby or Python wrappers on top of system commands when bash was built for this
+one task?
 
 ## STRATEGIES
 `deliver strategies` will list all available strategies. The default strategies

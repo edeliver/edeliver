@@ -9,66 +9,71 @@ then
   export GH_PAGES_DIR="gh-pages"
 fi
 
-# This function must be present since deliver will call it directly
-# Everything inside it or around it are only limited by your imagination : )
-#
 run() {
-  __run 'gitstatus' "Checking local repository"
-  __run 'generate'  "Generating content"
-  __run 'prepare'   "Preparing gh-pages branch"
-  __run 'push'      "Pushing to github:pages"
-  __run 'cleanup'   "Cleaning up"
+  gitstatus &&
+  generate &&
+  prepare &&
+  push &&
+  cleanup
 }
 
 # If working directory isn't clean, all changes will be lost if this strategy
 # runs all the way to the end. I would be very annoyed if that happened.
 #
 gitstatus() {
+  status "Checking local repository"
+
   if [ $(git status | grep -c "working directory clean") = 0 ]
   then
-    error "\n\nYour working directory is not clean.
-\nEither stash or commit before re-running this command.
-\nI don't want you to lose any uncommitted changes, will stop here."
+    error "
+Your working directory is not clean.
+Either stash or commit before re-running this command.
+I don't want you to lose any uncommitted changes, will stop here.\n"
   fi
 }
 
-# If there is a local bin/generate executable, it will run it,
+# If GH_PAGES_EXEC is set, it will run it,
 # otherwise it will default to the standard rocco command.
 #
 generate() {
-  local git_head=$(git symbolic-ref HEAD)
-  echo "${git_head##*/}" > /tmp/current_git_branch
+  status "Generating content for github:pages"
+
+  local git_head="$(git symbolic-ref HEAD)"
+  echo "${git_head##*/}" > /tmp/deliver_gh_pages_current_git_branch
 
   # If GH_PAGES_DIR is not ignored, it won't survive 'git clean -fd'
-  if [ $(egrep -c -e "^$GH_PAGES_DIR" .gitignore) = 0 ]
+  if [ $(egrep -c -e "^$GH_PAGES_DIR/*" .gitignore) = 0 ]
   then
-    echo $GH_PAGES_DIR >> .gitignore
+    echo "$GH_PAGES_DIR/*" >> .gitignore
     __exec "git commit -a -m 'Ignoring content generated for github:pages'"
   fi
 
-  local ghpages_cmd="$APP_ROOT/bin/gh-pages"
-
-  if [ -x $ghpages_cmd ]
+  if [ -n "$GH_PAGES_EXEC" ]
   then
-    $ghpages_cmd
-  else
-    if [ ! -z "$ROCCO_FILES" ]
-    then
-      set -f # disables file globbing
-      __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
-      set +f # enables file globbing
-    fi
-    __exec "cd $GH_PAGES_DIR"
+    __exec "$GH_PAGES_EXEC"
+  elif [ -n "$ROCCO_FILES" ]
+  then
+    set -f # disables file globbing
+    __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
+    set +f # enables file globbing
+
+    cd $GH_PAGES_DIR
+
     __exec "find . -type d -depth 1 | while read dir
-            do
-              mv $dir/* .
-              rm -fr $dir
-            done
-            "
-    if [ -e "$APP*.html" ]
+    do
+      mv $dir/* .
+      rm -fr $dir
+    done"
+
+    if [ -e "$APP.html" ]
     then
-      __exec "mv $APP*.html index.html"
+      __exec "mv $APP.html index.html"
     fi
+  else
+    error "
+You must define one of the following:
+* GH_PAGES_EXEC - a shell command (can be an executable) which will generate the html files
+* ROCCO_FILES - the source files that you want running through rocco\n"
   fi
 }
 
@@ -76,18 +81,22 @@ generate() {
 # Prep the locally generated content
 #
 prepare() {
+  status "Preparing gh-pages branch"
+
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
-  __exec "git clean -fd"
-  mv $GH_PAGES_DIR/* .
-  rm -fr $GH_PAGES_DIR
+  __exec "find . -not -iname '.git' -not -iname '$GH_PAGES_DIR' -depth 1 -exec rm -fr {} \;"
+  __exec "mv $GH_PAGES_DIR/* ."
+  __exec "rm -fr $GH_PAGES_DIR"
 }
 
 # Move all files from the generated folder into root folder,
 # commit and push
 #
 push() {
-  git add .
+  status "Pushing to github:pages"
+
+  __exec "git add ."
   if [[ ! $(git status) =~ "nothing to commit" ]]; then
     __exec "git commit -a -m 'Generated github:pages via deliver'"
     __exec "git push origin -f gh-pages"
@@ -97,7 +106,9 @@ push() {
 # Clean up after ourselves, switch back to the initial git branch
 #
 cleanup() {
+  status "Cleaning up"
+
   unset GH_PAGES_DIR
-  __exec "git checkout -f $(cat /tmp/current_git_branch)"
-  rm /tmp/current_git_branch
+  __exec "git checkout -f $(cat /tmp/deliver_gh_pages_current_git_branch)"
+  __exec "rm /tmp/deliver_gh_pages_current_git_branch"
 }

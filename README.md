@@ -1,12 +1,26 @@
-Deliver takes your local code and sets it up in production. A cross
-between Capistrano, git-deploy and heroku deploys, but language agnostic
-with no dependencies (other than bash or zsh). At [GoSquared] [2], we
-use this utility to deploy Ruby and node.js applications. An example:
+Deliver is a pure bash deployment tool with virtually no dependencies.
+It only cares about having enough info in the shell environment to do
+its job. Why add Ruby or Python wrappers on top of system commands when
+bash was built for this one task?
 
-![deliver] [1]
+Capistrano was just infuriating when you added rvm and bundler into the
+mix, git-deploy is great for single server, but what if you're running a
+bunch of auto-scaled clusters (Ruby, node.js etc.)?
 
-Strategies is what sets this utility apart from everything else. It
-comes with these by default:
+At GoSquared, the place where deliver started, each of us is free to use
+their own programming language. As long as the service exposes an API
+and has decent test coverage, anything goes. Yes, **even** PHP.
+
+Delivering a ruby service to multiple hosts:
+
+![deliver] [2]
+
+Delivering deliver to gh-pages:
+
+![deliver] [7]
+
+Strategies is what sets this utility apart from everything else. By
+default, it comes with:
 
   * [ruby] [3]
 
@@ -71,7 +85,7 @@ This will print the most important config settings and ensure that
 deliver has everything that it needs for a successful run. 
 
 Deliver will use the ruby strategy by default. If you want to use a different
-one, define it in your `.deliver/config` file.
+one, specify it in your `.deliver/config` file.
 
 To see a list of available strategies:
 
@@ -113,9 +127,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-[1]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
-[2]: http://www.gosquared.com/
+[1]: http://www.gosquared.com/
+[2]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
 [3]: deliver/tree/master/strategies/ruby
 [4]: deliver/tree/master/strategies/nodejs
 [5]: deliver/tree/master/strategies/gh-pages
 [6]: deliver/tree/master/strategies
+[7]: http://c2990942.r42.cf0.rackcdn.com/deliver.png
