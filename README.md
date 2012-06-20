@@ -4,13 +4,12 @@ its job. Why add Ruby or Python wrappers on top of system commands when
 bash was built for this one task?
 
 Capistrano was just infuriating when you added rvm and bundler into the
-mix, git-deploy is great for single server, but what if you're running
-a bunch of auto-scaled clusters (Ruby, node.js etc.)?
+mix, git-deploy is great for single server, but what if you're running a
+bunch of auto-scaled clusters (Ruby, node.js etc.)?
 
-At GoSquared, the place where deliver started, each of us is
-free to use their own programming language. As long as the service
-exposes an API and has decent test coverage, anything goes. Yes, **even**
-PHP.
+At GoSquared, the place where deliver started, each of us is free to use
+their own programming language. As long as the service exposes an API
+and has decent test coverage, anything goes. Yes, **even** PHP.
 
 Delivering a ruby service to multiple hosts:
 
