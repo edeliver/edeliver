@@ -85,7 +85,7 @@ prepare() {
 
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
-  __exec "find . -not -iname '.git' -not -iname '$GH_PAGES_DIR' -depth 1 -exec rm -fr {} \;"
+  __exec "ls -a | egrep -v -e \"\.$|\.git$|$GH_PAGES_DIR\" | while read resource; do rm -fr \"\$resource\"; done"
   __exec "mv $GH_PAGES_DIR/* ."
   __exec "rm -fr $GH_PAGES_DIR"
 }
