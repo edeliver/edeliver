@@ -78,7 +78,7 @@ rvmrc_trust() {
   status "Trusting rvmrc in $DELIVER_TO"
   __remote "
     set -e
-    . .profile
+    source .profile
     rvm rvmrc trust $DELIVER_TO $SILENCE
   "
 }
@@ -88,7 +88,7 @@ bundle_install() {
   status "Installing gems with bundler"
   __remote "
     set -e
-    . .profile
+    source .profile
     cd $DELIVER_TO $SILENCE
     bundle install --local --deployment --without development test $SILENCE
   "
@@ -98,7 +98,7 @@ npm_install() {
   status "Installing modules with npm"
   __remote "
     set -e
-    . .profile
+    source .profile
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
   "
@@ -112,7 +112,7 @@ foreman_export() {
 
   __remote "
     set -e
-    . .profile
+    source .profile
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
   "
