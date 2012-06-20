@@ -48,16 +48,14 @@ generate() {
     __exec "git commit -a -m 'Ignoring content generated for github:pages'"
   fi
 
-  if [ -n "$GH_PAGES_EXEC" ] && [ -x $GH_PAGES_EXEC ]
+  if [ -n "$GH_PAGES_EXEC" ]
   then
     __exec "$GH_PAGES_EXEC"
-  else
-    if [ -n "$ROCCO_FILES" ]
-    then
-      set -f # disables file globbing
-      __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
-      set +f # enables file globbing
-    fi
+  elif [ -n "$ROCCO_FILES" ]
+  then
+    set -f # disables file globbing
+    __exec "bundle exec rocco -o $GH_PAGES_DIR $ROCCO_FILES"
+    set +f # enables file globbing
 
     cd $GH_PAGES_DIR
 
@@ -67,10 +65,15 @@ generate() {
       rm -fr $dir
     done"
 
-    if [ -e "$APP*.html" ]
+    if [ -e "$APP.html" ]
     then
-      __exec "mv $APP*.html index.html"
+      __exec "mv $APP.html index.html"
     fi
+  else
+    error "
+You must define one of the following:
+* GH_PAGES_EXEC - a shell command (can be an executable) which will generate the html files
+* ROCCO_FILES - the source files that you want running through rocco\n"
   fi
 }
 
@@ -82,7 +85,7 @@ prepare() {
 
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
-  __exec "git clean -fd"
+  __exec "find . -not -iname '.git' -not -iname '$GH_PAGES_DIR' -depth 1 -exec rm -fr {} \;"
   __exec "mv $GH_PAGES_DIR/* ."
   __exec "rm -fr $GH_PAGES_DIR"
 }
