@@ -20,6 +20,7 @@ __remote_friendly() {
 #
 __capture_runtime_configs() {
   RUNTIME_STRATEGY="$STRATEGY"
+  RUNTIME_BRANCH="$BRANCH"
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS")"
 }
 
@@ -30,6 +31,11 @@ __apply_runtime_configs() {
   if [ -n "$RUNTIME_STRATEGY" ]
   then
     STRATEGY="$RUNTIME_STRATEGY"
+  fi
+
+  if [ -n "$RUNTIME_BRANCH" ]
+  then
+    BRANCH="$RUNTIME_BRANCH"
   fi
 
   if [ -n "$RUNTIME_SERVERS" ]
