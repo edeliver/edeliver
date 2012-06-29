@@ -3,6 +3,12 @@
 # http://linuxtidbits.wordpress.com/2008/08/11/output-color-on-bash-scripts/
 # SPINNER http://fitnr.com/showing-a-bash-spinner.html
 #
+# Progress indicator when running commands in the background
+# http://www.theiling.de/projects/bar.html#examples
+# http://moblog.bradleyit.com/2010/02/simple-bash-progress-bar-function.html
+# http://www.catonmat.net/blog/unix-utilities-pipe-viewer/ & http://www.ivarch.com/programs/quickref/pv.shtml
+# http://fitnr.com/showing-a-bash-spinner.html
+#
 txtund=$(tput sgr 0 1)          # Underline
 txtbld=$(tput bold)             # Bold
 bldred=${txtbld}$(tput setaf 1) #  red
