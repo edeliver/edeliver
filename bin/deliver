@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BASE_PATH="$(dirname $0)/.."
+BASE_PATH="$( cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd )"
 
 # All functions starting with __ are private ones
 # You can overwrite them, but ideally they should be left alone.
