@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# If a specific part fails (I'm thinking mostly remote commands),
-# I will fail the script explicitly, don't want it to just die
-# set -e
-
 BASE_PATH="$(dirname $0)/.."
 
 # All functions starting with __ are private ones
