@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+base_path="$( cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd )"
+
+cd $base_path
+mkdir -p $GH_PAGES_DIR
+cp share/man/$APP*.html $GH_PAGES_DIR/index.html
