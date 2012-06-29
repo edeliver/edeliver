@@ -3,11 +3,11 @@
 REQUIRED_CONFIGS+=("SERVERS")
 
 run() {
-  init_app_remotely &&
-  git_push &&
-  git_reset_remote &&
-  git_submodules &&
-  npm_install &&
-  foreman_export &&
+  init_app_remotely
+  git_push
+  git_reset_remote
+  git_submodules
+  npm_install
+  foreman_export
   upstart
 }

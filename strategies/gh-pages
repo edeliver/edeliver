@@ -10,10 +10,10 @@ then
 fi
 
 run() {
-  gitstatus &&
-  generate &&
-  prepare &&
-  push &&
+  gitstatus
+  generate
+  prepare
+  push
   cleanup
 }
 

@@ -11,12 +11,12 @@ REQUIRED_CONFIGS+=("SERVERS")
 run() {
   # TODO
   # If remote is up-to-date, finish early
-  init_app_remotely &&
-  git_push &&
-  git_reset_remote &&
-  git_submodules &&
-  rvmrc_trust &&
-  bundle_install &&
-  foreman_export &&
+  init_app_remotely
+  git_push
+  git_reset_remote
+  git_submodules
+  rvmrc_trust
+  bundle_install
+  foreman_export
   upstart
 }
