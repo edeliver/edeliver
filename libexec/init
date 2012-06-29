@@ -77,3 +77,12 @@ case "${MODE}" in
     TEST=true
   ;;
 esac
+
+# Print functions in test mode
+#
+#(test)
+  ##printf '%q' $(declare -f $1)
+  #IFS='%'
+  #echo -e $(declare -f "$1")
+  #unset IFS
+#;;
