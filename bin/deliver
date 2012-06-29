@@ -11,7 +11,8 @@ source "$BASE_PATH/libexec/defaults"
 source "$BASE_PATH/libexec/core"
 source "$BASE_PATH/libexec/common"
 
-__complain_if_interrupted
+trap __graceful_stop SIGINT SIGTERM
+
 __capture_runtime_configs
 __find_all_strategies
 

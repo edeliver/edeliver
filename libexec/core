@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
-# If script doesn't run all the way to the end,
-# it will exit 2 == SIGINT (Interrupt)
+# When a `SIGINT` or `SIGTERM` is received, stop all background jobs and exit
+# cheerfully.
+# https://github.com/hecticjeff/shoreman/blob/master/shoreman.sh
 # http://steve-parker.org/sh/trap.shtml
 #
-__complain_if_interrupted() {
-  trap "exit 2" 1 2 3 13 15
+__graceful_stop() {
+  local _message="Stopping deliver..."
+  hint_message "\n$_message" &&
+  __log "$_message" &&
+  kill ${background_jobs_pids[*]} 2>&1 &&
+  local _message="DELIVER STOPPED!"
+  success_message "\n$_message\n" &&
+  __log "$_message" &&
+  __log "===========================================================" &&
+  exit 0
 }
 
 # Ensures args (in this case hosts) are space separated so that we can easily loop over them
@@ -154,64 +163,6 @@ __check_config() {
   fi
 }
 
-# Progress indicator when running commands in the background
-# http://www.theiling.de/projects/bar.html#examples
-# http://moblog.bradleyit.com/2010/02/simple-bash-progress-bar-function.html
-# http://www.catonmat.net/blog/unix-utilities-pipe-viewer/ & http://www.ivarch.com/programs/quickref/pv.shtml
-# http://fitnr.com/showing-a-bash-spinner.html
-#
-__progress() {
-  local message="$1"
-  local style="${2:"$txtwht"}"
-  # Last process to have gone in the background (in this context),
-  # is our command
-  local _pid="$!"
-
-  echo -en "$style$message"
-
-  # If the pid exists, the process is running; use . as status indicators
-  while [[ $(ps -eo pid | grep "$_pid") ]]
-  do
-    printf '.'
-    sleep 0.5
-  done
-
-  # Wait until command finishes, otherwise fail
-  wait "$_pid" #|| fail
-  # Grab the command's exit code
-  local _status="$?"
-
-  # Anything but 0 means that it failed
-  if [[ $status = 0 ]]
-  then
-    success
-  else
-    error "FAILED. Re-run in verbose or debug mode."
-  fi
-}
-
-# Wrapper to either run the command verbosely (inline),
-# or silently (in the background)
-#
-__run() {
-  case "${MODE}" in
-    (compact)
-      ( "$1" ) &
-      __progress "$2"
-    ;;
-    (verbose|debug)
-      echo -e "$bldylw\n$2$txtrst"
-      eval "$1"
-    ;;
-    (test)
-      #printf '%q' $(declare -f $1)
-      IFS='%'
-      echo -e $(declare -f "$1")
-      unset IFS
-    ;;
-  esac
-}
-
 # Mode aware:
 # * COMPACT - silences jobs
 # * TEST - captures all jobs, no local or remote changes
@@ -227,9 +178,10 @@ __monitor_background_jobs() {
   for (( i = 0 ; i < ${#background_jobs_pids[@]} ; i++ ))
   do
     wait ${background_jobs_pids[$i]}
-    if [[ "$?" != 0 ]]
+    local _exit_status="$?"
+    if [[ "$_exit_status" != 0 ]]
     then
-      error "\nFAILED:\n${background_jobs[$i]}\n"
+      error "\nFAILED $stopping $_exit_status:\n${background_jobs[$i]}\n"
     fi
   done
 
