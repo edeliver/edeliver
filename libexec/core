@@ -127,39 +127,37 @@ __remote_hosts() {
 }
 
 __check_config() {
-  if [ ! -z "$CHECK" ]
-  then
-    set -f # disables file globbing
-    local configs=("$REQUIRED_VARS $STRATEGY_VARS")
+  set -f # disables file globbing
+  local _configs=("$REQUIRED_VARS $STRATEGY_VARS")
+  local _missing_configs=()
 
-    echo ""
+  echo ""
 
-    for config in $configs
-    do
-      local config_value="$(echo $(eval echo \$$config))"
-      if [ -z "$config_value" ]
-      then
-        local config_text="${txtred}"
-        local check_failed=true
-      else
-        local config_text="${txtgrn}"
-      fi
-      # http://unstableme.blogspot.co.uk/2009/07/text-alignment-with-awk-printf-function.html
-      # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
-      # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
-      # http://wiki.bash-hackers.org/commands/builtin/printf
-      printf "%-20s\t%s\n" "${config_text}$config" "$config_value${txtrst}"
-    done
-
-    if [ ! -z "$check_failed" ]
+  for config in $_configs
+  do
+    local _config_value="$(echo $(eval echo \$$config))"
+    if [ -z "$_config_value" ]
     then
-      echo -e "\n${bldred}CAN'T DELIVER, WE'RE MISSING A FEW THINGS${txtrst}\n"
+      _missing_configs+=("$config")
+      local _config_text="${txtred}"
+      local _check_failed=true
     else
-      echo -e "\n${bldgrn}YOU'RE READY TO DELIVER!${txtrst}\n"
+      local _config_text="${txtgrn}"
     fi
-    set +f # enables file globbing
+    # http://unstableme.blogspot.co.uk/2009/07/text-alignment-with-awk-printf-function.html
+    # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
+    # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
+    # http://wiki.bash-hackers.org/commands/builtin/printf
+    test -n "$CHECK" && printf "%-20s\t%s\n" "${_config_text}$config" "$_config_value${txtrst}"
+  done
+  set +f # re-enables file globbing
 
-    exit 0
+  if [ -n "$_check_failed" ]
+  then
+    echo -e "\n${bldred}DELIVER IS MISSING THE FOLLOWING CONFIG(S):${txtrst}\n\n${txtred}${_missing_configs[@]}${txtrst}\n"
+    exit 1
+  else
+    test -n "$CHECK" && echo -e "\n${bldgrn}READY TO DELIVER!${txtrst}\n" && exit 0
   fi
 }
 
