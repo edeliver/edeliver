@@ -132,6 +132,11 @@ __check_config() {
   set -f # disables file globbing
   local _missing_required_configs=()
 
+  if [ -n "$CHECK" ]
+  then
+    echo ""
+  fi
+
   for _required_config in ${REQUIRED_CONFIGS[@]}
   do
     local _required_config_value="$(echo $(eval echo \$$_required_config))"
