@@ -66,9 +66,9 @@ git_submodules() {
     git submodule sync $SILENCE
     if [ -e .gitmodules ]
     then
-      cat .gitmodules | awk -F'[@:]' '
+      cat .gitmodules | awk -F'/' '
       /url/ {
-        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts\"
+        command=\"test \$(ssh-keygen -F \" \$3 \" | grep -c found) = 0 && ssh-keyscan \" \$3 \" >> ~/.ssh/known_hosts 2>&1\"
         system(command)
         close(command)
       }'
