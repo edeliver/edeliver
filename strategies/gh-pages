@@ -2,7 +2,7 @@
 
 # Pushes locally generated content to Github Pages.
 
-STRATEGY_VARS="GH_PAGES_DIR"
+OPTIONAL_CONFIGS+=("GH_PAGES_DIR" "GH_PAGES_EXEC" "ROCCO_FILES")
 
 if [ -z "$GH_PAGES_DIR" ]
 then
@@ -28,7 +28,7 @@ gitstatus() {
     error "
 Your working directory is not clean.
 Either stash or commit before re-running this command.
-I don't want you to lose any uncommitted changes, will stop here.\n"
+Stopping so that uncommitted changes won't be lost.\n"
   fi
 }
 
@@ -72,7 +72,7 @@ generate() {
   else
     error "
 You must define one of the following:
-* GH_PAGES_EXEC - a shell command (can be an executable) which will generate the html files
+* GH_PAGES_EXEC - a shell command or an executable file which will generate the html files
 * ROCCO_FILES - the source files that you want running through rocco\n"
   fi
 }

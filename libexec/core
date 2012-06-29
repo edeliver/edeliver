@@ -127,18 +127,17 @@ __remote_hosts() {
 }
 
 __check_config() {
+  echo -en "\n${DEPRECATIONS[@]}"
+
   set -f # disables file globbing
-  local _configs=("$REQUIRED_VARS $STRATEGY_VARS")
-  local _missing_configs=()
+  local _missing_required_configs=()
 
-  echo ""
-
-  for config in $_configs
+  for _required_config in ${REQUIRED_CONFIGS[@]}
   do
-    local _config_value="$(echo $(eval echo \$$config))"
-    if [ -z "$_config_value" ]
+    local _required_config_value="$(echo $(eval echo \$$_required_config))"
+    if [ -z "$_required_config_value" ]
     then
-      _missing_configs+=("$config")
+      _missing_required_configs+=("$_required_config")
       local _config_text="${txtred}"
       local _check_failed=true
     else
@@ -148,16 +147,37 @@ __check_config() {
     # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
     # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
     # http://wiki.bash-hackers.org/commands/builtin/printf
-    test -n "$CHECK" && printf "%-20s\t%s\n" "${_config_text}$config" "$_config_value${txtrst}"
+    if [ -n "$CHECK" ]
+    then
+      printf "%-20s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
+    fi
+  done
+
+  if [ -n "$CHECK" ]
+  then
+    hint_message "-----------------------------------------------------------"
+  fi
+
+  for _optional_config in ${OPTIONAL_CONFIGS[@]}
+  do
+    local _optional_config_value="$(echo $(eval echo \$$_optional_config))"
+    if [ -n "$CHECK" ] && [ -n "$_optional_config_value" ]
+    then
+      printf "%-20s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
+    fi
   done
   set +f # re-enables file globbing
 
   if [ -n "$_check_failed" ]
   then
-    echo -e "\n${bldred}DELIVER IS MISSING THE FOLLOWING CONFIG(S):${txtrst}\n\n${txtred}${_missing_configs[@]}${txtrst}\n"
+    echo -e "\n${bldred}DELIVER IS MISSING THE FOLLOWING CONFIG(S):${txtrst}\n\n${txtred}${_missing_required_configs[@]}${txtrst}\n"
     exit 1
   else
-    test -n "$CHECK" && echo -e "\n${bldgrn}READY TO DELIVER!${txtrst}\n" && exit 0
+    if [ -n "$CHECK" ]
+    then
+      echo -e "\n${bldgrn}READY TO DELIVER!${txtrst}\n"
+      exit 0
+    fi
   fi
 }
 
@@ -252,4 +272,12 @@ __log() {
   local _line="$(date) ::: $@"
 
   echo "$_line" >> $log_file
+}
+
+__add_to_deprecations() {
+  local _value="$1"
+  local _version="$2"
+  local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
+
+  DEPRECATIONS+=("$_deprecation_message")
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 # Your app must run under this user. All files will be created as this user.
+# The context in which deliver gets run must be able to login as this user,
+# without asking for a password or a passphrase. The price of automation...
 #
 if [ -z "$APP_USER" ]
 then
@@ -24,23 +26,20 @@ then
   BRANCH="master"
 fi
 
-# It's no secret, Ruby is my darling, hence it's the default deliver strategy.
+# Ruby is the default deliver strategy.
+# node.js might be hip, but Ruby is beautiful.
 #
 if [ -z "$STRATEGY" ]
 then
   STRATEGY="ruby"
 fi
 
-# If a remote is not set, it will default to the app's user & server
-# NOTE DEPRECATED
-# Now that we support multiple servers, this doesn't make sense anymore.
-# Will be removed as of v1.1
-#
+__add_to_deprecations "REMOTE" "v0.6.0"
 if [ -z "$REMOTE" ]
 then
   REMOTE="$APP_USER@$SERVER"
 fi
 
-# From the time when deliver was single-server
+# Deliver used to be single-server, accounting for that here
 #
 SERVERS=$(__remote_friendly "$SERVER $SERVERS")

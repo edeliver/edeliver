@@ -11,14 +11,19 @@ APP="$(basename $APP_ROOT)"
 APP_CONFIG="$APP_ROOT/.deliver/config"
 
 GIT_REMOTE="deliver"
-DELIVER_REMOTE="$GIT_REMOTE" # legacy
+DELIVER_REMOTE="$GIT_REMOTE" # legacy, some custom strategies might still be using it
 
 SSH_TIMEOUT=3
 
+# Sincer deliver leverages foreman,
+# it supports all the supervisors that foreman does
 SUPERVISOR="upstart"
 
-REQUIRED_VARS="APP APP_ROOT STRATEGY"
+REQUIRED_CONFIGS=("APP" "APP_ROOT" "STRATEGY")
+OPTIONAL_CONFIGS=("APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS" "PORT")
 
 MODE="compact"
 
 log_file="/tmp/deliver-${APP}"
+
+DEPRECATIONS=()

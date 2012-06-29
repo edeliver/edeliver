@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
+REQUIRED_CONFIGS+=("SERVERS")
 
 run() {
   init_app_remotely &&

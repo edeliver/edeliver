@@ -3,7 +3,7 @@
 # This is the default deliver strategy.
 # It uses git push, rvm & foreman to generate upstart jobs
 
-STRATEGY_VARS="APP_USER DELIVER_TO SERVERS"
+REQUIRED_CONFIGS+=("SERVERS")
 
 # This function must be present since deliver will call it directly
 # Everything inside it or around it are only limited by your imagination : )
