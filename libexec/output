@@ -28,16 +28,39 @@ error_message() {
   echo -e "$bldred$@$txtrst"
 }
 
+# Specific failure, fail the whole script
+#
+error() {
+  IFS='%'
+  error_message $1
+  unset IFS
+  exit 1
+}
+
 # Displays arg as a hint message, yellow and optimistic
 #
 hint_message() {
   echo -e "$txtylw$@$txtrst"
 }
 
+# Command failed (not sure why), fail the whole script
+#
+fail() {
+  error_message "\nNot entirely sure why this failed."
+  hint_message "Re-run the command in verbose (-V|--verbose) or debug (-D|--debug) mode to gather more details about the failure."
+  exit 1
+}
+
 # Displays arg as a success message, green and cheerful
 #
 success_message() {
   echo -e "$bldgrn$@$txtrst"
+}
+
+# Command was successful
+#
+success() {
+  success_message " DONE"
 }
 
 # Converts all letters to uppercase
