@@ -127,9 +127,9 @@ when running deliver with the <code>--debug</code> option, the MODE for that one
 be <em>verbose</em>.</p>
 
 <dl>
-<dt><code>-C</code>, <code>--compact</code> (or <code>MODE=compact</code>)</dt><dd><p>Only shows the description and progress of each running task, on a per-host
-basis. Both standard and error output will be silenced. <em>This is the default
-mode</em></p></dd>
+<dt><code>-C</code>, <code>--compact</code> (or <code>MODE=compact</code>)</dt><dd><p>Only shows the description and progress of each running task, regardless
+how many hosts it's running on. Both standard and error output will be
+silenced. <em>This is the default mode</em></p></dd>
 <dt><code>-V</code>, <code>--verbose</code> (or <code>MODE=verbose</code>)</dt><dd><p>Will not silence output of the running task. Great for troubleshooting or
 getting feedback from all tasks.</p></dd>
 <dt><code>-D</code>, <code>--debug</code> (or <code>MODE=debug</code>)</dt><dd><p>Runs the entire script in standard shell debug mode, shows every line of
@@ -191,7 +191,7 @@ configured correctly:
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>Deliver 0.5.0</li>
-    <li class='tc'>June 2012</li>
+    <li class='tc'>July 2012</li>
     <li class='tr'>deliver(1)</li>
   </ol>
 

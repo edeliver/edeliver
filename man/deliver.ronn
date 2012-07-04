@@ -46,9 +46,9 @@ when running deliver with the `--debug` option, the MODE for that one run will
 be *verbose*.
 
   * `-C`, `--compact` (or `MODE=compact`):
-    Only shows the description and progress of each running task, on a per-host
-    basis. Both standard and error output will be silenced. _This is the default
-    mode_
+    Only shows the description and progress of each running task, regardless
+    how many hosts it's running on. Both standard and error output will be
+    silenced. _This is the default mode_
 
   * `-V`, `--verbose` (or `MODE=verbose`):
     Will not silence output of the running task. Great for troubleshooting or
