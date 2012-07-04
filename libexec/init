@@ -5,7 +5,33 @@ __version() {
 }
 
 __help() {
-  man $BASE_PATH/man/deliver.1
+  __version
+
+  echo -e "${txtbld}Usage:${txtrst}
+  deliver [MODE] [COMMAND]
+  deliver [OPTIONS]
+
+${txtbld}Commands:${txtrst}
+  deliver strategies    Lists all available strategies
+  deliver check         Checks if everything is setup correctly, displays the entire configuration
+  deliver [MODE]        Takes your code into production
+
+${txtbld}Modes:${txtrst}
+  -C, --compact         Displays every task as it's run, silences all output. (default mode)
+  -V, --verbose         Same as above, does not silence output.
+  -D, --debug           Runs in shell debug mode, displays everything.
+  -T, --testing         Similar to a dry-run. Displays the generated bash code.
+
+${txtbld}Options:${txtrst}
+  -s, --strategy        Enforces a particular strategy.
+  -h, --help            Displays this help. (works with no other options)
+  -v, --version         Displays the running version (works with no other options)
+
+${txtbld}Miscellaneous:${txtrst}
+  You can overwrite any config at runtime (deliver check):
+
+  SERVER=ruby-1-local PORT=6000 deliver -V
+"
 }
 
 __available_strategies() {
