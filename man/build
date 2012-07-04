@@ -8,3 +8,6 @@ export RONN_MANUAL="Deliver Manual"
 export RONN_ORGANIZATION="Deliver $VERSION"
 
 bundle exec ronn -w -s toc $BASE_PATH/man/*.ronn
+
+unset RONN_MANUAL
+unset RONN_ORGANIZATION
