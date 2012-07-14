@@ -11,7 +11,8 @@ APP="$(basename $APP_ROOT)"
 APP_CONFIG="$APP_ROOT/.deliver/config"
 
 GIT_REMOTE="deliver"
-DELIVER_REMOTE="$GIT_REMOTE" # legacy, some custom strategies might still be using it
+__add_to_deprecations "DELIVER_REMOTE" "v0.7.0"
+DELIVER_REMOTE="$GIT_REMOTE"
 
 SSH_TIMEOUT=3
 
@@ -25,5 +26,3 @@ OPTIONAL_CONFIGS=("APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS"
 MODE="compact"
 
 log_file="/tmp/deliver-${APP}"
-
-DEPRECATIONS=()

@@ -127,7 +127,7 @@ __remote_hosts() {
 }
 
 __check_config() {
-  echo -en "\n${DEPRECATIONS[@]}"
+  __display_deprecations
 
   set -f # disables file globbing
   local _missing_required_configs=()
@@ -276,13 +276,5 @@ __remote() {
 __log() {
   local _line="$(date) ::: $@"
 
-  echo "$_line" >> $log_file
-}
-
-__add_to_deprecations() {
-  local _value="$1"
-  local _version="$2"
-  local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
-
-  DEPRECATIONS+=("$_deprecation_message")
+  echo -e "$_line" >> $LOG_FILE
 }
