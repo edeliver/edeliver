@@ -18,7 +18,7 @@
 .br
 .
 .SH "DESCRIPTION"
-Deliver is a pure bash deployment tool with virtually no dependencies\. It only cares about having enough info in the shell environment to do its job\. Why add Ruby or Python wrappers on top of system commands when bash was built for this one task?
+Deliver is a pure bash deployment tool with virtually no dependencies\. It only cares about having enough info in the shell environment to do its job\. Why add Ruby or Python wrappers on top of system commands when bash was built for this?
 .
 .SH "STRATEGIES"
 \fBdeliver strategies\fR will list all available strategies\. The default strategies make certain assumptions, but they are fully modular and customizable\.
@@ -34,10 +34,6 @@ Heavily inspired by the ruby strategy, also foreman\-aware, defaults to upstart\
 .TP
 \fBgh\-pages\fR
 How many times did you find yourself copying that rake task which generates and publishes to github:pages \fIhttp://pages\.github\.com/\fR your project\'s docco \fIhttps://github\.com/jashkenas/docco\fR or rocco \fIhttps://github\.com/rtomayko/rocco\fR? With deliver, just run \fBdeliver \-s gh\-pages\fR from the app\'s root path\.
-.
-.SS "Customizing a default strategy?"
-.
-.SS "Creating a new strategy?"
 .
 .SH "CHECK"
 \fBdeliver check\fR will ensure that everything is set up correctly\. You can also use this to see your final configuration\.
@@ -59,13 +55,6 @@ Will not silence output of the running task\. Great for troubleshooting or getti
 .TP
 \fB\-D\fR, \fB\-\-debug\fR (or \fBMODE=debug\fR)
 Runs the entire script in standard shell debug mode, shows every line of bash that gets executed along with the task output\. Well suited when writing your own strategies or customizing existing ones\.
-.
-.TP
-\fB\-T\fR, \fB\-\-test\fR (or \fBMODE=test\fR)
-Similar to a dry\-run\. Will output each command that is going to run with no local or remote changes\. If you want full visibility into the final system commands that get generated, use this mode\.
-.
-.IP
-If you want tighter control over your deployment process, you can have everyone on the team using the generated commands rather than using deliver directly\.
 .
 .SH "COPYRIGHT"
 Deliver is Copyright (C) 2012 Gerhard Lazu \fIhttp://twitter\.com/gerhardlazu\fR

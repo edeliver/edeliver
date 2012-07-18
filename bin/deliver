@@ -40,10 +40,9 @@ __check_config
 
 # Run the loaded strategy
 # Can be overwritten by each strategy, e.g. custom output
-# When testing, only output the commands which would be run
 #
-[ ! $MODE = "test" ] && begin
+begin
 run
-[ ! $MODE = "test" ] && finish
+finish
 
 exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status

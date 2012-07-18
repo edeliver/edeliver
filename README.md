@@ -1,7 +1,7 @@
 Deliver is a pure bash deployment tool with virtually no dependencies.
 It only cares about having enough info in the shell environment to do
 its job. Why add Ruby or Python wrappers on top of system commands when
-bash was built for this one task?
+bash was built for this?
 
 Capistrano was just infuriating when you added rvm and bundler into the
 mix, git-deploy is great for single server, but what if you're running a
