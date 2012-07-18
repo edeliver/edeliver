@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # When a `SIGINT` or `SIGTERM` is received, stop all background jobs and exit
-# cheerfully.
+# cleanly.
 # https://github.com/hecticjeff/shoreman/blob/master/shoreman.sh
 # http://steve-parker.org/sh/trap.shtml
 #
@@ -28,18 +28,20 @@ __remote_friendly() {
 # until we're ready to overwrite everything set from other sources
 #
 __capture_runtime_configs() {
-  RUNTIME_STRATEGY="$STRATEGY"
-  RUNTIME_BRANCH="$BRANCH"
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS")"
+  RUNTIME_BRANCH="$BRANCH"
+  RUNTIME_LOG_FILE="$LOG_FILE"
+  RUNTIME_APP="$APP"
+  RUNTIME_STRATEGY="$STRATEGY"
 }
 
 # If STRATEGY or SERVERS are specified at the time of invoking, overwrite
 # anything that has been set from other sources
 #
 __apply_runtime_configs() {
-  if [ -n "$RUNTIME_STRATEGY" ]
+  if [ -n "$RUNTIME_SERVERS" ]
   then
-    STRATEGY="$RUNTIME_STRATEGY"
+    SERVERS="$RUNTIME_SERVERS"
   fi
 
   if [ -n "$RUNTIME_BRANCH" ]
@@ -47,9 +49,19 @@ __apply_runtime_configs() {
     BRANCH="$RUNTIME_BRANCH"
   fi
 
-  if [ -n "$RUNTIME_SERVERS" ]
+  if [ -n "$RUNTIME_LOG_FILE" ]
   then
-    SERVERS="$RUNTIME_SERVERS"
+    LOG_FILE="$RUNTIME_LOG_FILE"
+  fi
+
+  if [ -n "$RUNTIME_APP" ]
+  then
+    APP="$RUNTIME_APP"
+  fi
+
+  if [ -n "$RUNTIME_STRATEGY" ]
+  then
+    STRATEGY="$RUNTIME_STRATEGY"
   fi
 }
 
@@ -86,8 +98,8 @@ __find_all_strategies() {
     strategies_path+=("$BASE_PATH/strategies")
   fi
   # Per-project strategies
-  if [ -d "$APP_ROOT/.deliver/strategies" ]; then
-    strategies_path+=("$APP_ROOT/.deliver/strategies")
+  if [ -d "$ORIGIN_DIR/.deliver/strategies" ]; then
+    strategies_path+=("$ORIGIN_DIR/.deliver/strategies")
   fi
 
   STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
@@ -127,7 +139,7 @@ __remote_hosts() {
 }
 
 __check_config() {
-  echo -en "\n${DEPRECATIONS[@]}"
+  __display_deprecations
 
   set -f # disables file globbing
   local _missing_required_configs=()
@@ -246,28 +258,22 @@ __remote() {
 
   #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_job\""
 
-  if [[ $MODE != "test" ]]
-  then
-    local _remote_job="$1"
-    local _hosts="${2:-"$SERVERS_APP_USER"}"
-    background_jobs_pids=()
-    background_jobs=()
+  local _remote_job="$1"
+  local _hosts="${2:-"$SERVERS_APP_USER"}"
+  background_jobs_pids=()
+  background_jobs=()
 
-    __log "${_hosts} : $_remote_job"
+  __log "${_hosts} : $_remote_job"
 
-    for _host in $_hosts
-    do
-      ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
-      background_jobs_pids+=("$!")
-      local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
-      #__log "BACKGROUND JOB: $_background_job"
-      background_jobs+=("$_background_job")
-    done
+  for _host in $_hosts
+  do
+    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    background_jobs_pids+=("$!")
+    local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
+    background_jobs+=("$_background_job")
+  done
 
-    #__log "REMOTE PIDS: ${background_jobs_pids[@]}"
-
-    __monitor_background_jobs
-  fi
+  __monitor_background_jobs
 }
 
 # Logs all events (including formatting styles) so that people can tail,
@@ -276,13 +282,5 @@ __remote() {
 __log() {
   local _line="$(date) ::: $@"
 
-  echo "$_line" >> $log_file
-}
-
-__add_to_deprecations() {
-  local _value="$1"
-  local _version="$2"
-  local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
-
-  DEPRECATIONS+=("$_deprecation_message")
+  echo -e "$_line" >> $LOG_FILE
 }

@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ -z "$APP" ]
+then
+  APP="$(basename $ORIGIN_DIR)"
+fi
+
 # Your app must run under this user. All files will be created as this user.
 # The context in which deliver gets run must be able to login as this user,
 # without asking for a password or a passphrase. The price of automation...
@@ -43,3 +48,8 @@ fi
 # Deliver used to be single-server, accounting for that here
 #
 SERVERS=$(__remote_friendly "$SERVER $SERVERS")
+
+if [ -z "$LOG_FILE" ]
+then
+  LOG_FILE="/tmp/deliver"
+fi

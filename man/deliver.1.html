@@ -89,8 +89,7 @@
 
 <p>Deliver is a pure bash deployment tool with virtually no dependencies.  It only
 cares about having enough info in the shell environment to do its job. Why add
-Ruby or Python wrappers on top of system commands when bash was built for this
-one task?</p>
+Ruby or Python wrappers on top of system commands when bash was built for this?</p>
 
 <h2 id="STRATEGIES">STRATEGIES</h2>
 
@@ -107,10 +106,6 @@ and publishes to <a href="http://pages.github.com/">github:pages</a> your projec
 With deliver, just run <code>deliver -s gh-pages</code> from the app's root path.</p></dd>
 </dl>
 
-
-<h3 id="Customizing-a-default-strategy-">Customizing a default strategy?</h3>
-
-<h3 id="Creating-a-new-strategy-">Creating a new strategy?</h3>
 
 <h2 id="CHECK">CHECK</h2>
 
@@ -135,58 +130,12 @@ getting feedback from all tasks.</p></dd>
 <dt><code>-D</code>, <code>--debug</code> (or <code>MODE=debug</code>)</dt><dd><p>Runs the entire script in standard shell debug mode, shows every line of
 bash that gets executed along with the task output. Well suited when writing
 your own strategies or customizing existing ones.</p></dd>
-<dt><code>-T</code>, <code>--test</code> (or <code>MODE=test</code>)</dt><dd><p>Similar to a dry-run. Will output each command that is going to run with no
-local or remote changes. If you want full visibility into the final system
-commands that get generated, use this mode.</p>
-
-<p>If you want tighter control over your deployment process, you can have
-everyone on the team using the generated commands rather than using deliver
-directly.</p></dd>
 </dl>
 
 
 <h2 id="COPYRIGHT">COPYRIGHT</h2>
 
 <p>Deliver is Copyright (C) 2012 <a href="http://twitter.com/gerhardlazu">Gerhard Lazu</a></p>
-
-<!--
-With no options, it will run in compact mode and will use the STRATEGY from
-your runtime env, shell env or .deliver/config file. If you don't define a
-strategy, it will use the ruby one by default.
-
-If your specify a runtime strategy, this overwrite any subsequent configs:
-
-  STRATEGY=gh-pages deliver
-
-The above will use the gh-pages strategy, regardless of what you have
-defined in your .deliver/config file or your shell env.
-
-All settings respect the following priority (lower number takes precedence):
-
-1. Runtime env
-2. Shell env
-3. Deliver config file
-
-This becomes very helpful if you want to deploy your app to a local VM before
-pushing to production. You can invoke deliver with runtime envs without any
-modifications to your .deliver/config file:
-
-  SERVER=ruby-1-localvm deliver
-
-You can also deliver to multiple servers:
-
-  SERVER=ruby-1-local,ruby-2-local deliver
-
-When you're ready to update production, given that you already have the
-correct servers defined in your .deliver/config file, run deliver without any
-runtime variables.
-
-At any point, you can test your deliver setup to see if everything is
-configured correctly:
--->
-
-
-
 
 
   <ol class='man-decor man-foot man foot'>

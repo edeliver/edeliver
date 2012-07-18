@@ -18,6 +18,7 @@ BASE_PATH="$(cd "$DIR/.." && pwd)"
 # Remember Demeter: http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
 
 source "$BASE_PATH/libexec/output"
+source "$BASE_PATH/libexec/deprecations"
 source "$BASE_PATH/libexec/defaults"
 source "$BASE_PATH/libexec/core"
 source "$BASE_PATH/libexec/common"
@@ -39,10 +40,9 @@ __check_config
 
 # Run the loaded strategy
 # Can be overwritten by each strategy, e.g. custom output
-# When testing, only output the commands which would be run
 #
-[ ! $MODE = "test" ] && begin
+begin
 run
-[ ! $MODE = "test" ] && finish
+finish
 
-exit 0
+exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status

@@ -6,12 +6,15 @@ CREATOR="Gerhard Lazu"
 
 ARGS="$@"
 
-APP_ROOT="$(pwd)"
-APP="$(basename $APP_ROOT)"
-APP_CONFIG="$APP_ROOT/.deliver/config"
+ORIGIN_DIR="$(pwd)"
+__add_to_deprecations "APP_ROOT" "v0.7.0"
+APP_ROOT="$ORIGIN_DIR"
+
+APP_CONFIG="$ORIGIN_DIR/.deliver/config"
 
 GIT_REMOTE="deliver"
-DELIVER_REMOTE="$GIT_REMOTE" # legacy, some custom strategies might still be using it
+__add_to_deprecations "DELIVER_REMOTE" "v0.7.0"
+DELIVER_REMOTE="$GIT_REMOTE"
 
 SSH_TIMEOUT=3
 
@@ -19,11 +22,9 @@ SSH_TIMEOUT=3
 # it supports all the supervisors that foreman does
 SUPERVISOR="upstart"
 
-REQUIRED_CONFIGS=("APP" "APP_ROOT" "STRATEGY")
-OPTIONAL_CONFIGS=("APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS" "PORT")
+REQUIRED_CONFIGS=("ORIGIN_DIR" "STRATEGY")
+OPTIONAL_CONFIGS=("APP" "APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS" "PORT")
 
 MODE="compact"
 
 log_file="/tmp/deliver-${APP}"
-
-DEPRECATIONS=()

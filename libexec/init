@@ -20,7 +20,6 @@ ${txtbld}Modes:${txtrst}
   -C, --compact         Displays every task as it's run, silences all output. (default mode)
   -V, --verbose         Same as above, does not silence output.
   -D, --debug           Runs in shell debug mode, displays everything.
-  -T, --testing         Similar to a dry-run. Displays the generated bash code.
 
 ${txtbld}Options:${txtrst}
   -s, --strategy        Enforces a particular strategy.
@@ -35,11 +34,13 @@ ${txtbld}Miscellaneous:${txtrst}
 }
 
 __available_strategies() {
-  echo -e "\n${txtbld}AVAILABLE STRATEGIES${txtrst}\n"
+  __version
+
+  echo -e "${txtbld}Available strategies:${txtrst}"
 
   for strategy in $STRATEGIES_NAME
   do
-    echo " * $strategy"
+    echo "  * $strategy"
   done
 
   echo ""
@@ -57,9 +58,6 @@ do
     ;;
     (-V|--verbose)
       MODE="verbose"
-    ;;
-    (-T|--test)
-      MODE="test"
     ;;
     (-h|--help)
       __help
@@ -99,16 +97,4 @@ case "${MODE}" in
     VERBOSE=true
     SILENCE=""
   ;;
-  (test)
-    TEST=true
-  ;;
 esac
-
-# Print functions in test mode
-#
-#(test)
-  ##printf '%q' $(declare -f $1)
-  #IFS='%'
-  #echo -e $(declare -f "$1")
-  #unset IFS
-#;;
