@@ -35,11 +35,13 @@ ${txtbld}Miscellaneous:${txtrst}
 }
 
 __available_strategies() {
-  echo -e "\n${txtbld}AVAILABLE STRATEGIES${txtrst}\n"
+  __version
+
+  echo -e "${txtbld}Available strategies:${txtrst}"
 
   for strategy in $STRATEGIES_NAME
   do
-    echo " * $strategy"
+    echo "  * $strategy"
   done
 
   echo ""

@@ -92,7 +92,7 @@ one, specify it in your `.deliver/config` file.
 To see a list of available strategies:
 
 ```bash
-$ deliver -s|--strategies
+$ deliver strategies
 ```
 
 [Read more about deliver strategies] [6]
