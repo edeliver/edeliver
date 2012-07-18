@@ -61,21 +61,18 @@ git_submodules() {
   status "Updating git submodules"
   __remote "
     set -e
-    set -x
     cd $DELIVER_TO $SILENCE
     git submodule init $SILENCE
     git submodule sync $SILENCE
     if [ -e .gitmodules ]
     then
-      # will handle:
-      # https://github.com/user/repo
-      # git@github.com:user/repo
-      # ssh://git@github.com:user/repo
-      # cat .gitmodules | awk -F '(://)?(.*@)?|:|/' '
-      cat .gitmodules | awk -F 'git@|:' '
+      if [ ! -e ~/.ssh/known_hosts ]
+      then
+        touch ~/.ssh/known_hosts
+      fi
+      cat .gitmodules | awk -F '://|@|:|/' '
       /url/ {
-        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" | tee -a /tmp/git-submodules\"
-        print command
+        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts $SILENCE\"
         system(command)
         close(command)
       }'
