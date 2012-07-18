@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # When a `SIGINT` or `SIGTERM` is received, stop all background jobs and exit
-# cheerfully.
+# cleanly.
 # https://github.com/hecticjeff/shoreman/blob/master/shoreman.sh
 # http://steve-parker.org/sh/trap.shtml
 #
@@ -272,11 +272,8 @@ __remote() {
       ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
       background_jobs_pids+=("$!")
       local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
-      #__log "BACKGROUND JOB: $_background_job"
       background_jobs+=("$_background_job")
     done
-
-    #__log "REMOTE PIDS: ${background_jobs_pids[@]}"
 
     __monitor_background_jobs
   fi

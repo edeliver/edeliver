@@ -46,4 +46,4 @@ __check_config
 run
 [ ! $MODE = "test" ] && finish
 
-exit 0
+exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status

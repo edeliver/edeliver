@@ -98,6 +98,5 @@ finish() {
   local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
   echo -e "\n$_message\n"
   __log "$_message"
-  __log "==========================================================="
-  echo "" >> $log_file
+  __log "===========================================================\n"
 }
