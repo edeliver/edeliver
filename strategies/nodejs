@@ -6,6 +6,7 @@ run() {
   init_app_remotely
   git_push
   git_reset_remote
+  authorize_remote_hosts
   git_submodules
   npm_install
   foreman_export

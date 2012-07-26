@@ -105,6 +105,23 @@ rvmrc_trust() {
   __exec_if_defined "post_rvmrc_trust"
 }
 
+authorize_remote_hosts() {
+  if [[ ${#AUTHORIZED_REMOTE_HOSTS[@]} != 0 ]]
+  then
+    status "Authorizing remote hosts"
+    __remote "
+      set -e
+      source .profile
+      for _remote_host in $AUTHORIZED_REMOTE_HOSTS
+      do
+        if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
+        then
+          ssh-keyscan \$_remote_host >> ~/.ssh/known_hosts $SILENCE
+        fi
+      done
+    "
+  fi
+}
 
 bundle_install() {
   __exec_if_defined "pre_bundle_install"
