@@ -39,12 +39,6 @@ then
   STRATEGY="ruby"
 fi
 
-__add_to_deprecations "REMOTE" "v0.6.0"
-if [ -z "$REMOTE" ]
-then
-  REMOTE="$APP_USER@$SERVER"
-fi
-
 # Deliver used to be single-server, accounting for that here
 #
 SERVERS=$(__remote_friendly "$SERVER $SERVERS")
