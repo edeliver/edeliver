@@ -53,3 +53,8 @@ if [ -z "$LOG_FILE" ]
 then
   LOG_FILE="/tmp/deliver"
 fi
+
+if [ -z "$GENERATED_DIR" ]
+then
+  GENERATED_DIR="generated"
+fi

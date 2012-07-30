@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# Pushes locally generated content to Github Pages.
-
 OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATE_BIN" "ROCCO_FILES")
 
 run() {
@@ -9,7 +7,7 @@ run() {
   generate
   gh_prepare
   gh_push
-  gh_cleanup
+  cleanup
 }
 
 # Ensure that we have gh-pages branch,
@@ -18,11 +16,11 @@ run() {
 gh_prepare() {
   status "Preparing gh-pages branch"
 
-  export GENERATED_DIR
-
   __exec "git symbolic-ref HEAD refs/heads/gh-pages"
   __exec "rm .git/index"
-  __exec "ls -a | egrep -v -e \"\.$|\.git$|$GENERATED_DIR\" | while read resource; do rm -fr \"\$resource\"; done"
+  __exec "ls -a | egrep -v -e \"\.$|\.git$|$GH_PAGES_DIR\" | while read resource; do rm -fr \"\$resource\"; done"
+  __exec "mv $GH_PAGES_DIR/* ."
+  __exec "rm -fr $GH_PAGES_DIR"
 }
 
 # Move all files from the generated folder into root folder,

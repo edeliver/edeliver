@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+# If GENERATED_DIR is not ignored, it won't survive 'git clean -fd'
+#
+ignore_generated_dir() {
+  if [ $(egrep -c -e "^$GENERATED_DIR/*" .gitignore) = 0 ]
+  then
+    echo "$GENERATED_DIR/*" >> .gitignore
+    __exec "git commit -a -m 'Ignoring $GENERATED_DIR'"
+  fi
+}
+
+store_git_branch_before_generate() {
+  local git_head="$(git symbolic-ref HEAD)"
+  echo "${git_head##*/}" > /tmp/deliver_generated_current_git_branch
+}
+
+move_generated_files_to_root() {
+  cd $GENERATED_DIR
+
+  __exec "find . -type d -depth 1 | while read dir
+  do
+    mv $dir/* .
+    rm -fr $dir
+  done"
+
+  if [ -e "$APP.html" ]
+  then
+    __exec "mv $APP.html index.html"
+  fi
+}
+
+# If GENERATE_BIN is set, it will run it,
+# otherwise it will default to the standard rocco command.
+#
+generate() {
+  status "Generating content"
+
+  ignore_generated_dir
+  store_git_branch_before_generate
+
+  if [ -n "$GENERATE_BIN" ]
+  then
+    __exec "$GENERATE_BIN"
+  elif [ -n "$ROCCO_FILES" ]
+  then
+    set -f # disables file globbing
+    __exec "bundle exec rocco -o $GENERATED_DIR $ROCCO_FILES"
+    set +f # enables file globbing
+  else
+    error "
+You must define one of the following:
+* GENERATE_BIN - a shell command or an executable file which will generate the html files
+* ROCCO_FILES - the source files that you want running through rocco\n"
+  fi
+
+  move_generated_files_to_root
+}

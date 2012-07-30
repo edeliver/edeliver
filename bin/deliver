@@ -22,6 +22,7 @@ source "$BASE_PATH/libexec/deprecations"
 source "$BASE_PATH/libexec/defaults"
 source "$BASE_PATH/libexec/core"
 source "$BASE_PATH/libexec/common"
+source "$BASE_PATH/libexec/generated"
 
 trap __graceful_stop SIGINT SIGTERM
 
