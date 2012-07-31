@@ -1,7 +1,15 @@
 ### What's new in deliver 0.6.0
 
 Thanks to Dan Palmer, there's now a [deliver chef cookbook][1], perfect
-if you want to have your CI take code into production part of the build.
+if you want to have your CI take code into production. This makes it
+very easy to turn your Jenkins into a continous delivery system, just
+add `deliver --verbose` to your build command.
+
+* handles remote host authorization explicitly, via
+  AUTHORIZED\_REMOTE\_HOSTS (think private npm modules &amp; private
+  ruby gems, self-hosted)
+* pre & post hooks for the most common functions (eg.
+  `pre_init_app_remotely` &amp; `post_launch`)
 
 #### Deprecations
 

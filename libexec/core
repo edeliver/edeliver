@@ -284,3 +284,11 @@ __log() {
 
   echo -e "$_line" >> $LOG_FILE
 }
+
+# Used for pre & post hooks
+# Runs if functions are defined
+#
+__exec_if_defined() {
+  local _function="$1"
+  declare -F "$_function" > /dev/null && eval "$_function"
+}

@@ -20,6 +20,8 @@ nothing_to_do() {
 }
 
 init_app_remotely() {
+  __exec_if_defined "pre_init_app_remotely"
+
   local git_remote="$(git remote -v)"
 
   status "Ensuring remotes are ready to accept git pushes"
@@ -43,9 +45,12 @@ init_app_remotely() {
       git config receive.denyCurrentBranch ignore
     fi
   "
+  __exec_if_defined "post_init_app_remotely"
 }
 
 git_push() {
+  __exec_if_defined "pre_git_push"
+
   local _hosts="${1:-"$SERVERS_APP_USER"}"
 
   status "Pushing new commits with git to: $_hosts"
@@ -63,6 +68,8 @@ git_push() {
   done
 
   __monitor_background_jobs
+
+  __exec_if_defined "post_git_push"
 }
 
 git_reset_remote() {
@@ -75,6 +82,8 @@ git_reset_remote() {
 }
 
 git_submodules() {
+  __exec_if_defined "pre_git_submodules"
+
   status "Updating git submodules"
   __remote "
     set -e
@@ -96,19 +105,44 @@ git_submodules() {
       git submodule update $SILENCE
     fi
   "
+
+  __exec_if_defined "post_git_submodules"
 }
 
 rvmrc_trust() {
+  __exec_if_defined "pre_rvmrc_trust"
+
   status "Trusting rvmrc in $DELIVER_TO"
   __remote "
     set -e
     source .profile
     rvm rvmrc trust $DELIVER_TO $SILENCE
   "
+
+  __exec_if_defined "post_rvmrc_trust"
 }
 
+authorize_remote_hosts() {
+  if [[ ${#AUTHORIZED_REMOTE_HOSTS[@]} != 0 ]]
+  then
+    status "Authorizing remote hosts"
+    __remote "
+      set -e
+      source .profile
+      for _remote_host in $AUTHORIZED_REMOTE_HOSTS
+      do
+        if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
+        then
+          ssh-keyscan \$_remote_host >> ~/.ssh/known_hosts $SILENCE
+        fi
+      done
+    "
+  fi
+}
 
 bundle_install() {
+  __exec_if_defined "pre_bundle_install"
+
   status "Installing gems with bundler"
   __remote "
     set -e
@@ -116,9 +150,13 @@ bundle_install() {
     cd $DELIVER_TO $SILENCE
     bundle install --local --deployment --without development test $SILENCE
   "
+
+  __exec_if_defined "post_bundle_install"
 }
 
 npm_install() {
+  __exec_if_defined "pre_npm_install"
+
   status "Installing modules with npm"
   __remote "
     set -e
@@ -126,9 +164,13 @@ npm_install() {
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
   "
+
+  __exec_if_defined "post_npm_install"
 }
 
 foreman_export() {
+  __exec_if_defined "pre_foreman_export"
+
   status "Exporting services to $SUPERVISOR"
   local _foreman="foreman export $SUPERVISOR tmp --user $APP_USER --app $APP"
   test -n "$PORT" && _foreman="$_foreman --port $PORT"
@@ -140,9 +182,13 @@ foreman_export() {
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
   "
+
+  __exec_if_defined "post_foreman_export"
 }
 
-upstart() {
+launch() {
+  __exec_if_defined "pre_launch"
+
   status "Launching app with $SUPERVISOR"
   # This command, because of the sudo dependency, will use your local $USER.
   # You should be able to log in with $USER to the remote servers, and you
@@ -159,4 +205,14 @@ upstart() {
     sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
     sudo start $APP $SILENCE
   " "$SERVERS"
+
+  __exec_if_defined "post_launch"
+}
+
+# Aliased, no longer bound to upstart
+#
+upstart() {
+  __exec_if_defined "pre_upstart"
+  launch
+  __exec_if_defined "post_upstart"
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="0.5.0"
+VERSION="0.6.0-pre"
 HOMEPAGE="https://github.com/gerhard/deliver"
 CREATOR="Gerhard Lazu"
 
@@ -22,8 +22,10 @@ SSH_TIMEOUT=3
 # it supports all the supervisors that foreman does
 SUPERVISOR="upstart"
 
+AUTHORIZED_REMOTE_HOSTS=()
+
 REQUIRED_CONFIGS=("ORIGIN_DIR" "STRATEGY")
-OPTIONAL_CONFIGS=("APP" "APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS" "PORT")
+OPTIONAL_CONFIGS=("APP" "APP_USER" "DELIVER_TO" "BRANCH" "SUPERVISOR" "FOREMAN_EXTRAS" "PORT" "AUTHORIZED_REMOTE_HOSTS")
 
 MODE="compact"
 

@@ -20,7 +20,7 @@ Delivering deliver to [github:pages] [8] (very inception-esque):
 ![deliver deliver to github:pages] [7]
 
 Strategies is what sets this utility apart from everything else. By
-default, it comes with:
+default, it comes with strategies for:
 
   * [ruby] [3]
 

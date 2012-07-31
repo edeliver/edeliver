@@ -14,6 +14,7 @@ run() {
   init_app_remotely
   git_push
   git_reset_remote
+  authorize_remote_hosts
   git_submodules
   rvmrc_trust
   bundle_install
