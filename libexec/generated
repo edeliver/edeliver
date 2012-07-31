@@ -10,24 +10,25 @@ ignore_generated_dir() {
   fi
 }
 
-store_git_branch_before_generate() {
+store_current_git_branch() {
   local git_head="$(git symbolic-ref HEAD)"
-  echo "${git_head##*/}" > /tmp/deliver_generated_current_git_branch
+  echo "${git_head##*/}" > /tmp/deliver_current_git_branch
 }
 
 move_generated_files_to_root() {
-  cd $GENERATED_DIR
+  __exec "mv $GENERATED_DIR/* ."
+  __exec "rm -fr $GENERATED_DIR"
 
-  __exec "find . -type d -depth 1 | while read dir
-  do
-    mv $dir/* .
-    rm -fr $dir
-  done"
-
-  if [ -e "$APP.html" ]
+  if [ -e "$APP.html" ] && [ ! -e "index.html" ]
   then
-    __exec "mv $APP.html index.html"
+    __exec "cp $APP.html index.html"
   fi
+}
+
+reset_git_head() {
+  __exec "git symbolic-ref HEAD refs/heads/$GENERATED_BRANCH"
+  __exec "rm .git/index"
+  __exec "ls -a $ORIGIN_DIR | egrep -v -e \"\.$|\.git$|$GENERATED_DIR\" | while read resource; do rm -fr \"\$resource\"; done"
 }
 
 # If GENERATE_BIN is set, it will run it,
@@ -37,11 +38,14 @@ generate() {
   status "Generating content"
 
   ignore_generated_dir
-  store_git_branch_before_generate
 
-  if [ -n "$GENERATE_BIN" ]
+  CURRENT_GIT_BRANCH="$(git symbolic-ref HEAD)"
+
+  store_current_git_branch
+
+  if [ -n "$GENERATE_CMD" ]
   then
-    __exec "$GENERATE_BIN"
+    __exec "$GENERATE_CMD"
   elif [ -n "$ROCCO_FILES" ]
   then
     set -f # disables file globbing
@@ -50,9 +54,22 @@ generate() {
   else
     error "
 You must define one of the following:
-* GENERATE_BIN - a shell command or an executable file which will generate the html files
+* GENERATE_CMD - a bash function or an executable file which will generate the html files
 * ROCCO_FILES - the source files that you want running through rocco\n"
   fi
 
+  reset_git_head
   move_generated_files_to_root
+
+  __exec "git add ."
+}
+
+commit_generated() {
+  status "Committing generated content"
+  __exec "git commit -a -m 'Generated with deliver'"
+}
+
+generated_cleanup() {
+  __exec "git checkout -f $(cat /tmp/deliver_current_git_branch)"
+  __exec "rm /tmp/deliver_current_git_branch"
 }

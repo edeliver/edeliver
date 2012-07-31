@@ -1,47 +1,28 @@
 #!/usr/bin/env bash
 
-OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATE_BIN" "ROCCO_FILES")
+# For when you want to publish to a static vhost.
+#
+# There are references to ROCCO_FILES for when you want to make the code
+# comments available on github:pages (or elsewhere).
+# http://gchef.github.com/chef-extensions is a good example for this use-case.
+#
+# Every deploy is a commit on the generated branch. This then gets pushed out
+# to all remote hosts (or just to github:pages).
+
+OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD")
 
 run() {
   gitstatus
+  init_app_remotely
   generate
-  gh_prepare
-  gh_push
-  cleanup
-}
 
-# Ensure that we have gh-pages branch,
-# Prep the locally generated content
-#
-gh_prepare() {
-  status "Preparing gh-pages branch"
-
-  __exec "git symbolic-ref HEAD refs/heads/gh-pages"
-  __exec "rm .git/index"
-  __exec "ls -a | egrep -v -e \"\.$|\.git$|$GH_PAGES_DIR\" | while read resource; do rm -fr \"\$resource\"; done"
-  __exec "mv $GH_PAGES_DIR/* ."
-  __exec "rm -fr $GH_PAGES_DIR"
-}
-
-# Move all files from the generated folder into root folder,
-# commit and push
-#
-gh_push() {
-  status "Pushing to github:pages"
-
-  __exec "git add ."
-  if [[ ! $(git status) =~ "nothing to commit" ]]; then
-    __exec "git commit -a -m 'Generated github:pages via deliver'"
-    __exec "git push origin -f gh-pages"
+  if [[ ! $(git status) =~ "nothing to commit" ]]
+  then
+    commit_generated
+    git_push
+  else
+    nothing_to_do
   fi
-}
 
-# Clean up after ourselves, switch back to the initial git branch
-#
-gh_cleanup() {
-  status "Cleaning up"
-
-  unset GH_PAGES_DIR
-  __exec "git checkout -f $(cat /tmp/deliver_gh_pages_current_git_branch)"
-  __exec "rm /tmp/deliver_gh_pages_current_git_branch"
+  generated_cleanup
 }

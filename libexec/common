@@ -15,10 +15,14 @@ Stopping so that uncommitted changes won't be lost.\n"
   fi
 }
 
+nothing_to_do() {
+  status "Everything up-to-date"
+}
+
 init_app_remotely() {
   local git_remote="$(git remote -v)"
 
-  status "Ensuring remote is ready to accept git pushes"
+  status "Ensuring remotes are ready to accept git pushes"
 
   for _host in $SERVERS_APP_USER
   do
@@ -42,7 +46,7 @@ init_app_remotely() {
 }
 
 git_push() {
-  local _hosts="${2:-"$SERVERS_APP_USER"}"
+  local _hosts="${1:-"$SERVERS_APP_USER"}"
 
   status "Pushing new commits with git to: $_hosts"
 
