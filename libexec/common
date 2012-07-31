@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 
+# If working directory isn't clean, all changes will be lost if this strategy
+# runs all the way to the end. I would be very annoyed if that happened.
+#
+gitstatus() {
+  status "Checking local repository"
+
+  if [ $(git status | grep -c "working directory clean") = 0 ]
+  then
+    error "
+Your working directory is not clean.
+Either stash or commit before re-running this command.
+Stopping so that uncommitted changes won't be lost.\n"
+  fi
+}
+
+nothing_to_do() {
+  status "Everything up-to-date"
+}
+
 init_app_remotely() {
   __exec_if_defined "pre_init_app_remotely"
 
   local git_remote="$(git remote -v)"
 
-  status "Ensuring remote is ready to accept git pushes"
+  status "Ensuring remotes are ready to accept git pushes"
 
   for _host in $SERVERS_APP_USER
   do
@@ -32,7 +51,7 @@ init_app_remotely() {
 git_push() {
   __exec_if_defined "pre_git_push"
 
-  local _hosts="${2:-"$SERVERS_APP_USER"}"
+  local _hosts="${1:-"$SERVERS_APP_USER"}"
 
   status "Pushing new commits with git to: $_hosts"
 
@@ -47,8 +66,6 @@ git_push() {
     background_jobs_pids+=("$!")
     background_jobs+=("$_background_job")
   done
-
-  #__log "GIT PUSH PIDS: ${background_jobs_pids[@]}"
 
   __monitor_background_jobs
 
