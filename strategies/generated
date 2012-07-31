@@ -17,15 +17,8 @@ run() {
   gitstatus
   init_app_remotely
   generate
-
-  if [[ ! $(git status) =~ "nothing to commit" ]]
-  then
-    commit_generated
-    git_push
-    git_reset_remote
-  else
-    nothing_to_do
-  fi
-
+  commit_generated
+  git_push
+  git_reset_remote
   generated_cleanup
 }
