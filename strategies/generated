@@ -9,7 +9,9 @@
 # Every deploy is a commit on the generated branch. This then gets pushed out
 # to all remote hosts (or just to github:pages).
 
-OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD")
+OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD" "SERVERS")
+
+BRANCH="$GENERATED_BRANCH"
 
 run() {
   gitstatus
@@ -20,6 +22,7 @@ run() {
   then
     commit_generated
     git_push
+    git_reset_remote
   else
     nothing_to_do
   fi
