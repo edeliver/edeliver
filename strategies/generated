@@ -15,6 +15,7 @@ BRANCH="$GENERATED_BRANCH"
 
 run() {
   gitstatus
+  authorize_hosts
   init_app_remotely
   generate
   commit_generated
