@@ -11,6 +11,7 @@ REQUIRED_CONFIGS+=("SERVERS")
 run() {
   # TODO
   # If remote is up-to-date, finish early
+  authorize_hosts
   init_app_remotely
   git_push
   git_reset_remote

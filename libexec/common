@@ -19,6 +19,26 @@ nothing_to_do() {
   status "Everything up-to-date"
 }
 
+authorize_hosts() {
+  if [ -n "$SERVERS" ]
+  then
+    status "Authorizing hosts"
+
+    if [[ ! -e ~/.ssh/known_hosts ]]
+    then
+      touch ~/.ssh/known_hosts
+    fi
+
+    for _host in $SERVERS
+    do
+      if [[ $(ssh-keygen -F $_host | grep -c found) = 0 ]]
+      then
+        ssh-keyscan "$_host" 2>/dev/null >> ~/.ssh/known_hosts
+      fi
+    done
+  fi
+}
+
 init_app_remotely() {
   __exec_if_defined "pre_init_app_remotely"
 
