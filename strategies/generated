@@ -9,7 +9,7 @@
 # Every deploy is a commit on the generated branch. This then gets pushed out
 # to all remote hosts (or just to github:pages).
 
-OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD" "SERVERS")
+OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD" "HOSTS")
 
 BRANCH="$GENERATED_BRANCH"
 

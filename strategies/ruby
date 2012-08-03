@@ -3,14 +3,12 @@
 # This is the default deliver strategy.
 # It uses git push, rvm & foreman to generate upstart jobs
 
-REQUIRED_CONFIGS+=("SERVERS")
+REQUIRED_CONFIGS+=("HOSTS")
 
 # This function must be present since deliver will call it directly
 # Everything inside it or around it are only limited by your imagination : )
 #
 run() {
-  # TODO
-  # If remote is up-to-date, finish early
   authorize_hosts
   init_app_remotely
   git_push

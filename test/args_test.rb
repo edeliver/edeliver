@@ -53,13 +53,13 @@ class TestDeliverArgs < MiniTest::Unit::TestCase
   )
 
   deliver(
-    :vars   => "SERVER='localhost'",
+    :vars   => "HOSTS='localhost'",
     :args   => "check",
     :output => %r{
       APP.+deliver.+
-      APP_ROOT.+deliver.+
+      ORIGIN_DIR.+deliver.+
       STRATEGY.+ruby.+
-      SERVERS.+[^,]localhost[^,].+
+      HOSTS.+[^,]localhost[^,].+
       READY.TO.DELIVER
     }xm
   )

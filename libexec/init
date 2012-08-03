@@ -29,7 +29,7 @@ ${txtbld}Options:${txtrst}
 ${txtbld}Miscellaneous:${txtrst}
   You can overwrite any config at runtime (deliver check):
 
-  SERVER=ruby-1-local PORT=6000 deliver -V
+  HOSTS=ruby-1-local PORT=6000 deliver -V
 "
 }
 

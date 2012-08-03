@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-REQUIRED_CONFIGS+=("SERVERS")
+REQUIRED_CONFIGS+=("HOSTS")
 
 run() {
   authorize_hosts

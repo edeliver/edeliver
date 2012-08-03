@@ -41,7 +41,9 @@ fi
 
 # Deliver used to be single-server, accounting for that here
 #
-SERVERS=$(__remote_friendly "$SERVER $SERVERS")
+__add_to_deprecations "SERVERS" "v0.8.0"
+SERVERS=$(__remote_friendly "$SERVER $SERVERS $HOSTS")
+HOSTS="$SERVERS"
 
 if [ -z "$LOG_FILE" ]
 then

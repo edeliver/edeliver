@@ -20,7 +20,7 @@ nothing_to_do() {
 }
 
 authorize_hosts() {
-  if [ -n "$SERVERS" ]
+  if [ -n "$HOSTS" ]
   then
     status "Authorizing hosts"
 
@@ -29,7 +29,7 @@ authorize_hosts() {
       touch ~/.ssh/known_hosts
     fi
 
-    for _host in $SERVERS
+    for _host in $HOSTS
     do
       if [[ $(ssh-keygen -F $_host | grep -c found) = 0 ]]
       then
@@ -46,7 +46,7 @@ init_app_remotely() {
 
   status "Ensuring remotes are ready to accept git pushes"
 
-  for _host in $SERVERS_APP_USER
+  for _host in $HOSTS_APP_USER
   do
     local _remote_url="$_host:$DELIVER_TO"
     if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
@@ -71,7 +71,7 @@ init_app_remotely() {
 git_push() {
   __exec_if_defined "pre_git_push"
 
-  local _hosts="${1:-"$SERVERS_APP_USER"}"
+  local _hosts="${1:-"$HOSTS_APP_USER"}"
 
   status "Pushing new commits with git to: $_hosts"
 
@@ -224,7 +224,7 @@ launch() {
     sudo rm -f /etc/init/$APP[.-]*
     sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
     sudo start $APP $SILENCE
-  " "$SERVERS"
+  " "$HOSTS"
 
   __exec_if_defined "post_launch"
 }

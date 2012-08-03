@@ -28,20 +28,21 @@ __remote_friendly() {
 # until we're ready to overwrite everything set from other sources
 #
 __capture_runtime_configs() {
-  RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS")"
+  # DEPRECATE as of v0.8.0
+  RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
+  RUNTIME_HOSTS="$RUNTIME_SERVERS"
   RUNTIME_BRANCH="$BRANCH"
   RUNTIME_LOG_FILE="$LOG_FILE"
   RUNTIME_APP="$APP"
   RUNTIME_STRATEGY="$STRATEGY"
 }
 
-# If STRATEGY or SERVERS are specified at the time of invoking, overwrite
-# anything that has been set from other sources
+# Overwrite the following configs if they have been specified at runtime:
 #
 __apply_runtime_configs() {
-  if [ -n "$RUNTIME_SERVERS" ]
+  if [ -n "$RUNTIME_HOSTS" ]
   then
-    SERVERS="$RUNTIME_SERVERS"
+    HOSTS="$RUNTIME_HOSTS"
   fi
 
   if [ -n "$RUNTIME_BRANCH" ]
@@ -71,7 +72,7 @@ __apply_runtime_configs() {
 # just a function calling deliver behind the scenes. Imagine the following:
 #
 #   deploy() {
-#     APP=awesome SERVER=ruby-1 PORT=5000 deliver
+#     APP=awesome HOSTS=ruby-1 PORT=5000 deliver
 #   }
 #
 __load_app_config() {
@@ -127,15 +128,15 @@ __load_strategy() {
 }
 
 # Appends app user to all hosts so that we can log in with this user
-# on specific remote jobs. Formats all servers in a format parallel can work with.
+# on specific remote jobs.
 #
 __remote_hosts() {
-  for server in $SERVERS
+  for _host in $HOSTS
   do
-    SERVERS_APP_USER="$SERVERS_APP_USER,$APP_USER@$server"
+    HOSTS_APP_USER="$HOSTS_APP_USER,$APP_USER@$_host"
   done
-  SERVERS="$(__remote_friendly $SERVERS)"
-  SERVERS_APP_USER="$(__remote_friendly $SERVERS_APP_USER)"
+  HOSTS="$(__remote_friendly $HOSTS)"
+  HOSTS_APP_USER="$(__remote_friendly $HOSTS_APP_USER)"
 }
 
 __check_config() {
@@ -228,7 +229,7 @@ __monitor_background_jobs() {
 #
 __parallelize() {
   local _job="$1"
-  local _hosts="${2:-"$SERVERS_APP_USER"}"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
 
   background_job_pids=()
   background_jobs=()
@@ -259,7 +260,7 @@ __remote() {
   #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_job\""
 
   local _remote_job="$1"
-  local _hosts="${2:-"$SERVERS_APP_USER"}"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
   background_jobs_pids=()
   background_jobs=()
 
