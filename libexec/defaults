@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="0.6.0-pre"
+VERSION="0.6.0"
 HOMEPAGE="https://github.com/gerhard/deliver"
 CREATOR="Gerhard Lazu"
 

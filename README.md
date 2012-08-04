@@ -7,29 +7,31 @@ Capistrano was just infuriating when you added rvm and bundler into the
 mix, git-deploy is great for single server, but what if you're running a
 bunch of auto-scaled clusters (Ruby, node.js etc.)?
 
-At [GoSquared] [1], the place where deliver started, each of us is free to use
+At [GoSquared][1], the place where deliver started, each of us is free to use
 their own programming language. As long as the service exposes an API
 and has decent test coverage, anything goes. Yes, **even** PHP.
 
 Delivering a nodejs service to multiple hosts:
 
-![deliver nodejs service to multiple hosts] [2]
+![deliver nodejs service to multiple hosts][2]
 
-Delivering deliver to [github:pages] [8] (very inception-esque):
+Delivering deliver to [github:pages][8] (very inception-esque):
 
-![deliver deliver to github:pages] [7]
+![deliver deliver to github:pages][7]
 
 Strategies is what sets this utility apart from everything else. By
 default, it comes with strategies for:
 
-  * [ruby] [3]
+  * [ruby][3]
 
-  * [nodejs] [4]
+  * [nodejs][4]
 
-  * [gh-pages] [5]
+  * [gh-pages][5]
 
-You can also add your own, project-specific strategies. [Read more about deliver
-strategies.] [6]
+  * [generated][10]
+
+You can also add your own, project-specific strategies, or overload existing ones. [Read more about deliver
+strategies.][6]
 
 
 ## 1 INSTALLATION
@@ -67,7 +69,7 @@ This is a good example:
 #!/usr/bin/env bash
 
 APP="events"
-SERVERS="ruby-1,ruby-2"
+HOSTS="ruby-1,ruby-2"
 PORT="5000"
 ```
 
@@ -81,7 +83,7 @@ From the root of your project, run:
 $ deliver check
 ```
 
-![deliver check] [9]
+![deliver check][9]
 
 This will print the most important config settings and ensure that
 deliver has everything that it needs for a successful run. 
@@ -95,7 +97,7 @@ To see a list of available strategies:
 $ deliver strategies
 ```
 
-[Read more about deliver strategies] [6]
+[Read more about deliver strategies][6]
 
 To see all supported options and actions:
 
@@ -138,3 +140,4 @@ SOFTWARE.
 [7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
 [8]: http://gerhard.github.com/deliver
 [9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
+[10]: deliver/tree/master/strategies/generated

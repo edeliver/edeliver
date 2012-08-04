@@ -6,7 +6,7 @@
 # comments available on github:pages (or elsewhere).
 # http://gchef.github.com/chef-extensions is a good example for this use-case.
 #
-# Every deploy is a commit on the generated branch. This then gets pushed out
+# Every deliver is a commit on the generated branch. This then gets pushed out
 # to all remote hosts (or just to github:pages).
 
 OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD" "HOSTS")

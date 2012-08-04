@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "DELIVER" "1" "July 2012" "Deliver 0.5.0" "Deliver Manual"
+.TH "DELIVER" "1" "August 2012" "Deliver 0.6.0-pre" "Deliver Manual"
 .
 .SH "NAME"
 \fBdeliver\fR \- takes your code into production
@@ -34,6 +34,10 @@ Heavily inspired by the ruby strategy, also foreman\-aware, defaults to upstart\
 .TP
 \fBgh\-pages\fR
 How many times did you find yourself copying that rake task which generates and publishes to github:pages \fIhttp://pages\.github\.com/\fR your project\'s docco \fIhttps://github\.com/jashkenas/docco\fR or rocco \fIhttps://github\.com/rtomayko/rocco\fR? With deliver, just run \fBdeliver \-s gh\-pages\fR from the app\'s root path\.
+.
+.TP
+\fBgenerated\fR
+rocco \fIhttps://github\.com/rtomayko/rocco\fR, Jekyll \fIhttps://github\.com/mojombo/jekyll/\fR or even your own custom generator, everything goes\. Every deliver is a commit on the generated branch\. This then gets pushed out to all remote hosts (or just to github:pages)\.
 .
 .SH "CHECK"
 \fBdeliver check\fR will ensure that everything is set up correctly\. You can also use this to see your final configuration\.

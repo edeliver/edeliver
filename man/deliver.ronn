@@ -17,16 +17,21 @@ make certain assumptions, but they are fully modular and customizable.
 
   * `ruby`:
     [Foreman][1]-aware, uses upstart by default. Works seamlessly with
-    [rvm][2]. _This is the default strategy_
+[rvm][2]. _This is the default strategy_
 
   * `nodejs`:
     Heavily inspired by the ruby strategy, also foreman-aware, defaults to
-    upstart.
+upstart.
 
   * `gh-pages`:
     How many times did you find yourself copying that rake task which generates
-    and publishes to [github:pages][3] your project's [docco][4] or [rocco][5]?
-    With deliver, just run `deliver -s gh-pages` from the app's root path.
+and publishes to [github:pages][3] your project's [docco][4] or [rocco][5]?
+With deliver, just run `deliver -s gh-pages` from the app's root path.
+
+  * `generated`:
+    [rocco][5], [Jekyll][7] or even your own custom generator, everything goes.
+Every deliver is a commit on the generated branch. This then gets pushed out to
+all remote hosts (or just to github:pages).
 
 ## CHECK
 `deliver check` will ensure that everything is set up correctly. You can also
@@ -63,3 +68,4 @@ Deliver is Copyright (C) 2012 [Gerhard Lazu][6]
 [4]: https://github.com/jashkenas/docco
 [5]: https://github.com/rtomayko/rocco
 [6]: http://twitter.com/gerhardlazu
+[7]: https://github.com/mojombo/jekyll/
