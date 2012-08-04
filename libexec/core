@@ -31,6 +31,7 @@ __capture_runtime_configs() {
   # DEPRECATE as of v0.8.0
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
   RUNTIME_HOSTS="$RUNTIME_SERVERS"
+
   RUNTIME_BRANCH="$BRANCH"
   RUNTIME_LOG_FILE="$LOG_FILE"
   RUNTIME_APP="$APP"
