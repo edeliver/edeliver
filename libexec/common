@@ -44,7 +44,7 @@ init_app_remotely() {
 
   local git_remote="$(git remote -v)"
 
-  status "Ensuring remotes are ready to accept git pushes"
+  status "Ensuring hosts are ready to accept git pushes"
 
   for _host in $HOSTS_APP_USER
   do
@@ -93,7 +93,7 @@ git_push() {
 }
 
 git_reset_remote() {
-  status "Resetting remote to $BRANCH branch"
+  status "Ensuring hosts are using $BRANCH branch"
   __remote "
     set -e
     cd $DELIVER_TO $SILENCE
