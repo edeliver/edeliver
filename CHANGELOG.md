@@ -1,3 +1,8 @@
+### What's new in deliver 0.7.0
+
+* **shared** strategy with file permissions support (think www-data,
+  php-fpm, etc.)
+
 ### What's new in deliver 0.6.0
 
 * **generated** strategy with built-in support for ROCCO. Other

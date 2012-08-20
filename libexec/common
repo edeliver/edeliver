@@ -117,7 +117,7 @@ git_submodules() {
         touch ~/.ssh/known_hosts
       fi
       cat .gitmodules | awk -F '://|@|:|/' '
-      /url/ {
+      /url =/ {
         command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts $SILENCE\"
         system(command)
         close(command)
@@ -235,4 +235,17 @@ upstart() {
   __exec_if_defined "pre_upstart"
   launch
   __exec_if_defined "post_upstart"
+}
+
+permissions() {
+  __exec_if_defined "pre_permissions"
+
+  status "Setting file permissions"
+  __remote "
+    [ -n \"$OWNER\" ] && sudo chown -fR $OWNER.$GROUP $DELIVER_TO
+    [ -n \"$PERMISSIONS\" ] && sudo chmod -fR $PERMISSIONS $DELIVER_TO
+    exit 0
+  " "$HOSTS"
+
+  __exec_if_defined "post_permissions"
 }
