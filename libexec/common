@@ -242,8 +242,9 @@ permissions() {
 
   status "Setting file permissions"
   __remote "
-    [ -n "$OWNER" ] && sudo chown -fR $OWNER.$GROUP $DELIVER_TO
-    [ -n "$PERMISSIONS" ] && sudo chmod -fR $PERMISSIONS $DELIVER_TO
+    [ -n \"$OWNER\" ] && sudo chown -fR $OWNER.$GROUP $DELIVER_TO
+    [ -n \"$PERMISSIONS\" ] && sudo chmod -fR $PERMISSIONS $DELIVER_TO
+    exit 0
   " "$HOSTS"
 
   __exec_if_defined "post_permissions"
