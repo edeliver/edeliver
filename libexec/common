@@ -237,17 +237,14 @@ upstart() {
   __exec_if_defined "post_upstart"
 }
 
-ownership() {
-  if [ -n "$OWNER" ]
-  then
-    __exec_if_defined "pre_ownership"
+permissions() {
+  __exec_if_defined "pre_permissions"
 
-    status "Setting app ownership"
-    __remote "
-      set -e
-      sudo chown -fR $OWNER.$GROUP $DELIVER_TO/*
-    " "$HOSTS"
+  status "Setting file permissions"
+  __remote "
+    [ -n "$OWNER" ] && sudo chown -fR $OWNER.$GROUP $DELIVER_TO
+    [ -n "$PERMISSIONS" ] && sudo chmod -fR $PERMISSIONS $DELIVER_TO
+  " "$HOSTS"
 
-    __exec_if_defined "post_ownership"
-  fi
+  __exec_if_defined "post_permissions"
 }

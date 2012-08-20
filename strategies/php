@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 REQUIRED_CONFIGS+=("HOSTS")
-OPTIONAL_CONFIGS+=("OWNER" "GROUP")
+OPTIONAL_CONFIGS+=("OWNER" "GROUP" "PERMISSIONS")
 
 run() {
   authorize_hosts
@@ -10,5 +10,5 @@ run() {
   git_reset_remote
   authorize_remote_hosts
   git_submodules
-  ownership
+  permissions
 }
