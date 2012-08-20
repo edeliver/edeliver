@@ -117,7 +117,7 @@ git_submodules() {
         touch ~/.ssh/known_hosts
       fi
       cat .gitmodules | awk -F '://|@|:|/' '
-      /url/ {
+      /url =/ {
         command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts $SILENCE\"
         system(command)
         close(command)
