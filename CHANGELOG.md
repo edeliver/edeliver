@@ -1,7 +1,7 @@
 ### What's new in deliver 0.7.0
 
-* **php** strategy with file permissions support (think www-data,
-  php-fpm)
+* **shared** strategy with file permissions support (think www-data,
+  php-fpm, etc.)
 
 ### What's new in deliver 0.6.0
 
