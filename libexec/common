@@ -236,3 +236,18 @@ upstart() {
   launch
   __exec_if_defined "post_upstart"
 }
+
+ownership() {
+  if [ -n "$OWNER" ]
+  then
+    __exec_if_defined "pre_ownership"
+
+    status "Setting app ownership"
+    __remote "
+      set -e
+      sudo chown -fR $OWNER.$GROUP $DELIVER_TO/*
+    " "$HOSTS"
+
+    __exec_if_defined "post_ownership"
+  fi
+}
