@@ -19,6 +19,7 @@ ${txtbld}Commands:${txtrst}
 ${txtbld}Modes:${txtrst}
   -C, --compact         Displays every task as it's run, silences all output. (default mode)
   -V, --verbose         Same as above, does not silence output.
+  -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
   -D, --debug           Runs in shell debug mode, displays everything.
 
 ${txtbld}Options:${txtrst}
@@ -58,6 +59,9 @@ do
     ;;
     (-V|--verbose)
       MODE="verbose"
+    ;;
+    (-P|--plain)
+      MODE="plain"
     ;;
     (-h|--help)
       __help

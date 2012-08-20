@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 
-VERSION="0.6.0"
+VERSION="0.7.0-pre"
 HOMEPAGE="https://github.com/gerhard/deliver"
 CREATOR="Gerhard Lazu"
 
 ARGS="$@"
 
 ORIGIN_DIR="$(pwd)"
-__add_to_deprecations "APP_ROOT" "v0.7.0"
-APP_ROOT="$ORIGIN_DIR"
 
 APP_CONFIG="$ORIGIN_DIR/.deliver/config"
 
 GIT_REMOTE="deliver"
-__add_to_deprecations "DELIVER_REMOTE" "v0.7.0"
-DELIVER_REMOTE="$GIT_REMOTE"
 
 SSH_TIMEOUT=3
 

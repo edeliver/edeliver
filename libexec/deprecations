@@ -7,7 +7,13 @@ DEPRECATIONS=()
 __add_to_deprecations() {
   local _value="$1"
   local _version="$2"
-  local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
+
+  if [[ $MODE = "plain" ]]
+  then
+    local _deprecation_message="${_value} will be deprecated as of ${_version}\n"
+  else
+    local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
+  fi
 
   DEPRECATIONS+=("$_deprecation_message")
 }

@@ -33,7 +33,40 @@ ques=${bldblu}?${txtrst}
 # Displays arg as an error message, red and sad
 #
 error_message() {
-  echo -e "$bldred$@$txtrst"
+  local _message="$@"
+
+  if [[ $MODE != "plain" ]]
+  then
+    local _message="${bldred}${_message}${txtrst}"
+  fi
+
+  echo -e "$_message"
+}
+
+# Displays arg as a hint message, yellow and optimistic
+#
+hint_message() {
+  local _message="$@"
+
+  if [[ $MODE != "plain" ]]
+  then
+    local _message="${bldylw}${_message}${txtrst}"
+  fi
+
+  echo -e "$_message"
+}
+
+# Displays arg as a success message, green and cheerful
+#
+success_message() {
+  local _message="$@"
+
+  if [[ $MODE != "plain" ]]
+  then
+    local _message="${bldgrn}${_message}${txtrst}"
+  fi
+
+  echo -e "$_message"
 }
 
 # Specific failure, fail the whole script
@@ -45,24 +78,12 @@ error() {
   exit 1
 }
 
-# Displays arg as a hint message, yellow and optimistic
-#
-hint_message() {
-  echo -e "$txtylw$@$txtrst"
-}
-
 # Command failed (not sure why), fail the whole script
 #
 fail() {
   error_message "\nNot entirely sure why this failed."
   hint_message "Re-run the command in verbose (-V|--verbose) or debug (-D|--debug) mode to gather more details about the failure."
   exit 1
-}
-
-# Displays arg as a success message, green and cheerful
-#
-success_message() {
-  echo -e "$bldgrn$@$txtrst"
 }
 
 # Command was successful
@@ -81,13 +102,25 @@ upcase() {
 # It just looks better with spacing.
 #
 begin() {
-  local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
+  local _message="$(upcase "Delivering ${APP} with $STRATEGY strategy")"
+
+  if [[ $MODE != "plain" ]]
+  then
+    local _message="${bldgrn}$_message${txtrst}"
+  fi
+
   echo -e "\n$_message\n"
   __log "$_message"
 }
 
 status() {
-  local _message="${txtylw}----->${txtrst} ${bldwht}$1${txtrst}"
+  if [[ $MODE = "plain" ]]
+  then
+    local _message="-----> $@"
+  else
+    local _message="${txtylw}----->${txtrst} ${bldwht}$1${txtrst}"
+  fi
+
   echo "$_message"
   __log "$_message"
 }
@@ -95,7 +128,12 @@ status() {
 # If we reach this step, delivery was successfull
 #
 finish() {
-  local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
+  local _message="$(upcase "$APP delivered!")"
+  if [[ $MODE != "plain" ]]
+  then
+    local _message="${bldgrn}$_message${txtrst}"
+  fi
+
   echo -e "\n$_message\n"
   __log "$_message"
   __log "===========================================================\n"
