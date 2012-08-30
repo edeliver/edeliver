@@ -153,7 +153,7 @@ __check_config() {
 
   for _required_config in ${REQUIRED_CONFIGS[@]}
   do
-    local _required_config_value="$(echo $(eval echo \$$_required_config))"
+    local _required_config_value="$(echo $(eval echo \${$_required_config[@]}))"
     if [ -z "$_required_config_value" ]
     then
       _missing_required_configs+=("$_required_config")
@@ -176,9 +176,9 @@ __check_config() {
     then
       if [[ $MODE = "plain" ]]
       then
-        printf "%-25s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
+        printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
       else
-        printf "%-25s\t%s\n" "${_config_text}$_required_config" "$_required_config_value"
+        printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value"
       fi
     fi
   done
@@ -190,14 +190,14 @@ __check_config() {
 
   for _optional_config in ${OPTIONAL_CONFIGS[@]}
   do
-    local _optional_config_value="$(echo $(eval echo \$$_optional_config))"
+    local _optional_config_value="$(echo $(eval echo \${$_optional_config[@]}))"
     if [ -n "$CHECK" ] && [ -n "$_optional_config_value" ]
     then
       if [[ $MODE = "plain" ]]
       then
-        printf "%-25s\t%s\n" "$_optional_config" "$_optional_config_value"
+        printf "%-40s\t%s\n" "$_optional_config" "$_optional_config_value"
       else
-        printf "%-25s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
+        printf "%-40s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
       fi
     fi
   done
