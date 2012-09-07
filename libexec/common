@@ -130,16 +130,19 @@ git_submodules() {
 }
 
 rvmrc_trust() {
-  __exec_if_defined "pre_rvmrc_trust"
+  if [ -e "$ORIGIN_DIR/.rvmrc" ]
+  then
+    __exec_if_defined "pre_rvmrc_trust"
 
-  status "Trusting rvmrc in $DELIVER_TO"
-  __remote "
-    set -e
-    source .profile
-    rvm rvmrc trust $DELIVER_TO $SILENCE
-  "
+    status "Trusting rvmrc in $DELIVER_TO"
+    __remote "
+      set -e
+      source .profile
+      rvm rvmrc trust $DELIVER_TO $SILENCE
+    "
 
-  __exec_if_defined "post_rvmrc_trust"
+    __exec_if_defined "post_rvmrc_trust"
+  fi
 }
 
 authorize_remote_hosts() {
