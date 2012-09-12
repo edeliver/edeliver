@@ -171,7 +171,12 @@ bundle_install() {
     set -e
     source .profile
     cd $DELIVER_TO $SILENCE
-    bundle install --local --deployment --without development test $SILENCE
+    if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
+    then
+      bundle install --local --deployment --without development test $SILENCE
+    else
+      bundle install $SILENCE
+    fi
   "
 
   __exec_if_defined "post_bundle_install"
