@@ -61,7 +61,8 @@ do
       MODE="verbose"
     ;;
     (-P|--plain)
-      MODE="plain"
+      # this was already captured in libexec/output
+      # noop
     ;;
     (-h|--help)
       __help

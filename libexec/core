@@ -146,7 +146,7 @@ __check_config() {
   set -f # disables file globbing
   local _missing_required_configs=()
 
-  if [ -n "$CHECK" ]
+  if [[ -n "$CHECK" ]]
   then
     echo ""
   fi
@@ -157,33 +157,22 @@ __check_config() {
     if [ -z "$_required_config_value" ]
     then
       _missing_required_configs+=("$_required_config")
-      if [[ $MODE != "plain" ]]
-      then
-        local _config_text="${txtred}"
-      fi
+      local _config_text="${txtred}"
       local _check_failed=true
     else
-      if [[ $MODE != "plain" ]]
-      then
-        local _config_text="${txtgrn}"
-      fi
+      local _config_text="${txtgrn}"
     fi
     # http://unstableme.blogspot.co.uk/2009/07/text-alignment-with-awk-printf-function.html
     # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
     # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
     # http://wiki.bash-hackers.org/commands/builtin/printf
-    if [ -n "$CHECK" ]
+    if [[ -n "$CHECK" ]]
     then
-      if [[ $MODE = "plain" ]]
-      then
-        printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
-      else
-        printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value"
-      fi
+      printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
     fi
   done
 
-  if [ -n "$CHECK" ]
+  if [[ -n "$CHECK" ]]
   then
     hint_message "-----------------------------------------------------------"
   fi
@@ -193,12 +182,7 @@ __check_config() {
     local _optional_config_value="$(echo $(eval echo \${$_optional_config[@]}))"
     if [ -n "$CHECK" ] && [ -n "$_optional_config_value" ]
     then
-      if [[ $MODE = "plain" ]]
-      then
-        printf "%-40s\t%s\n" "$_optional_config" "$_optional_config_value"
-      else
-        printf "%-40s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
-      fi
+      printf "%-40s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
     fi
   done
   set +f # re-enables file globbing

@@ -9,21 +9,28 @@
 # http://www.catonmat.net/blog/unix-utilities-pipe-viewer/ & http://www.ivarch.com/programs/quickref/pv.shtml
 # http://fitnr.com/showing-a-bash-spinner.html
 #
-txtund=$(tput sgr 0 1)          # Underline
-txtbld=$(tput bold)             # Bold
-bldred=${txtbld}$(tput setaf 1) #  red
-bldgrn=${txtbld}$(tput setaf 2) #  green
-bldylw=${txtbld}$(tput setaf 3) #  yellow
-bldmgt=${txtbld}$(tput setaf 5) #  cyan
-bldcyn=${txtbld}$(tput setaf 6) #  cyan
-bldwht=${txtbld}$(tput setaf 7) #  white
-txtred=$(tput setaf 1)          # Red
-txtgrn=$(tput setaf 2)          # Green
-txtylw=$(tput setaf 3)          # Yellow
-txtblu=$(tput setaf 4)          # Blue
-txtmgt=$(tput setaf 5)          # Magenta
-txtcyn=$(tput setaf 6)          # Cyan
-txtwht=$(tput setaf 7)          # White
+
+if [[ $ARGS =~ "-P" ]] || [[ $ARGS =~ "--plain" ]]
+then
+  PLAIN=true
+else
+  txtred=$(tput setaf 1)          # Red
+  txtgrn=$(tput setaf 2)          # Green
+  txtylw=$(tput setaf 3)          # Yellow
+  txtblu=$(tput setaf 4)          # Blue
+  txtmgt=$(tput setaf 5)          # Magenta
+  txtcyn=$(tput setaf 6)          # Cyan
+  txtwht=$(tput setaf 7)          # White
+  txtund=$(tput sgr 0 1)          # Underline
+  txtbld=$(tput bold)             # Bold
+  bldred=${txtbld}$(tput setaf 1) #  red
+  bldgrn=${txtbld}$(tput setaf 2) #  green
+  bldylw=${txtbld}$(tput setaf 3) #  yellow
+  bldmgt=${txtbld}$(tput setaf 5) #  cyan
+  bldcyn=${txtbld}$(tput setaf 6) #  cyan
+  bldwht=${txtbld}$(tput setaf 7) #  white
+fi
+
 txtrst=$(tput sgr0)             # Reset
 info=${bldwht}*${txtrst}        # Feedback
 pass=${bldblu}*${txtrst}
@@ -33,12 +40,7 @@ ques=${bldblu}?${txtrst}
 # Displays arg as an error message, red and sad
 #
 error_message() {
-  local _message="$@"
-
-  if [[ $MODE != "plain" ]]
-  then
-    local _message="${bldred}${_message}${txtrst}"
-  fi
+  local _message="${bldred}${@}${txtrst}"
 
   echo -e "$_message"
 }
@@ -46,12 +48,7 @@ error_message() {
 # Displays arg as a hint message, yellow and optimistic
 #
 hint_message() {
-  local _message="$@"
-
-  if [[ $MODE != "plain" ]]
-  then
-    local _message="${bldylw}${_message}${txtrst}"
-  fi
+  local _message="${bldylw}${@}${txtrst}"
 
   echo -e "$_message"
 }
@@ -59,12 +56,7 @@ hint_message() {
 # Displays arg as a success message, green and cheerful
 #
 success_message() {
-  local _message="$@"
-
-  if [[ $MODE != "plain" ]]
-  then
-    local _message="${bldgrn}${_message}${txtrst}"
-  fi
+  local _message="${bldgrn}${@}${txtrst}"
 
   echo -e "$_message"
 }
@@ -73,7 +65,7 @@ success_message() {
 #
 error() {
   IFS='%'
-  error_message $1
+  error_message "$@"
   unset IFS
   exit 1
 }
@@ -102,24 +94,14 @@ upcase() {
 # It just looks better with spacing.
 #
 begin() {
-  local _message="$(upcase "Delivering ${APP} with $STRATEGY strategy")"
-
-  if [[ $MODE != "plain" ]]
-  then
-    local _message="${bldgrn}$_message${txtrst}"
-  fi
+  local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
 
   echo -e "\n$_message\n"
   __log "$_message"
 }
 
 status() {
-  if [[ $MODE = "plain" ]]
-  then
-    local _message="-----> $@"
-  else
-    local _message="${txtylw}----->${txtrst} ${bldwht}$1${txtrst}"
-  fi
+  local _message="${txtylw}-----> ${bldwht}$@${txtrst}"
 
   echo "$_message"
   __log "$_message"
@@ -128,11 +110,7 @@ status() {
 # If we reach this step, delivery was successfull
 #
 finish() {
-  local _message="$(upcase "$APP delivered!")"
-  if [[ $MODE != "plain" ]]
-  then
-    local _message="${bldgrn}$_message${txtrst}"
-  fi
+  local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
 
   echo -e "\n$_message\n"
   __log "$_message"
