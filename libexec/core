@@ -32,7 +32,6 @@ __capture_runtime_configs() {
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
   RUNTIME_HOSTS="$RUNTIME_SERVERS"
 
-  # DEPRECATE as of v0.8.0
   RUNTIME_BRANCH="$BRANCH"
   RUNTIME_REVISION="$REVISION"
   RUNTIME_LOG_FILE="$LOG_FILE"
@@ -48,7 +47,6 @@ __apply_runtime_configs() {
     HOSTS="$RUNTIME_HOSTS"
   fi
 
-  # DEPRECATE as of v0.8.0
   if [ -n "$RUNTIME_BRANCH" ]
   then
     BRANCH="$RUNTIME_BRANCH"

@@ -2,10 +2,9 @@
 
 * **shared** strategy with file permissions support (think www-data,
   php-fpm, etc.)
+* reset remotes to specific **REVISION** (see `deliver check`)
 
-#### Notices
 
-BRANCH has been replaced with REVISION.
 
 ### What's new in deliver 0.6.0
 

@@ -80,7 +80,7 @@ git_push() {
 
   for _host in $_hosts
   do
-    local _background_job="git push -f $_host $REVISION $SILENCE"
+    local _background_job="git push -f $_host $BRANCH $SILENCE"
     __log "JOB: $_background_job"
     ( eval "$_background_job" ) &
     background_jobs_pids+=("$!")
@@ -93,7 +93,7 @@ git_push() {
 }
 
 git_reset_remote() {
-  status "Ensuring hosts are using $REVISION"
+  status "Resetting remote hosts to $REVISION"
   __remote "
     set -e
     cd $DELIVER_TO $SILENCE
