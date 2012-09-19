@@ -24,11 +24,12 @@ then
   DELIVER_TO="~$APP_USER/app"
 fi
 
-# Configure which branch to push remotely
+# Configure which revision to push remotely
 #
-if [ -z "$BRANCH" ]
+__add_to_deprecations "BRANCH" "v0.8.0"
+if [ -z "$REVISION" ]
 then
-  BRANCH="master"
+  REVISION=${BRANCH:="master"}
 fi
 
 # Ruby is the default deliver strategy.
