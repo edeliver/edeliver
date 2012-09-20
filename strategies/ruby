@@ -14,7 +14,7 @@ then
 fi
 
 # This function must be present since deliver will call it directly
-# Everything inside it or around it are only limited by your imagination : )
+# Everything inside it or around it is up to you
 #
 run() {
   authorize_hosts
