@@ -24,11 +24,12 @@ then
   DELIVER_TO="~$APP_USER/app"
 fi
 
-# Configure which branch to push remotely
+# Configure which refspec to push remotely
 #
-if [ -z "$BRANCH" ]
+__add_to_deprecations "BRANCH" "v0.8.0"
+if [ -z "$REFSPEC" ]
 then
-  BRANCH="master"
+  REFSPEC="${BRANCH:=master}"
 fi
 
 # Configure which revision to push remotely

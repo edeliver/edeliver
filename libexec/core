@@ -32,7 +32,7 @@ __capture_runtime_configs() {
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
   RUNTIME_HOSTS="$RUNTIME_SERVERS"
 
-  RUNTIME_BRANCH="$BRANCH"
+  RUNTIME_REFSPEC="${BRANCH:=$REFSPEC}"
   RUNTIME_REVISION="$REVISION"
   RUNTIME_LOG_FILE="$LOG_FILE"
   RUNTIME_APP="$APP"
@@ -47,9 +47,9 @@ __apply_runtime_configs() {
     HOSTS="$RUNTIME_HOSTS"
   fi
 
-  if [ -n "$RUNTIME_BRANCH" ]
+  if [ -n "$RUNTIME_REFSPEC" ]
   then
-    BRANCH="$RUNTIME_BRANCH"
+    REFSPEC="$RUNTIME_REFSPEC"
   fi
 
   if [ -n "$RUNTIME_REVISION" ]

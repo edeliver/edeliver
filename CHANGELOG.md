@@ -4,6 +4,9 @@
   php-fpm, etc.)
 * reset remotes to specific **REVISION** (see `deliver check`)
 
+#### Notices
+
+BRANCH has been replaced with REFSPEC.
 
 
 ### What's new in deliver 0.6.0
