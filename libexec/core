@@ -32,6 +32,8 @@ __capture_runtime_configs() {
   RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
   RUNTIME_HOSTS="$RUNTIME_SERVERS"
 
+  RUNTIME_GIT_PUSH="$GIT_PUSH"
+  # DEPRECATE as of v0.8.0
   RUNTIME_REFSPEC="${BRANCH:=$REFSPEC}"
   RUNTIME_REVISION="$REVISION"
   RUNTIME_LOG_FILE="$LOG_FILE"
@@ -45,6 +47,11 @@ __apply_runtime_configs() {
   if [ -n "$RUNTIME_HOSTS" ]
   then
     HOSTS="$RUNTIME_HOSTS"
+  fi
+
+  if [ -n "$RUNTIME_GIT_PUSH" ]
+  then
+    GIT_PUSH="$RUNTIME_GIT_PUSH"
   fi
 
   if [ -n "$RUNTIME_REFSPEC" ]

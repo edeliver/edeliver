@@ -24,6 +24,11 @@ then
   DELIVER_TO="~$APP_USER/app"
 fi
 
+if [ -z "$GIT_PUSH" ]
+then
+  GIT_PUSH="${GIT_PUSH:=-f}"
+fi
+
 # Configure which refspec to push remotely
 #
 __add_to_deprecations "BRANCH" "v0.8.0"
