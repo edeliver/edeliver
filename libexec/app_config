@@ -28,7 +28,7 @@ fi
 #
 if [ -z "$BRANCH" ]
 then
-  BRANCH="HEAD"
+  BRANCH="master"
 fi
 
 # Configure which revision to push remotely
