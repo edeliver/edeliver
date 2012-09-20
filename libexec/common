@@ -175,7 +175,7 @@ bundle_install() {
     then
       bundle install --local --deployment --without development test $SILENCE
     else
-      bundle install $SILENCE
+      bundle install --local --deployment $SILENCE
     fi
   "
 
