@@ -13,6 +13,8 @@ documentation generator written for and in POSIX shell.
 
 Bash arrays: [LinuxJournal][6] [Greg's wiki][7]
 
+[Cram][8] - a functional testing framework for command line applications
+
 [1]: https://github.com/hecticjeff/shoreman
 [2]: https://github.com/bmizerany/roundup
 [3]: http://rtomayko.github.com/shocco/
@@ -20,3 +22,4 @@ Bash arrays: [LinuxJournal][6] [Greg's wiki][7]
 [5]: http://mywiki.wooledge.org/SignalTrap
 [6]: http://www.linuxjournal.com/content/bash-arrays
 [7]: http://mywiki.wooledge.org/BashGuide/Arrays
+[8]: https://bitheap.org/cram/
