@@ -122,6 +122,7 @@ git_submodules() {
         system(command)
         close(command)
       }'
+      git submodule foreach 'git reset --hard $SILENCE' $SILENCE
       git submodule update $SILENCE
     fi
   "
