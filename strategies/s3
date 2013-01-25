@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("GENERATE_CMD" "GENERATED_DIR")
+OPTIONAL_CONFIGS+=("S3CMDARGS")
+
+S3CMD=$(which s3cmd)
+if [ $? != 0 ]
+then
+  error_message "You must have s3cmd installed to use the s3 strategy."
+  echo "On Mac OSX:"
+  echo -e "\tbrew install s3cmd"
+  echo "On Ubuntu:"
+  echo -e "\tapt-get install s3cmd"
+  exit
+fi
+
+if [ -z "$S3CMDARGS" ]
+then
+  S3CMDARGS="sync"
+fi
+
+run() {
+  __exec "$GENERATE_CMD"
+  if [ -n "$S3CMDARGS" ]
+  then
+    S3CMD="$S3CMD $S3CMDARGS "
+  fi
+
+  CMD="$S3CMD $GENERATED_DIR s3://$BUCKET$PREFIX"
+  __exec "$CMD"
+}
