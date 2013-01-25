@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+DEPRECATIONS=()
+
+# Captures all deprecations in an internal array
+#
+__add_to_deprecations() {
+  local _value="$1"
+  local _version="$2"
+
+  local _deprecation_message="${bldmgt}${_value}${txtrst} ${txtmgt}will be deprecated as of ${_version}${txtrst}\n"
+
+  DEPRECATIONS+=("$_deprecation_message")
+}
+
+# Displays all previously captured deprecations
+#
+__display_deprecations() {
+  if [[ ${#DEPRECATIONS[@]} != 0 ]]
+  then
+    echo ""
+  fi
+
+  for _deprecation in "${DEPRECATIONS[@]}"
+  do
+    echo -en "$_deprecation"
+  done
+}

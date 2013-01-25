@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+if [ -z "$APP" ]
+then
+  APP="$(basename $ORIGIN_DIR)"
+fi
+
+# Your app must run under this user. All files will be created as this user.
+# The context in which deliver gets run must be able to login as this user,
+# without asking for a password or a passphrase. The price of automation...
+#
+if [ -z "$APP_USER" ]
+then
+  APP_USER="$APP"
+fi
+
+# If your app runs under 'foobar' system user, the code will be delivered to
+# '~foobar/app' by default. You can deliver multiple apps under the same user
+# by overwriting this value on a per app basis, but I would discourage this practice.
+# Each app should run under its own system user.
+#
+if [ -z "$DELIVER_TO" ]
+then
+  DELIVER_TO="~$APP_USER/app"
+fi
+
+if [ -z "$GIT_PUSH" ]
+then
+  GIT_PUSH="${GIT_PUSH:=-f}"
+fi
+
+# Configure which refspec to push remotely
+#
+__add_to_deprecations "BRANCH" "v0.8.0"
+if [ -z "$REFSPEC" ]
+then
+  REFSPEC="${BRANCH:=master}"
+fi
+
+# Configure which revision to push remotely
+#
+if [ -z "$REVISION" ]
+then
+  REVISION="$(git rev-parse $BRANCH)"
+fi
+
+# Ruby is the default deliver strategy.
+# node.js might be hip, but Ruby is beautiful.
+#
+if [ -z "$STRATEGY" ]
+then
+  STRATEGY="ruby"
+fi
+
+# Deliver used to be single-server, accounting for that here
+#
+__add_to_deprecations "SERVERS" "v0.8.0"
+SERVERS=$(__remote_friendly "$SERVER $SERVERS $HOSTS")
+HOSTS="$SERVERS"
+
+if [ -z "$LOG_FILE" ]
+then
+  LOG_FILE="/tmp/deliver"
+fi
+
+# Controls which directory the generated strategy puts the final files into
+#
+if [ -z "$GENERATED_DIR" ]
+then
+  GENERATED_DIR="generated"
+fi
+
+# The local git branch into which all generated content will be committed
+#
+if [ -z "$GENERATED_BRANCH" ]
+then
+  GENERATED_BRANCH="generated"
+fi

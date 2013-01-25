@@ -1,0 +1,309 @@
+#!/usr/bin/env bash
+
+# When a `SIGINT` or `SIGTERM` is received, stop all background jobs and exit
+# cleanly.
+# https://github.com/hecticjeff/shoreman/blob/master/shoreman.sh
+# http://steve-parker.org/sh/trap.shtml
+#
+__graceful_stop() {
+  local _message="Stopping deliver..."
+  hint_message "\n$_message" &&
+  __log "$_message" &&
+  kill ${background_jobs_pids[*]} 2>&1 &&
+  local _message="DELIVER STOPPED!"
+  success_message "\n$_message\n" &&
+  __log "$_message" &&
+  __log "===========================================================" &&
+  exit 0
+}
+
+# Ensures args (in this case hosts) are space separated so that we can easily loop over them
+# e.g. " ruby-1,ruby-2 " -> "ruby-1 ruby-2"
+#
+__remote_friendly() {
+  echo "$@" | tr ',' ' ' | sed 's/^ //' | sed 's/ $//'
+}
+
+# If these values are specified at the runtime, hang onto them
+# until we're ready to overwrite everything set from other sources
+#
+__capture_runtime_configs() {
+  # DEPRECATE as of v0.8.0
+  RUNTIME_SERVERS="$(__remote_friendly "$SERVER $SERVERS $HOSTS")"
+  RUNTIME_HOSTS="$RUNTIME_SERVERS"
+
+  RUNTIME_GIT_PUSH="$GIT_PUSH"
+  # DEPRECATE as of v0.8.0
+  RUNTIME_REFSPEC="${BRANCH:=$REFSPEC}"
+  RUNTIME_REVISION="$REVISION"
+  RUNTIME_LOG_FILE="$LOG_FILE"
+  RUNTIME_APP="$APP"
+  RUNTIME_STRATEGY="$STRATEGY"
+}
+
+# Overwrite the following configs if they have been specified at runtime:
+#
+__apply_runtime_configs() {
+  if [ -n "$RUNTIME_HOSTS" ]
+  then
+    HOSTS="$RUNTIME_HOSTS"
+  fi
+
+  if [ -n "$RUNTIME_GIT_PUSH" ]
+  then
+    GIT_PUSH="$RUNTIME_GIT_PUSH"
+  fi
+
+  if [ -n "$RUNTIME_REFSPEC" ]
+  then
+    REFSPEC="$RUNTIME_REFSPEC"
+  fi
+
+  if [ -n "$RUNTIME_REVISION" ]
+  then
+    REVISION="$RUNTIME_REVISION"
+  fi
+
+  if [ -n "$RUNTIME_LOG_FILE" ]
+  then
+    LOG_FILE="$RUNTIME_LOG_FILE"
+  fi
+
+  if [ -n "$RUNTIME_APP" ]
+  then
+    APP="$RUNTIME_APP"
+  fi
+
+  if [ -n "$RUNTIME_STRATEGY" ]
+  then
+    STRATEGY="$RUNTIME_STRATEGY"
+  fi
+}
+
+# Loads the .deliver config file if it exists
+# This is now optional. All config values can be passed at runtime, or, even
+# better you can create a project-specific deploy (or even cap deploy) which is
+# just a function calling deliver behind the scenes. Imagine the following:
+#
+#   deploy() {
+#     APP=awesome HOSTS=ruby-1 PORT=5000 deliver
+#   }
+#
+__load_app_config() {
+  if [ -f "$APP_CONFIG" ]
+  then
+    source "$APP_CONFIG"
+  fi
+}
+
+# Ensures all required configs are set, tries to be helpful by adding some
+# sane defaults
+#
+__default_app_config() {
+  source "$BASE_PATH/libexec/app_config"
+}
+
+# Builds an index of all available strategies
+#
+__find_all_strategies() {
+  local strategies_path=()
+
+  # There are strategies that came with deliver itself
+  if [ -d "$BASE_PATH/strategies" ]; then
+    strategies_path+=("$BASE_PATH/strategies")
+  fi
+  # Per-project strategies
+  if [ -d "$ORIGIN_DIR/.deliver/strategies" ]; then
+    strategies_path+=("$ORIGIN_DIR/.deliver/strategies")
+  fi
+
+  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
+  for strategy in $STRATEGIES
+  do
+    STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
+  done
+}
+
+# Load the correct strategy
+#
+__load_strategy() {
+  for strategy in $STRATEGIES
+  do
+    [[ ! $strategy =~ $STRATEGY ]] && continue
+    source "$strategy" && strategy_loaded=true && break
+  done
+
+  if [ -z "$strategy_loaded" ]
+  then
+    error_message "\n'$STRATEGY' strategy does not exist"
+    __available_strategies
+    exit 1
+  fi
+}
+
+# Appends app user to all hosts so that we can log in with this user
+# on specific remote jobs.
+#
+__remote_hosts() {
+  for _host in $HOSTS
+  do
+    HOSTS_APP_USER="$HOSTS_APP_USER,$APP_USER@$_host"
+  done
+  HOSTS="$(__remote_friendly $HOSTS)"
+  HOSTS_APP_USER="$(__remote_friendly $HOSTS_APP_USER)"
+}
+
+__check_config() {
+  __display_deprecations
+
+  set -f # disables file globbing
+  local _missing_required_configs=()
+
+  if [[ -n "$CHECK" ]]
+  then
+    echo ""
+  fi
+
+  for _required_config in ${REQUIRED_CONFIGS[@]}
+  do
+    local _required_config_value="$(echo $(eval echo \${$_required_config[@]}))"
+    if [ -z "$_required_config_value" ]
+    then
+      _missing_required_configs+=("$_required_config")
+      local _config_text="${txtred}"
+      local _check_failed=true
+    else
+      local _config_text="${txtgrn}"
+    fi
+    # http://unstableme.blogspot.co.uk/2009/07/text-alignment-with-awk-printf-function.html
+    # http://linuxconfig.org/bash-printf-syntax-basics-with-examples
+    # http://stackoverflow.com/questions/6345429/how-do-i-print-some-text-in-bash-and-pad-it-with-spaces-to-a-certain-width
+    # http://wiki.bash-hackers.org/commands/builtin/printf
+    if [[ -n "$CHECK" ]]
+    then
+      printf "%-30s\t%s\n" "${_config_text}$_required_config" "$_required_config_value${txtrst}"
+    fi
+  done
+
+  if [[ -n "$CHECK" ]]
+  then
+    hint_message "-----------------------------------------------------------"
+  fi
+
+  for _optional_config in ${OPTIONAL_CONFIGS[@]}
+  do
+    local _optional_config_value="$(echo $(eval echo \${$_optional_config[@]}))"
+    if [ -n "$CHECK" ] && [ -n "$_optional_config_value" ]
+    then
+      printf "%-40s\t%s\n" "${bldylw}$_optional_config" "$_optional_config_value${txtrst}"
+    fi
+  done
+  set +f # re-enables file globbing
+
+  if [ -n "$_check_failed" ]
+  then
+    error_message "\nDELIVER IS MISSING THE FOLLOWING CONFIG(S):\n\n${_missing_required_configs[@]}\n"
+    exit 1
+  else
+    if [ -n "$CHECK" ]
+    then
+      success_message "\nREADY TO DELIVER!\n"
+      exit 0
+    fi
+  fi
+}
+
+# Mode aware:
+# * COMPACT - silences jobs
+# * TEST - captures all jobs, no local or remote changes
+#
+__exec() {
+  eval "$1 $SILENCE"
+}
+
+# Waits until all background jobs finish successfully
+# If any of them fail, the entire script fails
+#
+__monitor_background_jobs() {
+  for (( i = 0 ; i < ${#background_jobs_pids[@]} ; i++ ))
+  do
+    wait ${background_jobs_pids[$i]}
+    local _exit_status="$?"
+    if [[ "$_exit_status" != 0 ]]
+    then
+      error "\nFAILED $stopping $_exit_status:\n${background_jobs[$i]}\n"
+    fi
+  done
+
+  unset background_jobs_pids
+  unset background_jobs
+}
+
+# Runs commands in parallel, as background jobs
+#
+__parallelize() {
+  local _job="$1"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
+
+  background_job_pids=()
+  background_jobs=()
+
+  for _host in $_hosts
+  do
+    local _logged_job="$(eval echo $_job)"
+    if [[ $MODE = "verbose" ]]
+    then
+      echo "$_logged_job"
+    fi
+
+    ( eval "$_job" ) &
+    # WON'T WORK because it captures eval's pid, not the job's pid
+    # Ideally, I want to stay away from eval
+    background_job_pids+=("$!")
+    background_jobs+=("$_logged_job")
+  done
+
+  __monitor_background_jobs
+}
+
+# Multi-host & mode aware
+#
+__remote() {
+  local _remote_job="$1"
+
+  #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_job\""
+
+  local _remote_job="$1"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
+  background_jobs_pids=()
+  background_jobs=()
+
+  __log "${_hosts} : $_remote_job"
+
+  for _host in $_hosts
+  do
+    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    background_jobs_pids+=("$!")
+    local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
+    background_jobs+=("$_background_job")
+  done
+
+  __monitor_background_jobs
+}
+
+# Logs all events (including formatting styles) so that people can tail,
+# inspect and use for general debugging.
+#
+__log() {
+  local _line="$(date) ::: $@"
+
+  echo -e "$_line" >> $LOG_FILE
+}
+
+# Used for pre & post hooks
+# Runs if functions are defined
+#
+__exec_if_defined() {
+  local _function="$1"
+  declare -F "$_function" > /dev/null && eval "$_function"
+}

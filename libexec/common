@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+
+# If working directory isn't clean, all changes will be lost if this strategy
+# runs all the way to the end. I would be very annoyed if that happened.
+#
+gitstatus() {
+  status "Checking local repository"
+
+  if [ $(git status | grep -c "working directory clean") = 0 ]
+  then
+    error "
+Your working directory is not clean.
+Either stash or commit before re-running this command.
+Stopping so that uncommitted changes won't be lost.\n"
+  fi
+}
+
+nothing_to_do() {
+  status "Everything up-to-date"
+}
+
+authorize_hosts() {
+  if [ -n "$HOSTS" ]
+  then
+    status "Authorizing hosts"
+
+    if [[ ! -e ~/.ssh/known_hosts ]]
+    then
+      touch ~/.ssh/known_hosts
+    fi
+
+    for _host in $HOSTS
+    do
+      if [[ $(ssh-keygen -F $_host | grep -c found) = 0 ]]
+      then
+        ssh-keyscan "$_host" 2>/dev/null >> ~/.ssh/known_hosts
+      fi
+    done
+  fi
+}
+
+init_app_remotely() {
+  __exec_if_defined "pre_init_app_remotely"
+
+  local git_remote="$(git remote -v)"
+
+  status "Ensuring hosts are ready to accept git pushes"
+
+  for _host in $HOSTS_APP_USER
+  do
+    local _remote_url="$_host:$DELIVER_TO"
+    if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
+      [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
+      git remote add "$_host" "$_remote_url"
+    fi
+  done
+
+  __remote "
+    set -e
+    if [ ! -d $DELIVER_TO ]
+    then
+      mkdir $DELIVER_TO
+      cd $DELIVER_TO
+      git init $SILENCE
+      git config receive.denyCurrentBranch ignore
+    fi
+  "
+  __exec_if_defined "post_init_app_remotely"
+}
+
+git_push() {
+  __exec_if_defined "pre_git_push"
+
+  local _hosts="${1:-"$HOSTS_APP_USER"}"
+
+  status "Pushing new commits with git to: $_hosts"
+
+  background_jobs_pids=()
+  background_jobs=()
+
+  for _host in $_hosts
+  do
+    local _background_job="git push $GIT_PUSH $_host $REFSPEC $SILENCE"
+    __log "JOB: $_background_job"
+    ( eval "$_background_job" ) &
+    background_jobs_pids+=("$!")
+    background_jobs+=("$_background_job")
+  done
+
+  __monitor_background_jobs
+
+  __exec_if_defined "post_git_push"
+}
+
+git_reset_remote() {
+  status "Resetting remote hosts to $REVISION"
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git reset --hard $REVISION $SILENCE
+  "
+}
+
+git_submodules() {
+  __exec_if_defined "pre_git_submodules"
+
+  status "Updating git submodules"
+  __remote "
+    set -e
+    cd $DELIVER_TO $SILENCE
+    git submodule init $SILENCE
+    git submodule sync $SILENCE
+    if [ -e .gitmodules ]
+    then
+      if [ ! -e ~/.ssh/known_hosts ]
+      then
+        touch ~/.ssh/known_hosts
+      fi
+      cat .gitmodules | awk -F '://|@|:|/' '
+      /url =/ {
+        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts $SILENCE\"
+        system(command)
+        close(command)
+      }'
+      git submodule update $SILENCE
+    fi
+  "
+
+  __exec_if_defined "post_git_submodules"
+}
+
+rvmrc_trust() {
+  if [ -e "$ORIGIN_DIR/.rvmrc" ]
+  then
+    __exec_if_defined "pre_rvmrc_trust"
+
+    status "Trusting rvmrc in $DELIVER_TO"
+    __remote "
+      set -e
+      source .profile
+      rvm rvmrc trust $DELIVER_TO $SILENCE
+    "
+
+    __exec_if_defined "post_rvmrc_trust"
+  fi
+}
+
+authorize_remote_hosts() {
+  if [[ ${#AUTHORIZED_REMOTE_HOSTS[@]} != 0 ]]
+  then
+    status "Authorizing remote hosts"
+    __remote "
+      set -e
+      source .profile
+      for _remote_host in $AUTHORIZED_REMOTE_HOSTS
+      do
+        if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
+        then
+          ssh-keyscan \$_remote_host >> ~/.ssh/known_hosts $SILENCE
+        fi
+      done
+    "
+  fi
+}
+
+bundle_install() {
+  __exec_if_defined "pre_bundle_install"
+
+  status "Installing gems with bundler"
+  __remote "
+    set -e
+    source .profile
+    cd $DELIVER_TO $SILENCE
+    if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
+    then
+      bundle install --local --deployment --without development test $SILENCE
+    else
+      bundle install --local --deployment $SILENCE
+    fi
+  "
+
+  __exec_if_defined "post_bundle_install"
+}
+
+npm_install() {
+  __exec_if_defined "pre_npm_install"
+
+  status "Installing modules with npm"
+  __remote "
+    set -e
+    source .profile
+    cd $DELIVER_TO $SILENCE
+    npm install $SILENCE
+  "
+
+  __exec_if_defined "post_npm_install"
+}
+
+foreman_export() {
+  __exec_if_defined "pre_foreman_export"
+
+  status "Exporting services to $SUPERVISOR"
+  local _foreman="foreman export $SUPERVISOR tmp --user $APP_USER --app $APP"
+  test -n "$PORT" && _foreman="$_foreman --port $PORT"
+  test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
+
+  __remote "
+    set -e
+    source .profile
+    cd $DELIVER_TO $SILENCE
+    $_foreman $SILENCE
+  "
+
+  __exec_if_defined "post_foreman_export"
+}
+
+launch() {
+  __exec_if_defined "pre_launch"
+
+  status "Launching app with $SUPERVISOR"
+  # This command, because of the sudo dependency, will use your local $USER.
+  # You should be able to log in with $USER to the remote servers, and you
+  # should be able to run sudo without needing a password.
+  #
+  # I will be tackling this shortly, you really shouldn't neeed sudo
+  # privileges to deliver an app. What was I thinking?!?
+  __remote "
+    set -e
+    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
+      sudo stop $APP $SILENCE
+    fi
+    sudo rm -f /etc/init/$APP[.-]*
+    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
+    sudo start $APP $SILENCE
+  " "$HOSTS"
+
+  __exec_if_defined "post_launch"
+}
+
+# Aliased, no longer bound to upstart
+#
+upstart() {
+  __exec_if_defined "pre_upstart"
+  launch
+  __exec_if_defined "post_upstart"
+}
+
+permissions() {
+  __exec_if_defined "pre_permissions"
+
+  status "Setting file permissions"
+  __remote "
+    [ -n \"$OWNER\" ] && sudo chown -fR $OWNER.$GROUP $DELIVER_TO
+    [ -n \"$PERMISSIONS\" ] && sudo chmod -fR $PERMISSIONS $DELIVER_TO
+    exit 0
+  " "$HOSTS"
+
+  __exec_if_defined "post_permissions"
+}

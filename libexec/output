@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+# http://linuxtidbits.wordpress.com/2008/08/11/output-color-on-bash-scripts/
+# SPINNER http://fitnr.com/showing-a-bash-spinner.html
+#
+# Progress indicator when running commands in the background
+# http://www.theiling.de/projects/bar.html#examples
+# http://moblog.bradleyit.com/2010/02/simple-bash-progress-bar-function.html
+# http://www.catonmat.net/blog/unix-utilities-pipe-viewer/ & http://www.ivarch.com/programs/quickref/pv.shtml
+# http://fitnr.com/showing-a-bash-spinner.html
+#
+
+if [[ $ARGS =~ "-P" ]] || [[ $ARGS =~ "--plain" ]]
+then
+  PLAIN=true
+else
+  txtrst=$(tput sgr0)             # Reset
+  txtred=$(tput setaf 1)          # Red
+  txtgrn=$(tput setaf 2)          # Green
+  txtylw=$(tput setaf 3)          # Yellow
+  txtblu=$(tput setaf 4)          # Blue
+  txtmgt=$(tput setaf 5)          # Magenta
+  txtcyn=$(tput setaf 6)          # Cyan
+  txtwht=$(tput setaf 7)          # White
+  txtund=$(tput sgr 0 1)          # Underline
+  txtbld=$(tput bold)             # Bold
+  bldred=${txtbld}$(tput setaf 1) #  red
+  bldgrn=${txtbld}$(tput setaf 2) #  green
+  bldylw=${txtbld}$(tput setaf 3) #  yellow
+  bldmgt=${txtbld}$(tput setaf 5) #  cyan
+  bldcyn=${txtbld}$(tput setaf 6) #  cyan
+  bldwht=${txtbld}$(tput setaf 7) #  white
+fi
+
+info=${bldwht}*${txtrst}
+pass=${bldblu}*${txtrst}
+warn=${bldred}*${txtrst}
+ques=${bldblu}?${txtrst}
+
+# Displays arg as an error message, red and sad
+#
+error_message() {
+  local _message="${bldred}${@}${txtrst}"
+
+  echo -e "$_message"
+}
+
+# Displays arg as a hint message, yellow and optimistic
+#
+hint_message() {
+  local _message="${bldylw}${@}${txtrst}"
+
+  echo -e "$_message"
+}
+
+# Displays arg as a success message, green and cheerful
+#
+success_message() {
+  local _message="${bldgrn}${@}${txtrst}"
+
+  echo -e "$_message"
+}
+
+# Specific failure, fail the whole script
+#
+error() {
+  IFS='%'
+  error_message "$@"
+  unset IFS
+  exit 1
+}
+
+# Command failed (not sure why), fail the whole script
+#
+fail() {
+  error_message "\nNot entirely sure why this failed."
+  hint_message "Re-run the command in verbose (-V|--verbose) or debug (-D|--debug) mode to gather more details about the failure."
+  exit 1
+}
+
+# Command was successful
+#
+success() {
+  success_message " DONE"
+}
+
+# Converts all letters to uppercase
+#
+upcase() {
+  echo "$@" | tr '[:lower:]' '[:upper:]'
+}
+
+# Start each strategy's output with an empty line.
+# It just looks better with spacing.
+#
+begin() {
+  local _message="${bldgrn}$(upcase "Delivering ${APP} with $STRATEGY strategy")${txtrst}"
+
+  echo -e "\n$_message\n"
+  __log "$_message"
+}
+
+status() {
+  local _message="${txtylw}-----> ${bldwht}$@${txtrst}"
+
+  echo "$_message"
+  __log "$_message"
+}
+
+# If we reach this step, delivery was successfull
+#
+finish() {
+  local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"
+
+  echo -e "\n$_message\n"
+  __log "$_message"
+  __log "===========================================================\n"
+}

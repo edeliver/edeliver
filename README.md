@@ -1,158 +1,113 @@
-Born out of frustration with the current Ruby deployment practices.
+Deliver is a pure bash deployment tool with virtually no dependencies.
+It only cares about having enough info in the shell environment to do
+its job. Why add Ruby or Python wrappers on top of system commands when
+bash was built for this?
 
-Capistrano is a workhorse, but if you combine it with rvm and bundler, you're
-in for a treat.
+Capistrano was just infuriating when you added rvm and bundler into the
+mix, git-deploy is great for single server, but what if you're running a
+bunch of auto-scaled clusters (Ruby, node.js etc.)?
 
-git-deploy works pretty well, but it's still not seamless and you end up having
-to work around it too often for my taste.
+Delivering a nodejs service to multiple hosts:
 
-heroku solves the deployment process bang on.
+![deliver nodejs service to multiple hosts][2]
 
-This command-line utility brings the same heroku-style deploys convenience to a
-regular VPS, {cloud-provider} instance or even bare metal (if you're that hard
-core).
+Delivering deliver to [github:pages][8] (very inception-esque):
 
-At [GoSquared](http://www.gosquared.com/), we use this utility to deploy Ruby, PHP
-and node.js applications. Here's a Ruby app being deployed:
+![deliver deliver to github:pages][7]
 
-<img src="http://c2990942.r42.cf0.rackcdn.com/deliver.png" />
+Strategies is what sets this utility apart from everything else. By
+default, it comes with strategies for:
 
+  * [ruby][3]
 
+  * [nodejs][4]
 
-## 1 ASSUMPTIONS
+  * [gh-pages][5]
 
-These are all good assumptions which have been bread over the years from
-administrating many different infrastructure setups. You can disregard
-everything here and go back to your existing deployment process. If you can't
-be bothered to submit a pull request with a better solution, I will show an
-equal interest in your opinions.
+  * [generated][10]
 
-### 1.1 Ubuntu
-
-Your server is running Ubuntu, preferably 10.04 LTS. Ubuntu + upstart are by no
-means the holy grail, but they work very well for me. Feel free to share your
-love for other distros & service managers via pull requests.
-
-### 1.2 Your user
-
-Your local username can gain sudo privileges on the server without being
-prompted for a password. Don't login with root. Don't use password logins.
-
-If you're using chef to manage your servers
-[sudo-cookbook](https://github.com/opscode/cookbooks/tree/master/sudo) &
-[ssh-cookbook](https://github.com/gchef/ssh-cookbook) will work right out of
-the box, you won't even have to think about it.
-
-### 1.3 App user
-
-A system user has been created for the app that you'll be delivering. I
-personally prefer the same name as the app itself. You should be able to log in
-as this user, without any password.
-
-If you've been inspired enough to choose chef,
-[bootstrap-cookbook](https://github.com/gchef/bootstrap-cookbook) with the
-`ruby_apps` recipe will just work. It handles the entire rvm integration, even
-down to configuring the user's bash environment.
-
-### 1.4 [RVM](http://beginrescueend.com/)
-
-You have rvm installed on the server that you'll be delivering your code to. I
-use only system-wide setups in production. Yes, you've guessed it, use
-[rvm-cookbook](https://github.com/gchef/rvm-cookbook) for the best experience.
-
-ps: rbenv support is on the roadmap. If you want it right now, fork away.
-
-### 1.5 [Foreman](https://github.com/ddollar/foreman)
-
-You can painlessly scale your services from your app, [just as if you were
-running on Heroku](http://devcenter.heroku.com/articles/procfile).
+You can also add your own, project-specific strategies, or overload existing ones. [Read more about deliver
+strategies.][6]
 
 
+## 1 INSTALLATION
 
-## 2 INSTALLATION
+### 1.1 Check out deliver into `~/.deliver`.
 
-### 2.1 Check out deliver into `~/.deliver`.
+```bash
+$ git clone git://github.com/gerhard/deliver.git ~/.deliver
+```
 
-    $ cd
-    $ git clone git://github.com/gerhard/deliver.git .deliver
+### 1.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
 
-### 2.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
+```bash
+$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
+# if using zsh
+$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
+```
 
-    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
-    # if using zsh
-    $ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
+### 1.3 Source your shell profile
 
-### 2.3 Source your shell profile
+```bash
+$ . ~/.bash_profile
+# if using zsh
+$ . ~/.zshrc 
+```
 
-    $ . ~/.bash_profile
-    # if using zsh
-    $ . ~/.zshrc 
+### 1.4 Personalize
 
-### 2.4 Personalize
+There are no generators or initializers, you will need to manually create a
+`.deliver/config` file in the app's root folder that you want to deliver.
 
-There are no fancy generators, you will need to create a `.deliver` file
-manually in the root folder of the app that you want delivering. For those of
-you that didn't notice it yet, there's no `Deliverfile` *faux pas* going on
-either.
+This is a good example:
 
-Here's a `.deliver` example:
+```bash
+#!/usr/bin/env bash
 
-    APP="squirrel"          # You know, the shipit one
-
-    USER="$APP"             # Can be anything really, but it would be nice if you stuck to this convention
-
-    PORT=7000               # The TCP port on which your app will be listening on (think reverse-proxies)
-                            # Not at all scalable, will be revised not before long
-
-    DEPLOY_TO="~$USER/app"  # The location where the app will be 'git pushed' to
-
-    SERVER="shipit"         # The hostname or IP where the app will be delivered
-
-    REMOTE="$USER@$SERVER"  # You will be performing most remote tasks as this user,
-                            # e.g. git pushing, bundling etc.
-                            # Tasks requiring sudo privileges will be performed as
-                            # your local user. See 1.2 from ASSUMPTIONS.
+APP="events"
+HOSTS="ruby-1,ruby-2"
+PORT="5000"
+```
 
 
 
-## 3 USAGE
+## 2 USAGE
 
-From the root of your project which has been configured via the `.deliver`
-file, run:
+From the root of your project, run:
 
-    $ deliver
+```bash
+$ deliver check
+```
 
-If you want a more verbose output:
+![deliver check][9]
 
-    $ deliver -v | --verbose
+This will print the most important config settings and ensure that
+deliver has everything that it needs for a successful run. 
 
-For full debugging mode:
+Deliver will use the ruby strategy by default. If you want to use a different
+one, specify it in your `.deliver/config` file.
 
-    $ deliver -d | --debug
+To see a list of available strategies:
 
+```bash
+$ deliver strategies
+```
 
+[Read more about deliver strategies][6]
 
-## 4 ROADMAP
+To see all supported options and actions:
 
-The utility is pretty much bare bones as it stands. It's just enough to solve our
-deployment woes.
-
-* revise the `PORT` option with something more scalable
-* multi-server deploys
-* don't run the full deploy if nothing has changed
-* Post deploy hooks:
-  * Campfire
-  * Graphite
-* rbenv integration (not a priority for me personally)
-* better error handling (particularly when remote tasks fail)
-
+```bash
+$ deliver -h|--help
+```
 
 
-## 5 LICENSE
+
+## 3 LICENSE
 
 (The MIT license)
 
-Copyright (c) 2012 Gerhard Lazu
+Copyright (c) Gerhard Lazu
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -171,3 +126,25 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+
+## 4 CREDITS
+
+Deliver started at [GoSquared][1]. It was a place where each of us was
+free to use their own programming language. As long as the service
+exposed an API and had decent test coverage, anything went. Yes,
+**even** PHP.
+
+
+
+[1]: http://www.gosquared.com/
+[2]: http://c2990942.r42.cf0.rackcdn.com/deliver-nodejs.png
+[3]: deliver/tree/master/strategies/ruby
+[4]: deliver/tree/master/strategies/nodejs
+[5]: deliver/tree/master/strategies/gh-pages
+[6]: deliver/tree/master/strategies
+[7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
+[8]: http://gerhard.github.com/deliver
+[9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
+[10]: deliver/tree/master/strategies/generated

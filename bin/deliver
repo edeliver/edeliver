@@ -1,43 +1,49 @@
 #!/usr/bin/env bash
 
-set -e
+# The most comprehensive way of figuring this script's absoute path,
+# even when we're dealing with multi-level symlinks
+SOURCE="${BASH_SOURCE[0]}"
+DIR="$( dirname "$SOURCE" )"
+while [ -h "$SOURCE" ]
+do
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+  DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
+done
+# DIR is now pointing to the bin dir, BASE_PATH is one level up
+BASE_PATH="$(cd "$DIR/.." && pwd)"
 
-############################################################################## ARGS #
+# All functions starting with __ are private ones
+# You can overwrite them, but ideally they should be left alone.
+# Remember Demeter: http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
 
-if [[ ! $@ =~ (-v|--verbose) ]]; then
-  # silent mode (default)
-  SILENCE="&> /dev/null"
-else
-  # verbose mode
-  SILENCE=
-  VERBOSE=true
-fi
+source "$BASE_PATH/libexec/defaults"
+source "$BASE_PATH/libexec/output"
+source "$BASE_PATH/libexec/deprecations"
+source "$BASE_PATH/libexec/core"
+source "$BASE_PATH/libexec/common"
+source "$BASE_PATH/libexec/generated"
 
-# debug mode
-[[ $@ =~ (-d|--debug) ]] && set -x
+trap __graceful_stop SIGINT SIGTERM
 
-############################################################################ CONFIG #
+__capture_runtime_configs
+__find_all_strategies
 
-GEM_LOCATION=$0
-DELIVERY_ROOT=$(pwd)
-CONFIG="$DELIVERY_ROOT/.deliver"
+source "$BASE_PATH/libexec/init"
 
-. "$GEM_LOCATION/../../libexec/visual"
-. "$GEM_LOCATION/../../libexec/functions"
+__load_app_config
+__default_app_config
+__apply_runtime_configs
+__load_strategy
+__remote_hosts
 
-############################################################################## WORK #
+__check_config
 
-complain_if_interrupted
-load_config
-start_output
+# Run the loaded strategy
+# Can be overwritten by each strategy, e.g. custom output
+#
+begin
+run
+finish
 
-run 'prepare' "Preparing repository"
-run 'update' "Updating remote code"
-
-# TODO
-# Stop right here if app is up-to-date
-
-run 'setup' "Setting up app"
-run 'boot' 'Booting app'
-
-finalize
+exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status

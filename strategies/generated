@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# For when you want to publish to a static vhost.
+#
+# There are references to ROCCO_FILES for when you want to make the code
+# comments available on github:pages (or elsewhere).
+# http://gchef.github.com/chef-extensions is a good example for this use-case.
+#
+# Every deliver is a commit on the generated branch. This then gets pushed out
+# to all remote hosts (or just to github:pages).
+
+OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD" "HOSTS")
+
+REFSPEC="$GENERATED_BRANCH"
+
+run() {
+  gitstatus
+  authorize_hosts
+  init_app_remotely
+  generate
+  commit_generated
+  git_push
+  git_reset_remote
+  generated_cleanup
+}

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# For when you want to publish to github:pages.
+#
+# There are references to ROCCO_FILES for when you want to make the code
+# comments available on github:pages (or elsewhere).
+# http://gchef.github.com/chef-extensions is a good example for this use-case.
+#
+# Every deploy is a commit on the generated branch. This then gets pushed out
+# to github:pages.
+
+REQUIRED_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH")
+OPTIONAL_CONFIGS=("GENERATE_CMD" "ROCCO_FILES")
+
+GENERATED_DIR="gh-pages"
+GENERATED_BRANCH="gh-pages"
+
+run() {
+  gitstatus
+  generate
+
+  if [[ ! $(git status) =~ "nothing to commit" ]]
+  then
+    commit_generated
+    gh_push
+  else
+    nothing_to_do
+  fi
+
+  generated_cleanup
+}
+
+# Move all files from the generated folder into root folder,
+# commit and push
+#
+gh_push() {
+  status "Pushing to github:pages"
+  __exec "git push origin -f $GENERATED_BRANCH"
+}

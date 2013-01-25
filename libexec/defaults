@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+VERSION="0.7.0-pre"
+HOMEPAGE="https://github.com/gerhard/deliver"
+CREATOR="Gerhard Lazu"
+
+ARGS="$@"
+
+ORIGIN_DIR="$(pwd)"
+
+APP_CONFIG="$ORIGIN_DIR/.deliver/config"
+
+GIT_REMOTE="deliver"
+
+SSH_TIMEOUT=3
+
+AUTHORIZED_REMOTE_HOSTS=()
+
+REQUIRED_CONFIGS=("ORIGIN_DIR" "STRATEGY")
+OPTIONAL_CONFIGS=("APP" "APP_USER" "DELIVER_TO" "REFSPEC" "GIT_PUSH" "REVISION" "FOREMAN_EXTRAS" "PORT" "AUTHORIZED_REMOTE_HOSTS")
+
+MODE="compact"
+
+log_file="/tmp/deliver-${APP}"

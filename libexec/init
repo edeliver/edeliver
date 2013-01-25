@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+__version() {
+  echo -e "\n${txtbld}deliver v$VERSION${txtrst} | $HOMEPAGE\n"
+}
+
+__help() {
+  __version
+
+  echo -e "${txtbld}Usage:${txtrst}
+  deliver [MODE] [COMMAND]
+  deliver [OPTIONS]
+
+${txtbld}Commands:${txtrst}
+  deliver strategies    Lists all available strategies
+  deliver check         Checks if everything is setup correctly, displays the entire configuration
+  deliver [MODE]        Takes your code into production
+
+${txtbld}Modes:${txtrst}
+  -C, --compact         Displays every task as it's run, silences all output. (default mode)
+  -V, --verbose         Same as above, does not silence output.
+  -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
+  -D, --debug           Runs in shell debug mode, displays everything.
+
+${txtbld}Options:${txtrst}
+  -s, --strategy        Enforces a particular strategy.
+  -h, --help            Displays this help. (works with no other options)
+  -v, --version         Displays the running version (works with no other options)
+
+${txtbld}Miscellaneous:${txtrst}
+  You can overwrite any config at runtime (deliver check):
+
+  HOSTS=ruby-1-local PORT=6000 deliver -V
+"
+}
+
+__available_strategies() {
+  __version
+
+  echo -e "${txtbld}Available strategies:${txtrst}"
+
+  for strategy in $STRATEGIES_NAME
+  do
+    echo "  * $strategy"
+  done
+
+  echo ""
+}
+
+while (( $# ))
+do
+  arg="$1" && shift
+  case "${arg}" in
+    (-C|--compact)
+      MODE="compact"
+    ;;
+    (-D|--debug)
+      MODE="debug"
+    ;;
+    (-V|--verbose)
+      MODE="verbose"
+    ;;
+    (-P|--plain)
+      # this was already captured in libexec/output
+      # noop
+    ;;
+    (-h|--help)
+      __help
+      exit 0
+    ;;
+    (-s|--strategy)
+      STRATEGY="$1" && shift
+    ;;
+    (-v|--version)
+      __version
+      exit 0
+    ;;
+    (strategies)
+      __available_strategies
+      exit 0
+    ;;
+    (check)
+      CHECK=true
+    ;;
+    (*)
+      hint_message "Unknown argument ${arg} ignored"
+    ;;
+  esac
+done
+
+case "${MODE}" in
+  (compact)
+    VERBOSE=""
+    SILENCE="&> /dev/null"
+  ;;
+  (verbose)
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (debug)
+    set -x
+    VERBOSE=true
+    SILENCE=""
+  ;;
+esac
