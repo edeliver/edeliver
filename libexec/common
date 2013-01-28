@@ -227,7 +227,7 @@ launch() {
   if [[ "$SUPERVISOR" == "bluepill" ]]; then
     __remote "
       set -e
-      sudo bluepill status ${APP}-web | grep up && sudo bluepill stop ${APP}-web $SILENCE
+      sudo bluepill ${APP} status | grep up && sudo bluepill ${APP} stop $SILENCE
       sudo bluepill load $DELIVER_TO/tmp/${APP}.pill $SILENCE
       " "$HOSTS"
   else
