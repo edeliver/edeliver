@@ -19,5 +19,5 @@ run() {
   git_submodules
   npm_install
   foreman_export
-  upstart
+  launch
 }
