@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# For pushing content to an S3 bucket
+# Uses s3cmd cli tool for S3 work
+# 
+# ASSETS_DIR   - the files for syncing with S3
+# S3_BUCKET    - Target S3 bucket name.
+# S3_PREFIX    - Target S3 prefix.
+# GENERATE_CMD - Command to run before syncing. Useful if it generates assets in ASSET_DIR
+# S3CMDARGS    - Arguments to pass to the s3cmd command. For example, "-c .deliver/s3cfg -P --delete-removed sync"
+# 
+
+REQUIRED_CONFIGS+=("ASSETS_DIR" "S3_BUCKET" "S3_PREFIX")
+OPTIONAL_CONFIGS+=("GENERATE_CMD" "S3CMDARGS")
+
+S3CMD=$(which s3cmd)
+if [ $? != 0 ]
+then
+  error_message "You must have s3cmd installed to use the s3 strategy."
+  echo "On Mac OSX:"
+  echo -e "\tbrew install s3cmd"
+  echo "On Ubuntu:"
+  echo -e "\tapt-get install s3cmd"
+  exit
+fi
+
+if [ -z "$S3CMDARGS" ]
+then
+  S3CMDARGS="sync"
+fi
+
+run() {
+  if [ ! -z "$GENERATE_CMD" ]
+  then
+    __exec "$GENERATE_CMD"
+  fi
+  S3CMD="$S3CMD $S3CMDARGS "
+
+  CMD="$S3CMD $ASSETS_DIR s3://$S3_BUCKET$S3_PREFIX"
+  __exec "$CMD"
+}
