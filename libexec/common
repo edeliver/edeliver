@@ -138,7 +138,7 @@ rvmrc_trust() {
     status "Trusting rvmrc in $DELIVER_TO"
     __remote "
       set -e
-      source .profile
+      source ~/.profile
       rvm rvmrc trust $DELIVER_TO $SILENCE
     "
 
@@ -152,7 +152,7 @@ authorize_remote_hosts() {
     status "Authorizing remote hosts"
     __remote "
       set -e
-      source .profile
+      source ~/.profile
       for _remote_host in $AUTHORIZED_REMOTE_HOSTS
       do
         if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
@@ -170,7 +170,7 @@ bundle_install() {
   status "Installing gems with bundler"
   __remote "
     set -e
-    source .profile
+    source ~/.profile
     cd $DELIVER_TO $SILENCE
     if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
     then
@@ -189,7 +189,7 @@ npm_install() {
   status "Installing modules with npm"
   __remote "
     set -e
-    source .profile
+    source ~/.profile
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
   "
@@ -207,7 +207,7 @@ foreman_export() {
 
   __remote "
     set -e
-    source .profile
+    source ~/.profile
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
   "
@@ -225,15 +225,23 @@ launch() {
   #
   # I will be tackling this shortly, you really shouldn't neeed sudo
   # privileges to deliver an app. What was I thinking?!?
-  __remote "
-    set -e
-    if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
-      sudo stop $APP $SILENCE
-    fi
-    sudo rm -f /etc/init/$APP[.-]*
-    sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
-    sudo start $APP $SILENCE
-  " "$HOSTS"
+  if [[ "$SUPERVISOR" == "bluepill" ]]; then
+    __remote "
+      set -e
+      sudo bluepill ${APP} status | grep up && sudo bluepill ${APP} stop $SILENCE
+      sudo bluepill load $DELIVER_TO/tmp/${APP}.pill $SILENCE
+      " "$HOSTS"
+  else
+    __remote "
+      set -e
+      if [[ \$(sudo initctl list | awk '/^'$APP' / { print \$0 }') =~ 'run' ]]; then
+        sudo stop $APP $SILENCE
+      fi
+      sudo rm -f /etc/init/$APP[.-]*
+      sudo mv -f $DELIVER_TO/tmp/*conf /etc/init/
+      sudo start $APP $SILENCE
+    " "$HOSTS"
+  fi
 
   __exec_if_defined "post_launch"
 }
