@@ -1,3 +1,8 @@
+"Rather than fitting a large number of complex primitives, choose a small
+number of simple primitives that can be combined in an infinite way to
+produce complex results. What was left out is more important than what
+was put in.| [AT&T - the UNIX operating system][att_unix]
+
 Deliver is a pure bash deployment tool with virtually no dependencies.
 It only cares about having enough info in the shell environment to do
 its job. Why add Ruby or Python wrappers on top of system commands when
@@ -147,4 +152,5 @@ exposed an API and had decent test coverage, anything went. Yes,
 [7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
 [8]: http://gerhard.github.com/deliver
 [9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
-[10]: /gerhard/deliver/tree/master/strategies/generated
+[10]: deliver/tree/master/strategies/generated
+[att_unix]: http://www.youtube.com/watch?v=tc4ROCJYbm0
