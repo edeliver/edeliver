@@ -1,8 +1,3 @@
-"Rather than fitting a large number of complex primitives, choose a small
-number of simple primitives that can be combined in an infinite way to
-produce complex results. What was left out is more important than what
-was put in.| [AT&T - the UNIX operating system][att_unix]
-
 Deliver is a pure bash deployment tool with virtually no dependencies.
 It only cares about having enough info in the shell environment to do
 its job. Why add Ruby or Python wrappers on top of system commands when
@@ -140,6 +135,15 @@ Deliver started at [GoSquared][1]. It was a place where each of us was
 free to use their own programming language. As long as the service
 exposed an API and had decent test coverage, anything went. Yes,
 **even** PHP.
+
+
+
+## INSPIRATION
+
+_Rather than fitting a large number of complex primitives, choose a small
+number of simple primitives that can be combined in an infinite way to
+produce complex results. What was left out is more important than what
+was put in._ [AT&T - the UNIX operating system][att_unix]
 
 
 
