@@ -1,3 +1,8 @@
+"Rather than fitting a large number of complex primitives, choose a small
+number of simple primitives that can be combined in an infinite way to
+produce complex results. What was left out is more important than what
+was put in.| [AT&T - the UNIX operating system][att_unix]
+
 Deliver is a pure bash deployment tool with virtually no dependencies.
 It only cares about having enough info in the shell environment to do
 its job. Why add Ruby or Python wrappers on top of system commands when
@@ -149,12 +154,12 @@ was put in._ [AT&T - the UNIX operating system][att_unix]
 
 [1]: http://www.gosquared.com/
 [2]: http://c2990942.r42.cf0.rackcdn.com/deliver-nodejs.png
-[3]: /gerhard/deliver/blob/master/strategies/ruby
-[4]: /gerhard/deliver/tree/master/strategies/nodejs
-[5]: /gerhard/deliver/tree/master/strategies/gh-pages
-[6]: /gerhard/deliver/tree/master/strategies
+[3]: strategies/ruby
+[4]: strategies/nodejs
+[5]: strategies/gh-pages
+[6]: strategies
 [7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
 [8]: http://gerhard.github.com/deliver
 [9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
-[10]: deliver/tree/master/strategies/generated
+[10]: strategies/generated
 [att_unix]: http://www.youtube.com/watch?v=tc4ROCJYbm0
