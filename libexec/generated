@@ -64,10 +64,14 @@ You must define one of the following:
   __exec "git add ."
 }
 
+set_revision_to_generated() {
+  REVISION=$(git rev-parse $GENERATED_BRANCH)
+}
+
 commit_generated() {
   status "Committing generated content"
   __exec "git commit -a -m 'Generated with deliver'"
-  REVISION=$(git rev-list $GENERATED_BRANCH | head -1)
+  set_revision_to_generated
 }
 
 generated_cleanup() {
