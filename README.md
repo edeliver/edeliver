@@ -1,114 +1,121 @@
-"Rather than fitting a large number of complex primitives, choose a small
-number of simple primitives that can be combined in an infinite way to
-produce complex results. What was left out is more important than what
-was put in.| [AT&T - the UNIX operating system][att_unix]
+## Erlang release build and deployment system
 
-Deliver is a pure bash deployment tool with virtually no dependencies.
-It only cares about having enough info in the shell environment to do
-its job. Why add Ruby or Python wrappers on top of system commands when
-bash was built for this?
+This is a fork of [deliver](https://github.com/gerhard/deliver) providing **[strategies](https://github.com/gerhard/deliver/tree/master/strategies) to build and deploy erlang releases**.
 
-Capistrano was just infuriating when you added rvm and bundler into the
-mix, git-deploy is great for single server, but what if you're running a
-bunch of auto-scaled clusters (Ruby, node.js etc.)?
+The **[erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html)** are **built** on a **remote host** that have a similar configuration as the deployment target system and can then be **deployed to several production systems**.
 
-Delivering a nodejs service to multiple hosts:
+This is necessary because the [release](http://www.erlang.org/doc/design_principles/release_handling.html) contain the full [erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html), all [dependencies (erlang applications)](http://www.erlang.org/doc/design_principles/applications.html) and your own erlang application(s) in a **standalone embedded node**.
 
-![deliver nodejs service to multiple hosts][2]
+Examples:
 
-Delivering deliver to [github:pages][8] (very inception-esque):
+**Build** an erlang release **and deploy** it on your **production hosts**:
 
-![deliver deliver to github:pages][7]
+    STRATEGY=erlang-build-release ./deliver 
+    STRATEGY=erlang-install-release ./deliver 
 
-Strategies is what sets this utility apart from everything else. By
-default, it comes with strategies for:
+Build an **update** from v1.0 to v2.0 for an erlang release and deploy it your production hosts.
+The update will be **available after restart** of your application.
 
-  * [ruby][3]
+    STRATEGY=erlang-build-update FROM=v1.0 TO=v2.0 ./deliver 
+    STRATEGY=erlang-install-update VERSION=v2.0 ./deliver 
+    STRATEGY=erlang-restart-apps ./deliver 
+    
+Build an **upgrade** from v1.0 to v2.0 for an erlang release and deploy it your production hosts.
+The upgrade will be **available immediately, without restarting** your application. It requires to
+add [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) to the new version.
 
-  * [nodejs][4]
+    STRATEGY=erlang-build-upgrade FROM=v1.0 TO=v2.0 ./deliver 
+    STRATEGY=erlang-install-upgrade VERSION=v2.0 ./deliver 
+    
 
-  * [gh-pages][5]
+### Installation
 
-  * [generated][10]
+Because it is based on [deliver](https://github.com/gerhard/deliver) is uses only shell scripts and has **no further dependencies** except [rebar](https://github.com/basho/rebar) which should be in your `$PATH` or in the root of you project directory. 
 
-You can also add your own, project-specific strategies, or overload existing ones. [Read more about deliver
-strategies.][6]
+It can be added as **[rebar](https://github.com/basho/rebar) depencency** for simple integration into erlang projects. Just add it to your `rebar.config`:
 
-
-## 1 INSTALLATION
-
-### 1.1 Check out deliver into `~/.deliver`.
-
-```bash
-$ git clone git://github.com/gerhard/deliver.git ~/.deliver
-```
-
-### 1.2 Add `~/.deliver/bin` to your `$PATH` for access to the `deliver` command-line utility
-
-```bash
-$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.bash_profile
-# if using zsh
-$ echo 'export PATH="$HOME/.deliver/bin:$PATH"' >> ~/.zshrc 
-```
-
-### 1.3 Source your shell profile
-
-```bash
-$ . ~/.bash_profile
-# if using zsh
-$ . ~/.zshrc 
-```
-
-### 1.4 Personalize
-
-There are no generators or initializers, you will need to manually create a
-`.deliver/config` file in the app's root folder that you want to deliver.
-
-This is a good example:
-
-```bash
-#!/usr/bin/env bash
-
-APP="events"
-HOSTS="ruby-1,ruby-2"
-PORT="5000"
-```
+    {deps, [
+      % ...
+      {deliver, "0.7.0",
+        {git, "git://github.com/bharendt/deliver.git", {branch, master}}}
+    ]}.
 
 
+And link the `deliver` binary to the root of your project directory: 
 
-## 2 USAGE
+    ./rebar update-deps get-deps
+    ln -s ./deps/deps/deliver/bin/deliver .
+    
+### Configuration
+    
+Create a `.deliver` directory in your project folder and add the `config` file:
 
-From the root of your project, run:
+    #!/usr/bin/env bash
+    
+    APP="your-erlang-app" # name of your release
+    STRATEGY="erlang" # default strategy. shows build and deploy strategies
+    
+    BUILD_HOST="build-system.acme.org" # host where to build the release
+    BUILD_USER="build" # local user at build host
+    BUILD_AT="/tmp/deliver-builds" # build directory on build host
+    
+    HOSTS="deploy-host1.acme.org,deploy-host2.acme.org" # deploy hosts
+    APP_USER="production" # local user at deploy hosts
+    DELIVER_TO="/opt/my-erlang-app" # deploy directory on
 
-```bash
-$ deliver check
-```
+There are **two kinds of strategies**: **build strategies** which compile the sources and build the erlang release **on the remote build system** and **deploy strategies** which deliver the built releases to the **remote production systems**.
 
-![deliver check][9]
+### Build Strategies
 
-This will print the most important config settings and ensure that
-deliver has everything that it needs for a successful run. 
+The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. R16B) of the remote build system is included into the release built and delivered to all production system. It is not required to install the otp runtime on the production systems.
+For build strategies the following **configuration** variables must be set:
 
-Deliver will use the ruby strategy by default. If you want to use a different
-one, specify it in your `.deliver/config` file.
+- `APP`: the name of your release which should be built
+- `BUILD_HOST`: the host where to build the release
+- `BUILD_USER`: the local user at build host
+- `BUILD_AT`: the directory on build host where to build the release
 
-To see a list of available strategies:
+The built release it then **copied to your local directory** `./deliver/erlang-builds` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
 
-```bash
-$ deliver strategies
-```
+#### erlang-build-release
 
-[Read more about deliver strategies][6]
+Builds an initial release that can be deployed to the production hosts.
 
-To see all supported options and actions:
+#### erlang-build-update
 
-```bash
-$ deliver -h|--help
-```
+Builds a release update that can be deployed to the production hosts. The update is generated for two git revisions or tags or from an old revision / tag to the current master branch. Requires that a `FROM=` environment variable is passed at the command line which referes the the old git revision or tag to build the update from and an optional `TO=` variable, if the update should not be created to the latest version.
+
+#### erlang-build-upgrade
+
+Builds a release upgrade that can be deployed to production hosts with running nodes. The upgrade is generated for two git revisions or tags or from an old revision / tag to the current master branch. Requires that a `FROM=` environment variable is passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `TO=` variable, if the upgrade should not be created to the latest version.To perform the live upgrade, it is required that [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) exist, that will be included in the release upgrade build.
+
+### Deploy Strategies
+
+Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `./deliver/erlang-builds`. To deploy a release the following **configuration** variables must be set:
+
+- `APP`: the name of your release which should be built
+- `HOSTS`: the production hosts to deploy to
+- `APP_USER`: the local users at the production hosts
+- `DELIVER_TO`: the directory at the production hosts to deploy the release at
+
+#### erlang-install-release
+
+Installs an initial release at the production hosts.
+Requires that the _erlang-build-release_ strategy was executed before.
 
 
+#### erlang-install-update
 
-## 3 LICENSE
+Installs an update at the production hosts. This does **not affect running nodes** on the production servers. The update is booted when the **production nodes are started the next time**. 
+Requires that the _erlang-build-update_ strategy was executed before and that there is already an initial release deployed to the production hosts.
+
+#### erlang-install-upgrade
+
+Installs an updated at the production hosts and **upgrades the running nodes** to the new version.
+Requires that the _erlang-build-upgrade_ strategy was executed before and that there is already an initial release deployed to the production hosts and that the node is running.
+
+---
+### LICENSE
 
 (The MIT license)
 
@@ -134,32 +141,3 @@ SOFTWARE.
 
 
 
-## 4 CREDITS
-
-Deliver started at [GoSquared][1]. It was a place where each of us was
-free to use their own programming language. As long as the service
-exposed an API and had decent test coverage, anything went. Yes,
-**even** PHP.
-
-
-
-## INSPIRATION
-
-_Rather than fitting a large number of complex primitives, choose a small
-number of simple primitives that can be combined in an infinite way to
-produce complex results. What was left out is more important than what
-was put in._ [AT&T - the UNIX operating system][att_unix]
-
-
-
-[1]: http://www.gosquared.com/
-[2]: http://c2990942.r42.cf0.rackcdn.com/deliver-nodejs.png
-[3]: strategies/ruby
-[4]: strategies/nodejs
-[5]: strategies/gh-pages
-[6]: strategies
-[7]: http://c2990942.r42.cf0.rackcdn.com/deliver-deliver.png
-[8]: http://gerhard.github.com/deliver
-[9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
-[10]: strategies/generated
-[att_unix]: http://www.youtube.com/watch?v=tc4ROCJYbm0
