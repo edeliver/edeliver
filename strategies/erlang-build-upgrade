@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("BUILD_HOST")
+REQUIRED_CONFIGS+=("BUILD_USER")
+REQUIRED_CONFIGS+=("BUILD_AT")
+REQUIRED_CONFIGS+=("FROM")
+OPTIONAL_CONFIGS+=("TO")
+
+run() {
+  status "Building upgrade"
+}
+

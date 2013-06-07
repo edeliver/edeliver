@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("BUILD_HOST")
+REQUIRED_CONFIGS+=("BUILD_USER")
+REQUIRED_CONFIGS+=("BUILD_AT")
+
+run() {
+  status "Building release"
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("HOSTS")
+REQUIRED_CONFIGS+=("APP_USER")
+REQUIRED_CONFIGS+=("DELIVER_TO")
+
+run() {
+  status "Installing release"
+}

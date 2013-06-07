@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("HOSTS")
+REQUIRED_CONFIGS+=("APP_USER")
+REQUIRED_CONFIGS+=("DELIVER_TO")
+OPTIONAL_CONFIGS+=("VERSION")
+
+run() {
+  status "Installing update"
+}

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+
+run() {
+  status "This is only the dummy strategy for erlang."
+  status
+  status "Use the following sub strategies to deliver erlang releases:"
+  status
+  status "erlang-build-release"
+  status
+  status "  builds an erlang release on a remote hosts that is similar"
+  status "  to the deployment target system and copies it to the local"
+  status "  machine to .deliver/erlang-releases"
+}
