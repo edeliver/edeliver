@@ -59,7 +59,7 @@ init_app_remotely() {
     set -e
     if [ ! -d $DELIVER_TO ]
     then
-      mkdir $DELIVER_TO
+      mkdir -p $DELIVER_TO
       cd $DELIVER_TO
       git init $SILENCE
       git config receive.denyCurrentBranch ignore
