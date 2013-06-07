@@ -8,3 +8,46 @@ set_build_hosts() {
   # use deliver to as built at destination
   export DELIVER_TO=$BUILD_AT  
 }
+
+
+rebar_clean_get_deps() {
+  __exec_if_defined "pre_rebar_clean_get_deps"
+
+  status "Updating rebar dependencies"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    ./rebar delete-deps get-deps
+  "
+
+  __exec_if_defined "post_rebar_clean_get_deps"
+}
+
+rebar_clean_compile() {
+  __exec_if_defined "pre_rebar_clean_compile"
+
+  status "Compiling sources"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    ./rebar clean compile
+  "
+
+  __exec_if_defined "post_rebar_clean_compile"
+}
+
+rebar_renerate() {
+  __exec_if_defined "pre_rebar_renerate"
+
+  status "Generating release"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    ./rebar -f generate
+  "
+
+  __exec_if_defined "post_rebar_renerate"
+}

@@ -12,7 +12,11 @@ run() {
   authorize_hosts  
   init_app_remotely
   git_push
-  git_reset_remote  
+  git_reset_remote 
+  authorize_remote_hosts 
+  rebar_clean_get_deps
+  rebar_clean_compile
+  rebar_renerate
 }
 
 
