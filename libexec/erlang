@@ -18,7 +18,8 @@ rebar_clean_get_deps() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar delete-deps get-deps
+    ./rebar -k delete-deps 
+    ./rebar get-deps
   "
 
   __exec_if_defined "post_rebar_clean_get_deps"
