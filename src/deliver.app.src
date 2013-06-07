@@ -1,0 +1,8 @@
+{application, deliver,
+ [
+  {description, "erlang remote build and deploy tool"},
+  {vsn, "0.7.0"},
+  {registered, []},
+  {applications, []},
+  {env, []}
+ ]}.
