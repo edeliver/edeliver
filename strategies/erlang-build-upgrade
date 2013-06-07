@@ -7,7 +7,17 @@ REQUIRED_CONFIGS+=("BUILD_AT")
 REQUIRED_CONFIGS+=("FROM")
 OPTIONAL_CONFIGS+=("TO")
 
+set_build_hosts
+
 run() {
   status "Building upgrade"
+  set_build_hosts
+  authorize_hosts  
+  init_app_remotely
+  git_push
+  git_reset_remote  
 }
+
+
+
 

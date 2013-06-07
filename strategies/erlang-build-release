@@ -5,6 +5,15 @@ REQUIRED_CONFIGS+=("BUILD_HOST")
 REQUIRED_CONFIGS+=("BUILD_USER")
 REQUIRED_CONFIGS+=("BUILD_AT")
 
+set_build_hosts
+
 run() {
   status "Building release"
+  authorize_hosts  
+  init_app_remotely
+  git_push
+  git_reset_remote  
 }
+
+
+

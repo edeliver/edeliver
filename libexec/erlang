@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# sets the build host, user and path as deliver hosts and path
+set_build_hosts() {
+  # use build host and user for remote operations
+  export HOSTS=$BUILD_HOST 
+  export APP_USER=$BUILD_USER
+  # use deliver to as built at destination
+  export DELIVER_TO=$BUILD_AT  
+}
