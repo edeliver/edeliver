@@ -75,11 +75,13 @@ For build strategies the following **configuration** variables must be set:
 - `BUILD_USER`: the local user at build host
 - `BUILD_AT`: the directory on build host where to build the release
 
-The built release it then **copied to your local directory** `./deliver/erlang-builds` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
+The built release it then **copied to your local directory** `.deliver/erlang-releases` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
+
+If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the `.deliver/erlang-releases` but you can configure any destination with the `RELEASE_STORE=` environment variables, also remote destinations like `RELEASE_STORE=user@releases.acme.org:/releases/`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
 
 #### erlang-build-release
 
-Builds an initial release that can be deployed to the production hosts. If you want to build a different branch, tag or revision, use the `REVISION=` environment variable.
+Builds an initial release that can be deployed to the production hosts. If you want to build a different branch, tag or revision, use the `REVISION=` environment variable. 
 
 #### erlang-build-update
 
@@ -91,7 +93,7 @@ Builds a release upgrade that can be deployed to production hosts with running n
 
 ### Deploy Strategies
 
-Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `./deliver/erlang-builds`. To deploy a release the following **configuration** variables must be set:
+Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `.deliver/erlang-releases`. To deploy a release the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
 - `HOSTS`: the production hosts to deploy to

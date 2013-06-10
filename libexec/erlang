@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# the local or remote (scp) directory where the built
+# releases should be copied to
+if [ -z "$RELEASE_STORE" ]
+then
+  RELEASE_STORE=".deliver/erlang-releases"
+fi
+
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
   # use build host and user for remote operations
@@ -9,7 +16,7 @@ set_build_hosts() {
   export DELIVER_TO=$BUILD_AT  
 }
 
-
+# clean fetch of rebar dependencies on the remote build host
 rebar_clean_get_deps() {
   __exec_if_defined "pre_rebar_clean_get_deps"
 
@@ -25,6 +32,7 @@ rebar_clean_get_deps() {
   __exec_if_defined "post_rebar_clean_get_deps"
 }
 
+# compiles the sources on the remote build host
 rebar_clean_compile() {
   __exec_if_defined "pre_rebar_clean_compile"
 
@@ -39,6 +47,7 @@ rebar_clean_compile() {
   __exec_if_defined "post_rebar_clean_compile"
 }
 
+# generates the release on the remote build host
 rebar_renerate() {
   __exec_if_defined "pre_rebar_renerate"
 
@@ -52,3 +61,76 @@ rebar_renerate() {
 
   __exec_if_defined "post_rebar_renerate"
 }
+
+# copies the generated release from the remote build host
+# to the release store
+copy_release_to_release_store() {
+  __detect_remote_release_dir
+  __detect_remote_release_version
+  status "Building archive of release ${RELEASE_VERSION}"  
+  # create tar
+  local _release_file=$(__remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION} -C $RELEASE_DIR/.. ${APP}
+    readlink -f $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz
+  ")
+  status "Copying $(basename $_release_file) to release store"  
+  # create releasee store directory if it is a local directory
+  ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p $RELEASE_STORE"
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"
+}
+
+# detects the directory that contains the generated release
+# on the remote build host
+__detect_remote_release_dir() {
+  if ! [ -z $RELEASE_DIR ]; then
+    return
+  else
+    local _release_directories=($(__remote "
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      cd $DELIVER_TO $SILENCE
+      find ./ -name RELEASES -exec readlink -f {} \; | grep $APP/releases
+    "))  
+    if [ ${#_release_directories[@]} -eq 1 ]; then
+      RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
+    else
+      error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
+      error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
+      if [ ${#_release_directories[@]} -gt 1 ]; then
+        hint_message "Maybe one of these directories contains the relase:"
+        for _dir in "${_release_directories[@]}"; do
+          hint_message "  ${_dir/\/releases\/RELEASES/}"
+        done
+      fi
+      exit 1
+    fi
+  fi
+}
+
+# detectes the current version of the generated release
+# on the remote build host
+__detect_remote_release_version() {
+  if ! [ -z $RELEASE_VERSION ]; then
+    return
+  else
+    local _releases=($(__remote "
+      ls -Ad $RELEASE_DIR/releases/*/
+    "))
+    if [ ${#_releases[@]} -eq 1 ]; then
+      RELEASE_VERSION=`basename ${_releases[0]}`
+    else
+      error_message "Failed to detect generated release version at\n$APP_USER@$HOSTS:$RELEASE_DIR/releases/\n"
+      error_message "Please set RELEASE_VERSION=x"
+      if [ ${#_releases[@]} -gt 1 ]; then
+        hint_message "Detected several releases:"
+        for _release in "${_releases[@]}"; do
+          hint_message " $(basename $_release)"
+        done
+      fi
+      exit 1
+    fi
+  fi
+}
+
