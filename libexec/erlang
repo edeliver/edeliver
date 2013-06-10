@@ -13,13 +13,13 @@ set_build_hosts() {
 rebar_clean_get_deps() {
   __exec_if_defined "pre_rebar_clean_get_deps"
 
-  status "Updating rebar dependencies"
+  status "Fetching rebar dependencies"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar -k delete-deps 
-    ./rebar get-deps
+    ./rebar -k delete-deps $SILENCE
+    ./rebar get-deps $SILENCE
   "
 
   __exec_if_defined "post_rebar_clean_get_deps"
@@ -33,7 +33,7 @@ rebar_clean_compile() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar clean compile
+    ./rebar clean compile $SILENCE
   "
 
   __exec_if_defined "post_rebar_clean_compile"
@@ -47,7 +47,7 @@ rebar_renerate() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar -f generate
+    ./rebar -f generate $SILENCE
   "
 
   __exec_if_defined "post_rebar_renerate"
