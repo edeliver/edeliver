@@ -5,7 +5,7 @@ BASE_PATH="$(dirname $0)/.."
 source "$BASE_PATH/libexec/defaults"
 
 export RONN_MANUAL="Deliver Manual"
-export RONN_ORGANIZATION="Deliver $VERSION"
+export RONN_ORGANIZATION="Deliver $DELIVER_VERSION"
 
 bundle exec ronn -w -s toc $BASE_PATH/man/*.ronn
 

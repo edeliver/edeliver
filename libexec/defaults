@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-VERSION="0.7.0-pre"
-HOMEPAGE="https://github.com/gerhard/deliver"
+DELIVER_VERSION="0.7.0-pre"
+HOMEPAGE="https://github.com/bharendt/deliver"
 CREATOR="Gerhard Lazu"
 
 ARGS="$@"

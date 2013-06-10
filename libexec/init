@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 __version() {
-  echo -e "\n${txtbld}deliver v$VERSION${txtrst} | $HOMEPAGE\n"
+  echo -e "\n${txtbld}deliver v$DELIVER_VERSION${txtrst} | $HOMEPAGE\n"
 }
 
 __help() {

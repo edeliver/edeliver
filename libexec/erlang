@@ -72,7 +72,7 @@ copy_release_to_release_store() {
   local _release_file=$(__remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION} -C $RELEASE_DIR/.. ${APP}
+    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz -C $RELEASE_DIR/.. ${APP}
     readlink -f $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz
   ")
   status "Copying $(basename $_release_file) to release store"  
@@ -80,6 +80,26 @@ copy_release_to_release_store() {
   ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p $RELEASE_STORE"
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"
 }
+
+# installs a release at all production hosts
+install_release() {
+  __select_release_from_store
+  status "Copying archive of release $(basename $VERSION)"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    mkdir -p $DELIVER_TO $SILENCE
+  "  
+  __parallel_scp "${RELEASE_STORE}/${RELEASE_FILE}" "${DELIVER_TO}/${RELEASE_FILE}"
+  status "Extracting archive $(basename $RELEASE_FILE)"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    tar -xzvf $RELEASE_FILE $SILENCE
+  "  
+}
+
 
 # detects the directory that contains the generated release
 # on the remote build host
@@ -134,3 +154,68 @@ __detect_remote_release_version() {
   fi
 }
 
+# reselects the release or update to deploy to productions hosts
+# from the release store
+__select_release_from_store() {
+  if ! [ -z $VERSION ]; then
+    RELEASE_FILE="${APP}_${VERSION}.tar.gz"
+    return
+  else
+    if [[ "$RELEASE_STORE" =~ .*:.* ]]; then
+      # TODO: list releases in remote store
+      error_message "Failed to detect release version to install."
+      error_message "Autodetection of releases in remote release stores is not supported."
+      hint_message "Please set VERSION=X in the command line"
+      exit 1
+    fi
+    _release_files=( $(ls ${RELEASE_STORE}/${APP}_*.tar.gz) )
+    if [ ${#_release_files[@]} -eq 1 ]; then
+      RELEASE_FILE=$(basename ${_release_files[0]})
+    else
+      hint_message "Found different versions to deploy."
+      hint_message "Type the version you want to deploy"
+      hint_message "or set VERSION=X in the command line."
+      hint_message "Versions:"
+      for _release_file in "${_release_files[@]}"; do
+        local _current_version=$(__release_version_from_archive_name $(basename $_release_file))
+        hint_message " $_current_version"
+      done
+      hint_message "Enter Version:"
+      read VERSION
+      RELEASE_FILE="${APP}_${VERSION}.tar.gz"      
+    fi
+  fi  
+}
+
+# gets the release version from the release archive name
+__release_version_from_archive_name() {
+  local _removed_app_name=${1/${APP}_/}
+  echo ${_removed_app_name/\.tar\.gz/}
+}
+
+# copy a file to all remote production hosts in parallel
+__parallel_scp() {
+  local _source_file="$1"
+  local _destination_dir="$2"
+  local _hosts="${3:-"$HOSTS_APP_USER"}"
+  if [ "${MODE}" = "compact" ]; then
+    local _options=" -q"
+  else 
+    local _options=""
+  fi
+  
+  background_jobs_pids=()
+  background_jobs=()  
+
+  __log "${_hosts} : $_remote_job"
+
+  for _host in $_hosts
+  do    
+    scp -o ConnectTimeout="$SSH_TIMEOUT" $_options "$_source_file" "$_host:$_destination_dir" &
+    background_jobs_pids+=("$!")
+    local _background_job="scp -o ConnectTimeout=$SSH_TIMEOUT $_options $_source_file $_host:$_destination_dir $SILENCE"
+    background_jobs+=("$_background_job")
+  done
+
+  __monitor_background_jobs
+}

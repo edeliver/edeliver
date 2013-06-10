@@ -104,6 +104,7 @@ Deploy strategies deploys the builds that were created with a build strategy bef
 
 Installs an initial release at the production hosts.
 Requires that the _erlang-build-release_ strategy was executed before.
+If there are several releases in the release store, you will be asked which release to install or you can pass the version by the `VERSION=` environment variable.
 
 
 #### erlang-install-update
