@@ -84,7 +84,7 @@ copy_release_to_release_store() {
 # installs a release at all production hosts
 install_release() {
   __select_release_from_store
-  status "Copying archive of release $(basename $VERSION)"
+  status "Copying archive of release $VERSION"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
@@ -171,6 +171,8 @@ __select_release_from_store() {
     _release_files=( $(ls ${RELEASE_STORE}/${APP}_*.tar.gz) )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
+      VERSION=${RELEASE_FILE/${APP}_/}
+      VERSION=${VERSION/.tar.gz/}
     else
       hint_message "Found different versions to deploy."
       hint_message "Type the version you want to deploy"
