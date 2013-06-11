@@ -76,7 +76,7 @@ copy_release_to_release_store() {
     readlink -f $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz
   ")
   status "Copying $(basename $_release_file) to release store"  
-  # create releasee store directory if it is a local directory
+  # create release store directory if it is a local directory
   ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p $RELEASE_STORE"
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"
 }
@@ -100,6 +100,54 @@ install_release() {
   "  
 }
 
+# gets the sha hash of the latest commit of the branch to deploy
+get_latest_commit() {
+  __exec "git rev-parse $BRANCH;"
+}
+
+# checks the given commit out on the remote build host
+git_checkout_remote() {
+  local _revision=$1
+  status "Checking out $_revision"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    git checkout $_revision $SILENCE
+  "
+}
+
+# renames the release directory on the remote build host
+# by adding the release version to the release folder name
+rename_release_add_version() {
+  __detect_remote_release_dir
+  __detect_remote_release_version
+  status "Moving old release to ${APP}_${RELEASE_VERSION}"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $RELEASE_DIR/.. $SILENCE
+    mv ${APP} ${APP}_${RELEASE_VERSION} $SILENCE
+  "
+  
+}
+
+# generates the upgrade from the old version to the new version
+rebar_generate_upgrade() {
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  local _old_version=$1
+  status "Generating upgrade to version ${RELEASE_VERSION}"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    ./rebar generate-appups previous_release=${APP}_${_old_version} $SILENCE
+    ./rebar generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
+  "
+}
+
 
 # detects the directory that contains the generated release
 # on the remote build host
@@ -111,7 +159,7 @@ __detect_remote_release_dir() {
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $DELIVER_TO $SILENCE
-      find ./ -name RELEASES -exec readlink -f {} \; | grep $APP/releases
+      find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES
     "))  
     if [ ${#_release_directories[@]} -eq 1 ]; then
       RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}

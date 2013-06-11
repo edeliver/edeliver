@@ -73,7 +73,7 @@ For build strategies the following **configuration** variables must be set:
 - `APP`: the name of your release which should be built
 - `BUILD_HOST`: the host where to build the release
 - `BUILD_USER`: the local user at build host
-- `BUILD_AT`: the directory on build host where to build the release
+- `BUILD_AT`: the directory on build host where to build the release. must exist.
 
 The built release it then **copied to your local directory** `.deliver/erlang-releases` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
 
@@ -81,7 +81,7 @@ If compiling and generating the release build was successful, the release is **c
 
 #### erlang-build-release
 
-Builds an initial release that can be deployed to the production hosts. If you want to build a different branch, tag or revision, use the `REVISION=` environment variable. 
+Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `REVISION=` environment variable. If you want to bild a different branch or the tag / revision is in a different branch, use the `BRANCH=` variable. 
 
 #### erlang-build-update
 

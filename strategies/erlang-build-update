@@ -7,14 +7,26 @@ REQUIRED_CONFIGS+=("BUILD_AT")
 REQUIRED_CONFIGS+=("FROM")
 OPTIONAL_CONFIGS+=("TO")
 
+TO="${TO:=$(get_latest_commit)}"
+
 set_build_hosts
 
 run() {
-  status "Building update"
   authorize_hosts  
   init_app_remotely
   git_push
   git_reset_remote  
+  git_checkout_remote $FROM
+  rebar_clean_get_deps
+  rebar_clean_compile
+  rebar_renerate
+  rename_release_add_version
+  OLD_RELEASE_VERSION=${RELEASE_VERSION}  
+  git_checkout_remote $TO
+  rebar_clean_get_deps
+  rebar_clean_compile
+  rebar_renerate
+  rebar_generate_upgrade $OLD_RELEASE_VERSION
 }
 
 
