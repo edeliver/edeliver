@@ -11,4 +11,5 @@ run() {
   authorize_remote_hosts 
   select_release_from_store
   upload_release_archive "/${APP}/releases"
+  make_release_permanent
 }

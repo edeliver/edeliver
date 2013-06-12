@@ -146,6 +146,19 @@ upload_release_archive() {
   __parallel_scp "${RELEASE_STORE}/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${RELEASE_FILE}"
 }
 
+# makes an update release permanent. which means the current node
+# is not upgraded while running, but on next start the new release
+# will be booted
+make_release_permanent() {
+  status "Making release $VERSION permanent"  
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd ${DELIVER_TO}/${APP} $SILENCE
+    bin/${APP} update ${APP}_${VERSION} $SILENCE
+  "
+}
+
 # installs a release at all production hosts
 remote_extract_release_archive() {
   status "Extracting archive $(basename $RELEASE_FILE)"
