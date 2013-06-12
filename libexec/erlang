@@ -7,6 +7,15 @@ then
   RELEASE_STORE=".deliver/erlang-releases"
 fi
 
+if [ -z "$REBAR_CONFIG" ]
+then
+  REBAR_OPTIONS=""
+else
+  REBAR_OPTIONS="-C $REBAR_CONFIG"
+fi
+
+REBAR_CMD="./rebar $REBAR_OPTIONS"
+
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
   # use build host and user for remote operations
@@ -25,8 +34,8 @@ rebar_clean_get_deps() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar -k delete-deps $SILENCE
-    ./rebar get-deps $SILENCE
+    $REBAR_CMD -k delete-deps $SILENCE
+    $REBAR_CMD get-deps $SILENCE
   "
 
   __exec_if_defined "post_rebar_clean_get_deps"
@@ -41,7 +50,7 @@ rebar_clean_compile() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar clean compile $SILENCE
+    $REBAR_CMD clean compile $SILENCE
   "
 
   __exec_if_defined "post_rebar_clean_compile"
@@ -56,7 +65,7 @@ rebar_renerate() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar -f generate $SILENCE
+    $REBAR_CMD -f generate $SILENCE
   "
 
   __exec_if_defined "post_rebar_renerate"
@@ -149,8 +158,8 @@ rebar_generate_upgrade() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    ./rebar generate-appups previous_release=${APP}_${_old_version} $SILENCE
-    ./rebar generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
+    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
+    $REBAR_CMD generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
   "
 }
 

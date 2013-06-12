@@ -91,6 +91,12 @@ Builds a release update that can be deployed to the production hosts. The update
 
 Builds a release upgrade that can be deployed to production hosts with running nodes. The upgrade is generated for two git revisions or tags or from an old revision / tag to the current master branch. Requires that a `FROM=` environment variable is passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `TO=` variable, if the upgrade should not be created to the latest version.To perform the live upgrade, it is required that [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) exist, that will be included in the release upgrade build.
 
+#### build restrictions
+
+To build **updates or upgrades** it is required that there is **only one release** in the release directory (`rel`) of you project **configured** in your `rebar.config`. E.g. if you want to build two different releases `project-dir/rel/release_a` and `project-dir/rel/release_b` you need two `rebar.config` files that refer only to either one of that release directories in the `sub_dirs` section.
+You can then pass the config file to use by adding the environment `REBAR_CONFIG=` at the command line.
+The reason for that is, that if the update or upgrade is build with rebar, rebar tries to find the old version in both release directories.
+
 ### Deploy Strategies
 
 Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `.deliver/erlang-releases`. To deploy a release the following **configuration** variables must be set:
