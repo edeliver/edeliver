@@ -8,5 +8,7 @@ REQUIRED_CONFIGS+=("DELIVER_TO")
 run() {
   authorize_hosts  
   authorize_remote_hosts 
-  install_release
+  select_release_from_store
+  upload_release_archive
+  remote_extract_release_archive
 }

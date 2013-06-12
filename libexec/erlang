@@ -96,16 +96,58 @@ copy_release_to_release_store() {
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"
 }
 
-# installs a release at all production hosts
-install_release() {
-  __select_release_from_store
-  status "Copying archive of release $VERSION"
+# reselects the release or update to deploy to productions hosts
+# from the release store. Sets the RELEASE_FILE and VERSION variables
+select_release_from_store() {
+  if ! [ -z $VERSION ]; then
+    RELEASE_FILE="${APP}_${VERSION}.tar.gz"
+    return
+  else
+    if [[ "$RELEASE_STORE" =~ .*:.* ]]; then
+      # TODO: list releases in remote store
+      error_message "Failed to detect release version to install."
+      error_message "Autodetection of releases in remote release stores is not supported."
+      hint_message "Please set VERSION=X in the command line"
+      exit 1
+    fi
+    _release_files=( $(ls ${RELEASE_STORE}/${APP}_*.tar.gz) )
+    if [ ${#_release_files[@]} -eq 1 ]; then
+      RELEASE_FILE=$(basename ${_release_files[0]})
+      VERSION=${RELEASE_FILE/${APP}_/}
+      VERSION=${VERSION/.tar.gz/}
+    else
+      hint_message "Found different versions to deploy."
+      hint_message "Type the version you want to deploy"
+      hint_message "or set VERSION=X in the command line."
+      hint_message "Versions:"
+      for _release_file in "${_release_files[@]}"; do
+        local _current_version=$(__release_version_from_archive_name $(basename $_release_file))
+        hint_message " $_current_version"
+      done
+      hint_message "Enter Version:"
+      read VERSION
+      RELEASE_FILE="${APP}_${VERSION}.tar.gz"      
+    fi
+  fi  
+}
+
+# copies the release archive to the production hosts to the DELIVER_TO path.
+# the current release file and version must be set in the
+# RELEASE_FILE and VERSION variables. an optional subdirectory can be passed
+# as argument (with a leading slash, but no tailing)
+upload_release_archive() {
+  local _subdirectory=${1-}
+  status "Uploading archive of release $VERSION"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    mkdir -p $DELIVER_TO $SILENCE
+    mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
   "  
-  __parallel_scp "${RELEASE_STORE}/${RELEASE_FILE}" "${DELIVER_TO}/${RELEASE_FILE}"
+  __parallel_scp "${RELEASE_STORE}/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${RELEASE_FILE}"
+}
+
+# installs a release at all production hosts
+remote_extract_release_archive() {
   status "Extracting archive $(basename $RELEASE_FILE)"
   __remote "
     set -e
@@ -217,40 +259,6 @@ __detect_remote_release_version() {
   fi
 }
 
-# reselects the release or update to deploy to productions hosts
-# from the release store
-__select_release_from_store() {
-  if ! [ -z $VERSION ]; then
-    RELEASE_FILE="${APP}_${VERSION}.tar.gz"
-    return
-  else
-    if [[ "$RELEASE_STORE" =~ .*:.* ]]; then
-      # TODO: list releases in remote store
-      error_message "Failed to detect release version to install."
-      error_message "Autodetection of releases in remote release stores is not supported."
-      hint_message "Please set VERSION=X in the command line"
-      exit 1
-    fi
-    _release_files=( $(ls ${RELEASE_STORE}/${APP}_*.tar.gz) )
-    if [ ${#_release_files[@]} -eq 1 ]; then
-      RELEASE_FILE=$(basename ${_release_files[0]})
-      VERSION=${RELEASE_FILE/${APP}_/}
-      VERSION=${VERSION/.tar.gz/}
-    else
-      hint_message "Found different versions to deploy."
-      hint_message "Type the version you want to deploy"
-      hint_message "or set VERSION=X in the command line."
-      hint_message "Versions:"
-      for _release_file in "${_release_files[@]}"; do
-        local _current_version=$(__release_version_from_archive_name $(basename $_release_file))
-        hint_message " $_current_version"
-      done
-      hint_message "Enter Version:"
-      read VERSION
-      RELEASE_FILE="${APP}_${VERSION}.tar.gz"      
-    fi
-  fi  
-}
 
 # gets the release version from the release archive name
 __release_version_from_archive_name() {
