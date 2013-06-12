@@ -27,6 +27,7 @@ run() {
   rebar_clean_compile
   rebar_renerate
   rebar_generate_upgrade $OLD_RELEASE_VERSION
+  copy_release_to_release_store
 }
 
 

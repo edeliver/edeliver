@@ -62,20 +62,26 @@ rebar_renerate() {
   __exec_if_defined "post_rebar_renerate"
 }
 
+# creates a tar.gz of the built release
+archive_release_dir() {
+  __detect_remote_release_dir
+  __detect_remote_release_version
+  status "Building archive of release ${RELEASE_VERSION}"  
+  # create tar
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz -C $RELEASE_DIR/.. ${APP} $SILENCE
+  "
+}
+
 # copies the generated release from the remote build host
 # to the release store
 copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
-  status "Building archive of release ${RELEASE_VERSION}"  
-  # create tar
-  local _release_file=$(__remote "
-    set -e
-    [ -f ~/.profile ] && source ~/.profile
-    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz -C $RELEASE_DIR/.. ${APP}
-    readlink -f $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz
-  ")
-  status "Copying $(basename $_release_file) to release store"  
+  local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
+  status "Copying $(basename $_release_file) to release store"
   # create release store directory if it is a local directory
   ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p $RELEASE_STORE"
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"

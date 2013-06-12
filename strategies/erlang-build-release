@@ -16,6 +16,7 @@ run() {
   rebar_clean_get_deps
   rebar_clean_compile
   rebar_renerate
+  archive_release_dir
   copy_release_to_release_store
 }
 
