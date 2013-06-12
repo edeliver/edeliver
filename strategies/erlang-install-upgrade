@@ -7,5 +7,9 @@ REQUIRED_CONFIGS+=("DELIVER_TO")
 OPTIONAL_CONFIGS+=("VERSION")
 
 run() {
-  status "Installing upgrade"
+  authorize_hosts  
+  authorize_remote_hosts 
+  select_release_from_store
+  upload_release_archive "/${APP}/releases"
+  upgrade_release
 }

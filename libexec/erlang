@@ -159,6 +159,18 @@ make_release_permanent() {
   "
 }
 
+# upgrades the remote hosts with running nodes to
+# the new release version.
+upgrade_release() {
+  status "Upgrading release to $VERSION"  
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd ${DELIVER_TO}/${APP} $SILENCE
+    bin/${APP} upgrade ${APP}_${VERSION} $SILENCE
+  "
+}
+
 # installs a release at all production hosts
 remote_extract_release_archive() {
   status "Extracting archive $(basename $RELEASE_FILE)"
