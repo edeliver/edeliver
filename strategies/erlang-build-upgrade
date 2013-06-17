@@ -8,15 +8,29 @@ REQUIRED_CONFIGS+=("FROM")
 OPTIONAL_CONFIGS+=("TO")
 OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 
+TO="${TO:=$(get_latest_commit)}"
+
 set_build_hosts
 
 run() {
-  status "Building upgrade"
-  set_build_hosts
   authorize_hosts  
   init_app_remotely
   git_push
   git_reset_remote  
+  git_checkout_remote $FROM
+  rebar_clean_get_deps
+  rebar_clean_compile
+  rebar_renerate
+  rename_release_add_version
+  OLD_RELEASE_VERSION=${RELEASE_VERSION}  
+  git_checkout_remote $TO
+  rebar_clean_get_deps
+  rebar_clean_compile
+  rebar_renerate
+  rebar_generate_appup $OLD_RELEASE_VERSION
+  copy_appups_from_release_store_to_build_host $OLD_RELEASE_VERSION
+  rebar_generate_upgrade $OLD_RELEASE_VERSION
+  copy_release_to_release_store
 }
 
 

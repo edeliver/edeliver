@@ -95,6 +95,19 @@ copy_release_to_release_store() {
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases"
 }
 
+# copies the generated appup files from the remote build host
+# to the release store
+copy_appups_to_release_store() {
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  local _old_version=$1
+  local _appup_files="$RELEASE_DIR/lib/*/ebin/*.appup"  
+  status "Copying generated appup files to release store /appup/${_old_version}-${RELEASE_VERSION}"
+  # create release store directory if it is a local directory
+  __create_directory_in_release_store "/appup/${_old_version}-${RELEASE_VERSION}"
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_appup_files} ${RELEASE_STORE}/appup/${_old_version}-${RELEASE_VERSION}"
+}
 
 
 # reselects the release or update to deploy to productions hosts
@@ -117,6 +130,7 @@ select_release_from_store() {
       VERSION=${RELEASE_FILE/${APP}_/}
       VERSION=${VERSION/.tar.gz/}
     else
+      status "Selecting release"
       hint_message "Found different versions to deploy."
       hint_message "Type the version you want to deploy"
       hint_message "or set VERSION=X in the command line."
@@ -216,6 +230,38 @@ rename_release_add_version() {
 }
 
 # generates the upgrade from the old version to the new version
+rebar_generate_appup() {
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  local _old_version=$1
+  status "Generating default appup scripts for release ${RELEASE_VERSION}"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
+  "
+}
+
+# copies the custom appups from the release store to the current release
+# on the build host. this overrides previously generated default appups
+copy_appups_from_release_store_to_build_host() {
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  local _old_version=$1
+  local _num_scripts=$(ls -1 $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup | wc -l)
+  status "Overwriting appups with ${_num_scripts// /} custom scripts from /appup/${_old_version}-${RELEASE_VERSION}/"
+  for appup_file in $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup; do
+    local _appup_base_name=$(basename $appup_file)
+    local _appup_app_name=${_appup_base_name%.*}
+    __exec "echo \"Copying $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name}\" to $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
+    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name} $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
+  done
+}
+
+# generates the upgrade from the old version to the new version
 rebar_generate_upgrade() {
   __detect_remote_release_dir
   RELEASE_VERSION="" # redetect new version
@@ -226,10 +272,26 @@ rebar_generate_upgrade() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
     $REBAR_CMD generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
   "
 }
+
+# generates the appup files from the old version to the new version
+rebar_generate_appup() {
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  local _old_version=$1
+  status "Generating appups for version ${RELEASE_VERSION}"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
+  "
+}
+
+
 
 
 # detects the directory that contains the generated release
