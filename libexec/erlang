@@ -4,7 +4,7 @@
 # releases should be copied to
 if [ -z "$RELEASE_STORE" ]
 then
-  RELEASE_STORE=".deliver/erlang-releases"
+  RELEASE_STORE=".deliver"
 fi
 
 if [ -z "$REBAR_CONFIG" ]
@@ -91,10 +91,11 @@ copy_release_to_release_store() {
   __detect_remote_release_version
   local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
   status "Copying $(basename $_release_file) to release store"
-  # create release store directory if it is a local directory
-  ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p $RELEASE_STORE"
-  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $RELEASE_STORE"
+  __create_directory_in_release_store "/releases"
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases"
 }
+
+
 
 # reselects the release or update to deploy to productions hosts
 # from the release store. Sets the RELEASE_FILE and VERSION variables
@@ -103,14 +104,14 @@ select_release_from_store() {
     RELEASE_FILE="${APP}_${VERSION}.tar.gz"
     return
   else
-    if [[ "$RELEASE_STORE" =~ .*:.* ]]; then
+    if [[ "${RELEASE_STORE}/releases" =~ .*:.* ]]; then
       # TODO: list releases in remote store
       error_message "Failed to detect release version to install."
       error_message "Autodetection of releases in remote release stores is not supported."
       hint_message "Please set VERSION=X in the command line"
       exit 1
     fi
-    _release_files=( $(ls ${RELEASE_STORE}/${APP}_*.tar.gz) )
+    _release_files=( $(ls ${RELEASE_STORE}/releases/${APP}_*.tar.gz) )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=${RELEASE_FILE/${APP}_/}
@@ -143,7 +144,7 @@ upload_release_archive() {
     [ -f ~/.profile ] && source ~/.profile
     mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
   "  
-  __parallel_scp "${RELEASE_STORE}/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${RELEASE_FILE}"
+  __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${RELEASE_FILE}"
 }
 
 # makes an update release permanent. which means the current node
@@ -284,6 +285,13 @@ __detect_remote_release_version() {
   fi
 }
 
+# creates a subdirectory or subdirectories on the release store
+__create_directory_in_release_store() {
+  local _directory=$1
+  # create release store directory if it is a local directory
+  ! [[ "$RELEASE_STORE" =~ .*:.* ]] && __exec "mkdir -p ${RELEASE_STORE}${_directory}"
+  # TODO: create directories also on remote stores
+}
 
 # gets the release version from the release archive name
 __release_version_from_archive_name() {

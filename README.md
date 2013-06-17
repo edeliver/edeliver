@@ -75,9 +75,9 @@ For build strategies the following **configuration** variables must be set:
 - `BUILD_USER`: the local user at build host
 - `BUILD_AT`: the directory on build host where to build the release. must exist.
 
-The built release it then **copied to your local directory** `.deliver/erlang-releases` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
+The built release it then **copied to your local directory** `.deliver/releases` and can then be **delivered to your production servers** by using one of the **deploy strategies**.
 
-If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the `.deliver/erlang-releases` but you can configure any destination with the `RELEASE_STORE=` environment variables, also remote destinations like `RELEASE_STORE=user@releases.acme.org:/releases/`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
+If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the local `.deliver` directory but you can configure any destination with the `RELEASE_STORE=` environment variables, also remote destinations like `RELEASE_STORE=user@releases.acme.org:/releases/`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
 
 #### erlang-build-release
 
@@ -99,7 +99,7 @@ The reason for that is, that if the update or upgrade is build with rebar, rebar
 
 ### Deploy Strategies
 
-Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `.deliver/erlang-releases`. To deploy a release the following **configuration** variables must be set:
+Deploy strategies deploys the builds that were created with a build strategy before to your procution hosts. The releases, updates or upgrades to deliver are then available in your local directory `.deliver/releases`. To deploy a release the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
 - `HOSTS`: the production hosts to deploy to
@@ -210,6 +210,10 @@ It also requires that the [install_upgrade.escript](https://github.com/basho/reb
       + rebar                              <- rebar binary 
       + deliver                            <- deliver binary linking to deps/deliver/bin/deliver
       + rebar.config                       <- should have "rel/your-app" in the sub_dirs section
+      + .deliver                           <- default release store
+      |  + releases/*.tar.gz               <- the built releases / update / upgrade packages
+      |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
+      |  + config                          <- deliver configuration
       + src/                               
       |  + *.erl
       |  + your-app.app.src
