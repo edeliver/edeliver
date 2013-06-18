@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+
+__version() {
+  echo -e "\n${txtbld}edeliver v$DELIVER_VERSION${txtrst} | $HOMEPAGE\n"
+}
+
+__help() {
+  __version
+  
+  echo -e "${txtbld}Usage:${txtrst}
+  edeliver <build-command|deploy-command|node-command|local-command> command-info [Options]
+  edeliver --help|--version
+  
+  ${txtbld}Build Commands:${txtrst}
+  edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
+  edeliver build update|upgrade|appups --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+  
+  ${txtbld}Deploy Commands:${txtrst}
+  edeliver deploy release|update|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+  
+  ${txtbld}Node Commands:${txtrst}
+  edeliver start|stop|restart|ping|version staging|production [Options]
+
+  ${txtbld}Local Commands:${txtrst}
+  edeliver check release|config [--version=<release-version>]
+  edeliver show releases|appups|relups
+  edeliver edit relup|appup
+
+${txtbld}Options:${txtrst}
+  -C, --compact         Displays every task as it's run, silences all output. (default mode)
+  -V, --verbose         Same as above, does not silence output.
+  -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
+  -D, --debug           Runs in shell debug mode, displays everything.
+
+${txtbld}Miscellaneous:${txtrst}
+  Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).  
+  You can overwrite any config at runtime:
+  
+  BUILD_HOST=build-2.acme.com edeliver build release
+"
+}
+
+__available_strategies() {
+  __version
+
+  echo -e "${txtbld}Available strategies:${txtrst}"
+
+  for strategy in $STRATEGIES_NAME
+  do
+    echo "  * $strategy"
+  done
+
+  echo ""
+}
+
+# parse command
+if (( $# )); then
+  arg="$1" && shift
+  case "${arg}" in
+    (build)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|update|upgrade)
+            COMMAND_INFO="${arg}"
+          ;;
+          (appups|appup)
+            COMMAND_INFO="appup"
+          ;;
+          (*)
+            __help; error_message "Unknown build type ${arg}. Use release|update|upgrade\n"; exit 2      
+          ;;
+        esac
+      else # no build type found
+        __help; error_message "No build type found. Use release|update|upgrade\n"; exit 2
+      fi      
+    ;;
+    (deploy)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|update|upgrade)
+            COMMAND_INFO="${arg}"
+          ;;
+          (*)
+            __help; error_message "Unknown deploy type ${arg}. Use release|update|upgrade\n"; exit 2      
+          ;;
+        esac
+      else # no build type found
+        __help; error_message "No deploy type found. Use release|update|upgrade\n"; exit 2
+      fi      
+    ;;
+    (start|stop|restart|ping|version)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (staging|production)
+            NODE_ENVIRONMENT="${arg}"
+          ;;
+          (*)
+            __help; error_message "Unknown environment ${arg}. Use staging|production\n"; exit 2      
+          ;;
+        esac
+      else # no environment found
+        __help; error_message "No environment found. Use staging|procuction\n"; exit 2
+      fi            
+    ;;
+    (check)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|config)
+            CHECK_CMD="${arg}"
+          ;;
+          (*)
+            __help; error_message "Unknown check type ${arg}. Use release|config\n"; exit 2      
+          ;;
+        esac
+      else 
+        __help; error_message "No check type found. Use release|config\n"; exit 2
+      fi            
+    ;;
+    (show)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|releases)
+            SHOW_CMD="releases"
+          ;;
+          (appup|appups)
+            SHOW_CMD="appups"
+          ;;
+          (relup|relups)
+            SHOW_CMD="relups"
+          ;;
+          (*)
+            __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2      
+          ;;
+        esac
+      else 
+        __help; error_message "No show command found. Use releases|appups|relups\n"; exit 2
+      fi            
+    ;;
+    (edit)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (appup|appups)
+            EDIT_CMD="appups"
+          ;;
+          (relup|relups)
+            EDIT_CMD="relups"
+          ;;
+          (*)
+            __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2      
+          ;;
+        esac
+      else 
+        __help; error_message "No edit command found. Use appup|relup\n"; exit 2
+      fi            
+    ;;
+    (-h|--help)
+      __help
+      exit 0
+    ;;
+    (-v|--version)
+      __version
+      exit 0
+    ;;
+    (*)
+      __help; error_message "Unknown command ${arg}.\n"; exit 2      
+    ;;
+  esac
+else # no command found
+  __help; error_message "No command found.\n"; exit 2
+fi
+
+while (( $# ))
+do
+  arg="$1" && shift
+  case "${arg}" in
+    (-C|--compact)
+      MODE="compact"
+    ;;
+    (-D|--debug)
+      MODE="debug"
+    ;;
+    (-V|--verbose)
+      MODE="verbose"
+    ;;
+    (-P|--plain)
+      # this was already captured in libexec/output
+      # noop
+    ;;
+    (-h|--help)
+      __help
+      exit 0
+    ;;
+    (to)
+    ;;
+    (staging)
+      DEPLOY_ENVIRONMENT="staging"
+    ;;
+    (production)
+      DEPLOY_ENVIRONMENT="production"
+    ;;
+    (check)
+      CHECK=true
+    ;;
+    (*)
+      if [[ "${arg}" =~ ^--from= ]]; then
+        FROM="${arg##--from=}"
+      elif [[ "${arg}" =~ ^--to= ]]; then
+        TO="${arg##--to=}"
+      elif [[ "${arg}" =~ ^--revision= ]]; then
+        REVISION="${arg##--revision=}"
+      elif [[ "${arg}" =~ ^--tag= ]]; then
+        TAG="${arg##--tag=}"
+        REVISION="${REVISION:=$TAG}"
+      elif [[ "${arg}" =~ ^--branch= ]]; then
+        BRANCH=${arg##--branch=}
+      elif [[ "${arg}" =~ ^--version= ]]; then
+        VERSION=${arg##--version=}
+      else
+        hint_message "Unknown argument ${arg} ignored"
+      fi      
+    ;;
+  esac
+done
+
+case "${MODE}" in
+  (compact)
+    VERBOSE=""
+    SILENCE="&> /dev/null"
+  ;;
+  (verbose)
+    VERBOSE=true
+    SILENCE=""
+  ;;
+  (debug)
+    set -x
+    VERBOSE=true
+    SILENCE=""
+  ;;
+esac
+
+case "${COMMAND}" in
+  (build)
+    STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
+    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]]; then
+      __help; error_message "build command requires --from= argument.\n"; exit 2      
+    fi      
+  ;;
+  (deploy)
+    STRATEGY="erlang-install-${COMMAND_INFO}"
+  ;;
+  (start|stop|restart|ping|version)
+    STRATEGY="erlang-node-execute"
+    NODE_ACTION="${COMMAND}"
+  ;;
+  (check|show|edit)
+    __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
+  ;;
+esac
