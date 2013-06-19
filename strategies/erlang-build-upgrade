@@ -17,6 +17,7 @@ run() {
   init_app_remotely
   git_push
   git_reset_remote  
+  git_stash_remote
   git_checkout_remote $FROM
   rebar_get_and_update_deps
   rebar_clean_compile

@@ -213,6 +213,24 @@ git_checkout_remote() {
   "
 }
 
+# stashes the build directory on the remote build host.
+# stashing instead of cleaning prevent losing manual changes
+# and prevent damage if BUILD_AT directory is not configured
+# properly. 
+# keeps max 10 stashes because the stashed files may be
+# quite large because that are previous builds
+git_stash_remote() {
+  status "Stashing build directory on remote build host"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    [[ \$(git stash list | wc -l) -gt 0 ]] && _oldest_stash=\$(git stash list | tail -1 | grep -o 'stash@{[0-9]\+}' | grep -o '[0-9]\+') || _oldest_stash=0
+    [[ \${_oldest_stash} -gt 50 ]] && git stash drop stash@{\$_oldest_stash} $SILENCE
+    git stash --all $SILENCE  
+  "
+}
+
 # renames the release directory on the remote build host
 # by adding the release version to the release folder name
 rename_release_add_version() {
