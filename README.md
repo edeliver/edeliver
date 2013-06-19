@@ -46,7 +46,7 @@ It can be added as **[rebar](https://github.com/basho/rebar) depencency** for si
 
     {deps, [
       % ...
-      {edeliver, "0.7.0",
+      {edeliver, "1.0",
         {git, "git://github.com/bharendt/edeliver.git", {branch, master}}}
     ]}.
 
