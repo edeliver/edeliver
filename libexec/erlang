@@ -26,19 +26,18 @@ set_build_hosts() {
 }
 
 # clean fetch of rebar dependencies on the remote build host
-rebar_clean_get_deps() {
-  __exec_if_defined "pre_rebar_clean_get_deps"
+rebar_get_and_update_deps() {
+  __exec_if_defined "pre_rebar_get_and_update_deps"
 
   status "Fetching rebar dependencies"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD -k delete-deps $SILENCE
-    $REBAR_CMD get-deps $SILENCE
+    $REBAR_CMD update-deps get-deps $SILENCE
   "
 
-  __exec_if_defined "post_rebar_clean_get_deps"
+  __exec_if_defined "pos_rebar_get_and_update_deps"
 }
 
 # compiles the sources on the remote build host

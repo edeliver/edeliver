@@ -18,13 +18,13 @@ run() {
   git_push
   git_reset_remote  
   git_checkout_remote $FROM
-  rebar_clean_get_deps
+  rebar_get_and_update_deps
   rebar_clean_compile
   rebar_renerate
   rename_release_add_version
   OLD_RELEASE_VERSION=${RELEASE_VERSION}  
   git_checkout_remote $TO
-  rebar_clean_get_deps
+  rebar_get_and_update_deps
   rebar_clean_compile
   rebar_renerate
   rebar_generate_appup $OLD_RELEASE_VERSION
