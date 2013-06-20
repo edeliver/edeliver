@@ -118,14 +118,16 @@ archive_release_dir() {
 }
 
 # copies the generated release from the remote build host
-# to the release store
+# to the release store. takes the release type as parameter
+# (release|update|upgrade)
 copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
+  local _release_type="$1"
   local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
   status "Copying $(basename $_release_file) to release store"
   __create_directory_in_release_store "/releases"
-  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases"
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz"
 }
 
 # copies the generated appup files from the remote build host
@@ -145,9 +147,11 @@ copy_appups_to_release_store() {
 
 # reselects the release or update to deploy to productions hosts
 # from the release store. Sets the RELEASE_FILE and VERSION variables
+# takes the release type as parameter (release|update|upgrade)
 select_release_from_store() {
+  local _release_type="$1"
   if ! [ -z $VERSION ]; then
-    RELEASE_FILE="${APP}_${VERSION}.tar.gz"
+    RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
     return
   else
     if [[ "${RELEASE_STORE}/releases" =~ .*:.* ]]; then
@@ -157,7 +161,7 @@ select_release_from_store() {
       hint_message "Please set VERSION=X in the command line"
       exit 1
     fi
-    _release_files=( $(ls ${RELEASE_STORE}/releases/${APP}_*.tar.gz) )
+    _release_files=( $(ls ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz) )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=${RELEASE_FILE/${APP}_/}
@@ -170,11 +174,12 @@ select_release_from_store() {
       hint_message "Versions:"
       for _release_file in "${_release_files[@]}"; do
         local _current_version=$(__release_version_from_archive_name $(basename $_release_file))
+        _current_version=${_current_version%.${_release_type}}
         hint_message " $_current_version"
       done
       hint_message "Enter Version:"
       read VERSION
-      RELEASE_FILE="${APP}_${VERSION}.tar.gz"      
+      RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"      
     fi
   fi  
 }
@@ -191,7 +196,7 @@ upload_release_archive() {
     [ -f ~/.profile ] && source ~/.profile
     mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
   "  
-  __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${RELEASE_FILE}"
+  __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${APP}_${VERSION}.tar.gz"
 }
 
 # makes an update release permanent. which means the current node
@@ -221,12 +226,13 @@ upgrade_release() {
 
 # installs a release at all production hosts
 remote_extract_release_archive() {
-  status "Extracting archive $(basename $RELEASE_FILE)"
+  local _archive="${APP}_${VERSION}.tar.gz"
+  status "Extracting archive ${_archive}"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    tar -xzvf $RELEASE_FILE $SILENCE
+    tar -xzvf ${_archive} $SILENCE
   "  
 }
 

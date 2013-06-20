@@ -19,7 +19,7 @@ run() {
   rebar_clean_compile
   rebar_renerate
   archive_release_dir
-  copy_release_to_release_store
+  copy_release_to_release_store "release"
 }
 
 

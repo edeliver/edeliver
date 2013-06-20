@@ -6,7 +6,7 @@ set_deploy_hosts
 run() {
   authorize_hosts  
   authorize_remote_hosts 
-  select_release_from_store
+  select_release_from_store "release"
   upload_release_archive
   remote_extract_release_archive
 }
