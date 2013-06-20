@@ -308,14 +308,18 @@ copy_appups_from_release_store_to_build_host() {
   RELEASE_VERSION="" # redetect new version
   __detect_remote_release_version
   local _old_version=$1
-  local _num_scripts=$(ls -1 $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup | wc -l)
-  status "Overwriting appups with ${_num_scripts// /} custom scripts from /appup/${_old_version}-${RELEASE_VERSION}/"
-  for appup_file in $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup; do
-    local _appup_base_name=$(basename $appup_file)
-    local _appup_app_name=${_appup_base_name%.*}
-    __exec "echo \"Copying $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name}\" to $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
-    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name} $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
-  done
+  if [ -d "$RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}" ]; then
+    local _num_scripts=$(ls -1 $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup | wc -l)
+    status "Overwriting appups with ${_num_scripts// /} custom scripts from /appup/${_old_version}-${RELEASE_VERSION}/"
+    for appup_file in $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/*.appup; do
+      local _appup_base_name=$(basename $appup_file)
+      local _appup_app_name=${_appup_base_name%.*}
+      __exec "echo \"Copying $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name}\" to $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
+      __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name} $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
+    done
+  else 
+    status "Using default appup scripts. No custom scripts in /appup/${_old_version}-${RELEASE_VERSION}/"
+  fi
 }
 
 # generates the upgrade from the old version to the new version
