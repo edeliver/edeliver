@@ -82,7 +82,8 @@ rebar_clean_compile() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD clean compile $SILENCE
+    $REBAR_CMD clean skip_deps=true $SILENCE
+    $REBAR_CMD compile $SILENCE
   "
 
   __exec_if_defined "post_rebar_clean_compile"
