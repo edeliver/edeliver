@@ -433,9 +433,18 @@ __parallel_scp() {
   background_jobs=()  
 
   __log "${_hosts} : $_remote_job"
-
+  
+    
   for _host in $_hosts
-  do    
+  do
+    if [ "$SKIP_COPYING_EXISTING_FILES" = "skip" ]; then
+      local _local_md5=$(__local_md5 $_source_file)
+      local _remote_md5=$(__remote_md5 $_host "$_destination_dir")
+      if [[ -n "$_local_md5" ]] && [[ -n "$_remote_md5" ]] && [[ "$_local_md5" = "$_remote_md5" ]]; then
+        __exec "echo \"file \$(basename \$_source_file) already exists on host \$_host (checksum: \$_remote_md5)\""
+        continue       
+      fi
+    fi
     scp -o ConnectTimeout="$SSH_TIMEOUT" $_options "$_source_file" "$_host:$_destination_dir" &
     background_jobs_pids+=("$!")
     local _background_job="scp -o ConnectTimeout=$SSH_TIMEOUT $_options $_source_file $_host:$_destination_dir $SILENCE"
@@ -443,6 +452,48 @@ __parallel_scp() {
   done
 
   __monitor_background_jobs
+}
+
+# gets the md5 checksum of a release in the local release store
+__local_md5() {
+  local _file_name="$1"
+  if [ -z "$LOCAL_MD5_COMMAND" ]; then
+    LOCAL_MD5_COMMAND=$(which md5)
+    if [ $? -eq 1 ]; then
+      LOCAL_MD5_COMMAND=$(which md5sum)
+      [ $? -eq 1 ] && LOCAL_MD5_COMMAND=""
+    fi
+  fi
+  if ! [ -z "$LOCAL_MD5_COMMAND" ]; then
+    $LOCAL_MD5_COMMAND ${_file_name} | grep -o "[0-9a-fA-F]\{32\}"
+  else 
+    echo ""    
+  fi
+}
+
+# gets the md5 checksum of a release file on the remote host
+__remote_md5() {
+  local _remote_host="$1"
+  local _remote_file_name="$2"
+  _remote_job="
+    if [ -f \"${_remote_file_name}\" ]; then
+      if [ -z \"\$REMOTE_MD5_COMMAND\" ]; then
+        REMOTE_MD5_COMMAND=\$(which md5)
+        if [ \$? -eq 1 ]; then
+          REMOTE_MD5_COMMAND=\$(which md5sum)
+          [ \$? -eq 1 ] && LOCAL_MD5_COMMAND=""
+        fi
+      fi
+      if ! [ -z \"\$REMOTE_MD5_COMMAND\" ]; then
+        \$REMOTE_MD5_COMMAND ${_remote_file_name} | grep -o \"[0-9a-fA-F]\\{32\\}\"
+      else 
+        echo \"\"
+      fi  
+    else
+        echo \"\"
+    fi
+  "  
+  ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_remote_host" "$_remote_job"
 }
 
 begin() {

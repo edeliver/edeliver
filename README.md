@@ -147,7 +147,7 @@ Deploying to **staging** can be used to test your releases and upgrades before d
 
 Installs an initial release at the production hosts.
 Requires that the `build release` command was executed before.
-If there are several releases in the release store, you will be asked which release to install or you can pass the version by the `--version=` argument variable.
+If there are several releases in the release store, you will be asked which release to install or you can pass the version by the `--version=` argument variable. If the nodes on the remote deploy hosts are up, the running old release is not affected. The new release will be **available** only after **starting or restarting** the nodes on the deploy hosts.
 
 
 #### Deploy an Upgrade Package for Live Updates at Running Nodes
@@ -249,7 +249,18 @@ A rebar template to add that automatically will be provided soon.
              |   + vm.args                 <- erlang vm args for the node
              + reltool.config              <- should have the unpack-update.escript in overlay section    
 
+
+
+### Extended Options
+
+If something goes wrong, retry with the `--verbose` option.
+
+If you have large release files that may be delivered to some of the deploy hosts already or if you want to deploy an old version again, you can skip the copy process by passing the `--skip-existing` option. edeliver checks then whether the release file exist already and have equal md5 checksum.
+
+
+
 ---
+
 ### LICENSE
 
 (The MIT license)

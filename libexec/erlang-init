@@ -31,6 +31,7 @@ ${txtbld}Options:${txtrst}
   -V, --verbose         Same as above, does not silence output.
   -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
   -D, --debug           Runs in shell debug mode, displays everything.
+  -S, --skip-existing   Skip copying release archives if they exist already on the deploy hosts.
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).  
@@ -193,6 +194,9 @@ do
     ;;
     (-V|--verbose)
       MODE="verbose"
+    ;;
+    (-S|--skip-existing)
+      SKIP_COPYING_EXISTING_FILES="skip"
     ;;
     (-P|--plain)
       # this was already captured in libexec/output
