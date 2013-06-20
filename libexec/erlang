@@ -25,6 +25,39 @@ set_build_hosts() {
   export DELIVER_TO=$BUILD_AT  
 }
 
+# sets the deploy host, user and path as deliver hosts and path
+set_deploy_hosts() {
+  if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
+    export HOSTS=$PRODUCTION_HOSTS 
+    export APP_USER=$PRODUCTION_USER
+  else 
+    export HOSTS=$STAGING_HOSTS 
+    export APP_USER=$STAGING_USER
+    export DELIVER_TO=$TEST_AT  
+  fi
+}
+
+# sets all required config variables and defaults for deploy strategies
+require_deploy_config() {
+  DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
+  TEST_AT="${DELIVER_TO:=$TEST_AT}"
+
+  REQUIRED_CONFIGS+=("APP")
+
+  if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
+    REQUIRED_CONFIGS+=("PRODUCTION_HOSTS")
+    REQUIRED_CONFIGS+=("PRODUCTION_USER")
+    REQUIRED_CONFIGS+=("DELIVER_TO")  
+  else
+    REQUIRED_CONFIGS+=("STAGING_HOSTS")
+    REQUIRED_CONFIGS+=("STAGING_USER")
+    REQUIRED_CONFIGS+=("TEST_AT")  
+  fi  
+  
+  OPTIONAL_CONFIGS+=("VERSION")
+}
+
+
 # clean fetch of rebar dependencies on the remote build host
 rebar_get_and_update_deps() {
   __exec_if_defined "pre_rebar_get_and_update_deps"
@@ -403,4 +436,42 @@ __parallel_scp() {
   done
 
   __monitor_background_jobs
+}
+
+begin() {
+  case "$COMMAND" in
+    (build)
+      local _message="${bldgrn}BUILDING $(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP ON BUILD HOST${txtrst}"      
+    ;;
+    (deploy)
+      local _host_color="${bldylw}"
+      [ "$DEPLOY_ENVIRONMENT" = "production" ] && _host_color="${bldred}"
+      local _message="${bldgrn}DEPLOYING ${bldylw}$(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP TO ${_host_color}$(upcase ${DEPLOY_ENVIRONMENT}) HOSTS${txtrst}"      
+    ;;
+    (*)
+      local _message="${bldgrn}$(upcase "edeliver ${APP} with $COMMAND command")${txtrst}"
+    ;;
+  esac
+  echo -e "\n$_message\n"  
+  __log "$_message"
+}
+
+
+# If we reach this step, delivery was successfull
+#
+finish() {
+  case "$COMMAND" in
+    (build)
+      local _message="${bldgrn}$(upcase "${COMMAND_INFO} BUILD OF $APP WAS SUCCESSFUL!")${txtrst}"
+      ;;
+    (deploy)
+      local _message="${bldgrn}DEPLOYED $(upcase "${COMMAND_INFO} TO ${DEPLOY_ENVIRONMENT}!")${txtrst}"      
+    ;;
+    (*)
+      local _message="${bldgrn}$(upcase "$COMMAND DONE!")${txtrst}"
+    ;;
+  esac
+  echo -e "\n$_message\n"
+  __log "$_message"
+  __log "===========================================================\n"
 }

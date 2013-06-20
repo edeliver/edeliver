@@ -6,11 +6,11 @@
 # http://steve-parker.org/sh/trap.shtml
 #
 __graceful_stop() {
-  local _message="Stopping deliver..."
+  local _message="Stopping edeliver..."
   hint_message "\n$_message" &&
   __log "$_message" &&
   kill ${background_jobs_pids[*]} 2>&1 &&
-  local _message="DELIVER STOPPED!"
+  local _message="EDELIVER STOPPED!"
   success_message "\n$_message\n" &&
   __log "$_message" &&
   __log "===========================================================" &&
@@ -202,7 +202,7 @@ __check_config() {
 
   if [ -n "$_check_failed" ]
   then
-    error_message "\nDELIVER IS MISSING THE FOLLOWING CONFIG(S):\n\n${_missing_required_configs[@]}\n"
+    error_message "\nEDELIVER IS MISSING THE FOLLOWING CONFIG(S):\n\n${_missing_required_configs[@]}\n"
     exit 1
   else
     if [ -n "$CHECK" ]

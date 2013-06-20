@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 
-REQUIRED_CONFIGS+=("APP")
-REQUIRED_CONFIGS+=("HOSTS")
-REQUIRED_CONFIGS+=("APP_USER")
-REQUIRED_CONFIGS+=("DELIVER_TO")
-OPTIONAL_CONFIGS+=("DEPLOY_ENVIRONMENT")
-
-DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
+require_deploy_config
+set_deploy_hosts
 
 run() {
   authorize_hosts  

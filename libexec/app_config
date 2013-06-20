@@ -31,7 +31,6 @@ fi
 
 # Configure which refspec to push remotely
 #
-__add_to_deprecations "BRANCH" "v0.8.0"
 if [ -z "$REFSPEC" ]
 then
   REFSPEC="${BRANCH:=master}"
@@ -54,7 +53,6 @@ fi
 
 # Deliver used to be single-server, accounting for that here
 #
-__add_to_deprecations "SERVERS" "v0.8.0"
 SERVERS=$(__remote_friendly "$SERVER $SERVERS $HOSTS")
 HOSTS="$SERVERS"
 
