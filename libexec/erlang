@@ -449,6 +449,7 @@ __parallel_scp() {
         continue       
       fi
     fi
+    __exec "echo \"copying $_source_file to $_host:$_destination_dir\""
     scp -o ConnectTimeout="$SSH_TIMEOUT" $_options "$_source_file" "$_host:$_destination_dir" &
     background_jobs_pids+=("$!")
     local _background_job="scp -o ConnectTimeout=$SSH_TIMEOUT $_options $_source_file $_host:$_destination_dir $SILENCE"
