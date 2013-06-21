@@ -165,7 +165,7 @@ select_release_from_store() {
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=${RELEASE_FILE/${APP}_/}
-      VERSION=${VERSION/.tar.gz/}
+      VERSION=${VERSION/.${_release_type}.tar.gz/}
     else
       status "Selecting release"
       hint_message "Found different versions to deploy."
