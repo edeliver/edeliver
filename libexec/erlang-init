@@ -13,10 +13,10 @@ __help() {
   
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
-  edeliver build update|upgrade|appups --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+  edeliver build appups|upgrade --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
   
   ${txtbld}Deploy Commands:${txtrst}
-  edeliver deploy release|update|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+  edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
   
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version staging|production [Options]
@@ -63,18 +63,18 @@ if (( $# )); then
       if (( $# )); then
         arg="$1" && shift
         case "${arg}" in
-          (release|update|upgrade)
+          (release|upgrade)
             COMMAND_INFO="${arg}"
           ;;
           (appups|appup)
             COMMAND_INFO="appup"
           ;;
           (*)
-            __help; error_message "Unknown build type ${arg}. Use release|update|upgrade\n"; exit 2      
+            __help; error_message "Unknown build type ${arg}. Use release|upgrade\n"; exit 2      
           ;;
         esac
       else # no build type found
-        __help; error_message "No build type found. Use release|update|upgrade\n"; exit 2
+        __help; error_message "No build type found. Use release|upgrade\n"; exit 2
       fi      
     ;;
     (deploy)
@@ -82,15 +82,15 @@ if (( $# )); then
       if (( $# )); then
         arg="$1" && shift
         case "${arg}" in
-          (release|update|upgrade)
+          (release|upgrade)
             COMMAND_INFO="${arg}"
           ;;
           (*)
-            __help; error_message "Unknown deploy type ${arg}. Use release|update|upgrade\n"; exit 2      
+            __help; error_message "Unknown deploy type ${arg}. Use release|upgrade\n"; exit 2      
           ;;
         esac
       else # no build type found
-        __help; error_message "No deploy type found. Use release|update|upgrade\n"; exit 2
+        __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
       fi      
     ;;
     (start|stop|restart|ping|version)

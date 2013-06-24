@@ -16,17 +16,6 @@ Examples:
     ./edeliver start production
 
 
-Build an **update** from v1.0 to v2.0 for an erlang release and deploy it your production hosts:
-
-
-    ./edeliver build update --from=v1.0 --to=v2.0
-    ./edeliver deploy update to production
-    ./edeliver restart production
-
-
-The update will be **available after restarting** your application.
-
-
 Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it on your production hosts:
     
     ./edeliver build appups --from=v1.0 --to=v2.0  # optional: generate and ...
@@ -35,7 +24,7 @@ Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it 
     ./edeliver build upgrade --from=v1.0 --to=v2.0
     ./edeliver deploy upgrade to production
 
-The upgrade will be **available immediately, without restarting** your application. If the generated [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) for the hot code upgrade are not sufficient, you can generate and modify these files before:
+The upgrade will be **available immediately, without restarting** your application. If the generated [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) for the hot code upgrade are not sufficient, you can generate and modify these files before by using the `build appups` command.
     
 
 ### Installation
@@ -101,12 +90,6 @@ If compiling and generating the release build was successful, the release is **c
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn. 
 
-#### Build an Update Package which Requires Node Restart
-
-    ./edeliver build update --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
-
-Builds a release update that can be deployed to the production hosts. The update is generated for changes between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` arguement is which referes the the old git revision or tag and is used to build the update from. The optional `--to=` option can be used, if the update should not be created to the latest version.
-
 #### Generate and Edit Upgrade Files (appup)
 
     ./edeliver build appups --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
@@ -115,21 +98,21 @@ Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
-    ./edeliver build update|upgrade|appups --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+    ./edeliver build upgrade --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. To perform the live upgrade, you can **provide custom [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)** that will be included in the release upgrade build if they exists in the release store at `appup/OldVersion-NewVersion/*.appup`. They will **overwrite the generated default appup files** See the `build appup` command for how to generated the default appup files and copy it to your release store.
 
 #### Build Restrictions
 
-To build **updates or upgrades** it is required that there is **only one release** in the release directory (`rel`) of you project **configured** in your `rebar.config`. E.g. if you want to build two different releases `project-dir/rel/release_a` and `project-dir/rel/release_b` you need two `rebar.config` files that refer only to either one of that release directories in the `sub_dirs` section.
+To build **upgrades** it is required that there is **only one release** in the release directory (`rel`) of you project **configured** in your `rebar.config`. E.g. if you want to build two different releases `project-dir/rel/release_a` and `project-dir/rel/release_b` you need two `rebar.config` files that refer only to either one of that release directories in the `sub_dirs` section.
 You can then pass the config file to use by setting the environment `REBAR_CONFIG=` at the command line.
-The reason for that is, that when the update or upgrade is build with rebar, rebar tries to find the old version in both release directories.
+The reason for that is, that when the upgrade is build with rebar, rebar tries to find the old version in both release directories.
 
 ### Deploy Commands
 
-    ./edeliver deploy release|update|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+    ./edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
 
-Deploy commands **deliver the builds** (that were created with a build command before) **to** your staging or **prodution hosts** and can perform the **live code upgrade**. The releases, updates or upgrades to deliver are then available in your local directory `.deliver/releases`. To deploy releases the following **configuration** variables must be set:
+Deploy commands **deliver the builds** (that were created with a build command before) **to** your staging or **prodution hosts** and can perform the **live code upgrade**. The releases or upgrades to deliver are then available in your local directory `.deliver/releases`. To deploy releases the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
 - `PRODUCTION_HOSTS`: the production hosts to deploy to
@@ -152,10 +135,10 @@ If there are several releases in the release store, you will be asked which rele
 
 #### Deploy an Upgrade Package for Live Updates at Running Nodes
 
-Installs an updated at the production hosts and **upgrades the running nodes** to the new version. 
+Installs an upgrade at the production hosts and **upgrades the running nodes** to the new version. 
 Requires that the `build upgrade` command was executed before and that there is already an initial release deployed to the production hosts and that the node is running. 
 
-Release archives in your release store that were created by the `build release` command **cannot be used to install an upgrade** but release archives created by the `build update` **can be used**, but execute generated **default upgrade** actions only, that **may not be sufficient** for and errorless upgrade.
+Release archives in your release store that were created by the `build release` command **cannot be used to install an upgrade**.
 
 This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands.
 
@@ -166,61 +149,6 @@ It also requires that the [install_upgrade.escript](https://github.com/basho/reb
     ]}.
 
 
-#### Deploy an Update Package which is Available only after Node Restart
-
-Installs an update at the production hosts. This does **not affect running nodes** on the production servers. The update is booted when the **production nodes are started the next time**. 
-
-Requires that the `build update` command was executed before and that there is already an initial release deployed to the production hosts.
-
-The `install update` command **requires that you patch your binary that starts your release** (that was generated by rebar) and add the following `update` command in addition to the `start|stop|ping|attach` commands:
-
-    upgrade)
-        # ...
-        ;;
-    update)
-        if [ -z "$2" ]; then
-            echo "Missing update package argument"
-            echo "Usage: $SCRIPT update {package base name}"
-            echo "NOTE {package base name} MUST NOT include the .tar.gz suffix"
-            exit 1
-        fi
-
-        # Make sure a node IS running
-        RES=`$NODETOOL ping`
-        ES=$?
-        if [ "$ES" -ne 0 ]; then
-            echo "Node is not running!"
-            exit $ES
-        fi
-
-        node_name=`echo $NAME_ARG | awk '{print $2}'`
-
-        UNPACKED_VERSION=$( $ERTS_PATH/escript $RUNNER_BASE_DIR/bin/unpack_update.escript $node_name $2 )
-        if [ $? -eq 0 ]; then
-          echo "Unpacked version ${UNPACKED_VERSION}"
-          if [[ ! -z "$ERTS_VSN" ]] && [[ ! -z "$APP_VSN" ]]; then
-            echo "$ERTS_VSN $UNPACKED_VERSION" > $RUNNER_BASE_DIR/releases/start_erl.data
-            echo "Set new version as boot version"
-          else
-            echo "Failed to set version as new boot version"
-            exit 1
-          fi
-        else 
-          echo "Unpacking version failed: $UNPACKED_VERSION"
-          exit 1
-        fi
-        ;;
-
-This command requires the [unpack_update.escript](misc/unpack_update.escript) in the `bin` folder of your release which can be copied automatically when generating releases by adding the folling line to your `reltool.config`:
-
-    {overlay, [ ...
-           {copy, "files/unpack_update.escript", "bin/unpack_update.escript"}
-    ]}.
-
-A rebar template to add that automatically will be provided soon.
-
-
-
 ### Recommended Project Structure
 
 
@@ -229,7 +157,7 @@ A rebar template to add that automatically will be provided soon.
       + edeliver                           <- edeliver binary linking to deps/deliver/bin/deliver
       + rebar.config                       <- should have "rel/your-app" in the sub_dirs section
       + .deliver                           <- default release store
-      |  + releases/*.tar.gz               <- the built releases / update / upgrade packages
+      |  + releases/*.tar.gz               <- the built releases / upgrade packages
       |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
       |  + config                          <- deliver configuration
       + src/                               
@@ -241,13 +169,12 @@ A rebar template to add that automatically will be provided soon.
       + rel/
          + your-app/                       <- generated by `./rebar create-node nodeid=your-app`
              + files/
-             |   + your-app                <- patched binary to start|stop|update|upgrade your app
+             |   + your-app                <- binary to start|stop|upgrade your app
              |   + nodetool                <- helper for your-app binary
              |   + install-upgrade.escript <- helper for the upgrade task of your-app binary
-             |   + unpack-update.escript   <- helper for the update task of you-app binary
              |   + sys.config              <- app configuration for the release build
              |   + vm.args                 <- erlang vm args for the node
-             + reltool.config              <- should have the unpack-update.escript in overlay section    
+             + reltool.config              <- should have the install_upgrade.escript in overlay section    
 
 
 
