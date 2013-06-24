@@ -119,15 +119,35 @@ archive_release_dir() {
 
 # copies the generated release from the remote build host
 # to the release store. takes the release type as parameter
-# (release|update|upgrade)
+# (release|upgrade)
 copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
   local _release_type="$1"
   local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
-  status "Copying $(basename $_release_file) to release store"
-  __create_directory_in_release_store "/releases"
-  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz"
+  
+  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
+    local _s3location=${RELEASE_STORE/#[sS]3:\/\//}
+    local _s3key_id=${_s3location%%@*}
+    _s3location=${_s3location##*@}
+    local _s3key=${_s3location%%:*}
+    _s3location=${_s3location##*:}
+    local _s3bucket=${_s3location%%*:}
+  fi
+
+  if [[ -n \"${_s3key_id}\" ]] && [[ -n \"${_s3key}\" ]] && [[ -n \"${_s3bucket}\" ]]; then  
+    local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
+    __remote "
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      cd $(dirname ${_release_file}) $SILENCE
+      AWS_ARGUMENTS=\"put ${_s3bucket}/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$_s3key_id\" AWS_SECRET_ACCESS_KEY=\"$_s3key\" perl <<'EOF'${_aws_script_content}EOF"
+  else 
+    status "Copying $(basename $_release_file) to release store"    
+    __create_directory_in_release_store "/releases"
+    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz"
+  fi
+
 }
 
 # copies the generated appup files from the remote build host

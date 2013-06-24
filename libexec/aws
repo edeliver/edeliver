@@ -761,6 +761,10 @@ $home = get_home_directory();
 # ec2 or s3 prefix) and not have to type "aws".
 unshift @ARGV, $1 if $0 =~ /^(?:.*[\\\/])?(?:(?:ec2|pa|s3|sqs|sdb)-?)?(.+?)(?:\..+)?$/ && $1 !~ /^l?aws/;
 
+if ((!@ARGV || join(@ARGV, "") == "-") && $ENV{"AWS_ARGUMENTS"}) {
+  @ARGV=split(/ /, $ENV{"AWS_ARGUMENTS"});
+}
+
 
 # parse meta-parameters, leaving parameters in @argv
 
@@ -850,7 +854,6 @@ unshift @ARGV, $1 if $0 =~ /^(?:.*[\\\/])?(?:(?:ec2|pa|s3|sqs|sdb)-?)?(.+?)(?:\.
 		# are active only if the particular command is indicated
 
 		# make a hash of aws keywords (%keyword), which are not treated as meta-parameters
-
 		for (@cmd)
 		{
 		    next unless grep /^\Q$cmd\E$/, split(" ", $_->[1]);
