@@ -2683,7 +2683,7 @@ sub s3
     my $cmd = qq[$curl $curl_options $insecureaws $accept $header --request $verb --dump-header - $content --location @{[cq($url)]}];
     print STDERR "$cmd\n" if $v;
     my $item = qx[$cmd];
-    exit $? >> 8 if $? && $fail;
+    exit $? >> 8 if $?;
 
     # remove "HTTP/1.1 100 Continue"
     $item =~ s/^HTTP\/\d+\.\d+\s+100\b.*?\r?\n\r?\n//s;
