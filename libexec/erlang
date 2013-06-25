@@ -219,19 +219,6 @@ upload_release_archive() {
   __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${APP}_${VERSION}.tar.gz"
 }
 
-# makes an update release permanent. which means the current node
-# is not upgraded while running, but on next start the new release
-# will be booted
-make_release_permanent() {
-  status "Making release $VERSION permanent"  
-  __remote "
-    set -e
-    [ -f ~/.profile ] && source ~/.profile
-    cd ${DELIVER_TO}/${APP} $SILENCE
-    bin/${APP} update ${APP}_${VERSION} $SILENCE
-  "
-}
-
 # upgrades the remote hosts with running nodes to
 # the new release version.
 upgrade_release() {
