@@ -123,29 +123,23 @@ archive_release_dir() {
 copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
+  __detect_release_store_type
   local _release_type="$1"
   local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
   
-  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
-    local _s3location=${RELEASE_STORE/#[sS]3:\/\//}
-    local _s3key_id=${_s3location%%@*}
-    _s3location=${_s3location##*@}
-    local _s3key=${_s3location%%:*}
-    _s3location=${_s3location##*:}
-    local _s3bucket=${_s3location%%*:}
-  fi
-
-  if [[ -n \"${_s3key_id}\" ]] && [[ -n \"${_s3key}\" ]] && [[ -n \"${_s3bucket}\" ]]; then  
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $(dirname ${_release_file}) $SILENCE
-      AWS_ARGUMENTS=\"put ${_s3bucket}/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$_s3key_id\" AWS_SECRET_ACCESS_KEY=\"$_s3key\" perl <<'EOF'${_aws_script_content}EOF"
-  else 
+      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
     status "Copying $(basename $_release_file) to release store"    
     __create_directory_in_release_store "/releases"
     __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz"
+  else 
+    error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
 
 }
@@ -174,27 +168,25 @@ select_release_from_store() {
     RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
     return
   else
-    if [[ "${RELEASE_STORE}/releases" =~ .*:.* ]]; then
-      # TODO: list releases in remote store
-      error_message "Failed to detect release version to install."
-      error_message "Autodetection of releases in remote release stores is not supported."
-      hint_message "Please set VERSION=X in the command line"
-      exit 1
-    fi
-    _release_files=( $(ls ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz) )
+    __detect_release_store_type
+    local _release_files=( $(__get_releases_in_store "$_release_type") )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=${RELEASE_FILE/${APP}_/}
       VERSION=${VERSION/.${_release_type}.tar.gz/}
+    elif [ ${#_release_files[@]} -eq 0 ]; then
+      error_message "No $_release_type(s) found in ${RELEASE_STORE_TYPE} release store."
+      hint_message "You can build one with the ./edeliver build $_release_type task."
+      exit 2
     else
       status "Selecting release"
-      hint_message "Found different versions to deploy."
+      hint_message "Found ${#_release_files[@]} different versions to deploy."
       hint_message "Type the version you want to deploy"
       hint_message "or set VERSION=X in the command line."
       hint_message "Versions:"
+      local _release_file
       for _release_file in "${_release_files[@]}"; do
-        local _current_version=$(__release_version_from_archive_name $(basename $_release_file))
-        _current_version=${_current_version%.${_release_type}}
+        local _current_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
         hint_message " $_current_version"
       done
       hint_message "Enter Version:"
@@ -203,6 +195,44 @@ select_release_from_store() {
     fi
   fi  
 }
+
+# lists the available releases in the store
+list_releases_in_store() {
+  local _release_type="$1"
+  __detect_release_store_type
+  status "Listing ${APP} releases in ${RELEASE_STORE_TYPE} release store"
+  local _release_files=( $(__get_releases_in_store "$_release_type") )
+  local _app_column_width=${#APP}
+  [[ $_app_column_width -lt 11 ]] && _app_column_width="11"
+  printf "\n %${_app_column_width}s | Version |    Type | File\n-" "Application"
+  for i in $(seq 1 $_app_column_width); do printf "-"; done
+  printf '-' {1.."$_app_column_width"}
+  printf "+---------+---------+---------------------\n"
+  local _release_file
+  for _release_file in "${_release_files[@]}"; do
+    # echo $_release_file
+    local _release_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
+    local _removed_app_name=${_release_file/${APP}_/}
+    local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
+    local _current_release_type=${_removed_archive_extension/$_release_version./}
+    printf " %${_app_column_width}s | %7s | %7s | %s\n" "$APP" "$_release_version"  "$_current_release_type" "$_release_file"
+    
+  done
+}
+
+# gets the names of the release packages in the release store.
+__get_releases_in_store() {
+  local _release_type="$1"
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
+    AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY ${BASE_PATH}/libexec/aws ls ${AWS_BUCKET_NAME} 2>/dev/null | grep -o "${APP}_.*.${_release_type}.tar.gz"
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
+    basename $(ls -1 ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz)
+  else 
+    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
+  fi
+}
+
 
 # copies the release archive to the production hosts to the DELIVER_TO path.
 # the current release file and version must be set in the
@@ -415,6 +445,32 @@ __detect_remote_release_version() {
   fi
 }
 
+# detects the type of the release store. sets RELEASE_STORE_TYPE either
+# to "local", "remote" or "s3" and also the following environment variables
+# depending on the detected release store type:
+#
+# AWS_SECRET_ACCESS_KEY (for s3)
+# AWS_SECRET_ACCESS_KEY (for s3)
+# AWS_BUCKET_NAME (for s3)
+__detect_release_store_type() {
+  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
+    local _s3location=${RELEASE_STORE/#[sS]3:\/\//}
+    AWS_ACCESS_KEY_ID=${_s3location%%@*}
+    _s3location=${_s3location##*@}
+    AWS_SECRET_ACCESS_KEY=${_s3location%%:*}
+    _s3location=${_s3location##*:}
+    AWS_BUCKET_NAME=${_s3location%%*:}
+  fi
+
+  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]] && [[ -n \"${AWS_ACCESS_KEY_ID}\" ]] && [[ -n \"${AWS_SECRET_ACCESS_KEY}\" ]] && [[ -n \"${AWS_BUCKET_NAME}\" ]]; then  
+    RELEASE_STORE_TYPE="s3"
+  elif [[ "$RELEASE_STORE" =~ ^[^@]+@[^:]+:.+$ ]]; then
+    RELEASE_STORE_TYPE="remote"
+  else 
+    RELEASE_STORE_TYPE="local"
+  fi
+}
+
 # creates a subdirectory or subdirectories on the release store
 __create_directory_in_release_store() {
   local _directory=$1
@@ -424,9 +480,15 @@ __create_directory_in_release_store() {
 }
 
 # gets the release version from the release archive name
+# $1 = release file name
+# $2 = release type (optional)
 __release_version_from_archive_name() {
+  local _release_type=${2}
+  _release_type=${_release_type:=*}
   local _removed_app_name=${1/${APP}_/}
-  echo ${_removed_app_name/\.tar\.gz/}
+  local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
+  local _removed_release_type=${_removed_archive_extension%.${_release_type}}
+  echo ${_removed_release_type}
 }
 
 # copy a file to all remote production hosts in parallel

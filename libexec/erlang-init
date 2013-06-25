@@ -131,13 +131,13 @@ if (( $# )); then
         arg="$1" && shift
         case "${arg}" in
           (release|releases)
-            SHOW_CMD="releases"
+            COMMAND_INFO="releases"
           ;;
           (appup|appups)
-            SHOW_CMD="appups"
+            COMMAND_INFO="appups"
           ;;
           (relup|relups)
-            SHOW_CMD="relups"
+            COMMAND_INFO="relups"
           ;;
           (*)
             __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2      
@@ -269,6 +269,9 @@ case "${COMMAND}" in
     NODE_ACTION="${COMMAND}"
   ;;
   (check|show|edit)
-    __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
+    STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
+    if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
+      __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
+    fi
   ;;
 esac
