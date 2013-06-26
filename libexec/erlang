@@ -227,7 +227,10 @@ __get_releases_in_store() {
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY ${BASE_PATH}/libexec/aws ls ${AWS_BUCKET_NAME} 2>/dev/null | grep -o "${APP}_.*.${_release_type}.tar.gz"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
-    basename $(ls -1 ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz)
+    local _release_file;
+    for _release_file in $(ls -1 ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz); do
+      echo $(basename $_release_file)
+    done
   else 
     error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
   fi
