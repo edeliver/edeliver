@@ -1,4 +1,4 @@
-{application, deliver,
+{application, edeliver,
  [
   {description, "erlang remote build and deploy tool"},
   {vsn, "1.0"},
