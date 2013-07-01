@@ -234,7 +234,7 @@ launch() {
   elif [[ "$SUPERVISOR" == "smf" ]]; then
     __remote "
       set -e
-      sudo svccfg import ${APP}
+      sudo svccfg import $APP $SILENCE
     " "$HOSTS"
   else
     __remote "
