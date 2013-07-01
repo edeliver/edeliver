@@ -235,6 +235,8 @@ launch() {
     __remote "
       set -e
       sudo svccfg import $APP $SILENCE
+      sudo svcadm enable -t $APP $SILENCE
+      sudo svcadm restart $APP $SILENCE
     " "$HOSTS"
   else
     __remote "
