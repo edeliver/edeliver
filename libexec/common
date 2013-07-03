@@ -235,8 +235,10 @@ launch() {
     __remote "
       set -e
       sudo svccfg import $DELIVER_TO/tmp/${APP}*xml $SILENCE
-      sudo svcadm enable -t $APP $SILENCE
-      sudo svcadm restart $APP $SILENCE
+      for service in `$APP/* | cut -d '/' -f 3`; do
+        sudo svcadm enable -t $service $SILENCE
+        sudo svcadm restart -t $service $SILENCE
+      done
     " "$HOSTS"
   else
     __remote "
