@@ -57,11 +57,11 @@ Create a `.deliver` directory in your project folder and add the `config` file:
     BUILD_USER="build" # local user at build host
     BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
     
-    STAGING_HOSTS="test1.acme.org,test2.acme.org" # staging / test hosts
+    STAGING_HOSTS="test1.acme.org test2.acme.org" # staging / test hosts separated by space
     STAGING_USER="test" # local user at staging hosts
     TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO 
     
-    PRODUCTION_HOSTS="deploy1.acme.org,deploy2.acme.org" # deploy / production hosts
+    PRODUCTION_HOSTS="deploy1.acme.org deploy2.acme.org" # deploy / production hosts separated by space
     PRODUCTION_USER="production" # local user at deploy hosts    
     DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
     
@@ -115,11 +115,11 @@ The reason for that is, that when the upgrade is build with rebar, rebar tries t
 Deploy commands **deliver the builds** (that were created with a build command before) **to** your staging or **prodution hosts** and can perform the **live code upgrade**. The releases or upgrades to deliver are then available in your local directory `.deliver/releases`. To deploy releases the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
-- `PRODUCTION_HOSTS`: the production hosts to deploy to
+- `PRODUCTION_HOSTS`: the production hosts to deploy to, separated by space
 - `PRODUCTION_USER`: the local users at the production hosts
 - `DELIVER_TO`: the directory at the production hosts to deploy the release at
 
-- `STAGING_HOSTS`: the staging hosts to test the releases at
+- `STAGING_HOSTS`: the staging hosts to test the releases at, separated by space
 - `STAGING_USER`: the local users at the staging hosts
 - `TEST_AT`: the directory at the staging hosts. if not set, the DELIVER_TO is used as directory
 
