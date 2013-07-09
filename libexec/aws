@@ -2606,7 +2606,7 @@ sub s3
 	{
 	    print STDERR "$code\n" unless $v;
 	    $exit_code = 22;
-	    return;
+      exit $exit_code;
 	}
 
 	if ($verb eq HEAD)
