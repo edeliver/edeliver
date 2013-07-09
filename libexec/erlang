@@ -244,12 +244,25 @@ __get_releases_in_store() {
 upload_release_archive() {
   local _subdirectory=${1-}
   status "Uploading archive of release $VERSION"
-  __remote "
-    set -e
-    [ -f ~/.profile ] && source ~/.profile
-    mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
-  "  
-  __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${APP}_${VERSION}.tar.gz"
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
+    local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
+    __remote "
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
+      cd ${DELIVER_TO}${_subdirectory} $SILENCE
+      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${RELEASE_FILE} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${VERSION}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;"
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
+    __remote "
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
+    "  
+    __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${APP}_${VERSION}.tar.gz"
+  else 
+    error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2    
+  fi  
 }
 
 # upgrades the remote hosts with running nodes to
