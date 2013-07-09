@@ -80,7 +80,7 @@ git_push() {
 
   for _host in $_hosts
   do
-    local _background_job="git push $GIT_PUSH $_host $REFSPEC $SILENCE"
+    local _background_job="git push --tags $GIT_PUSH $_host $REFSPEC $SILENCE"
     __log "JOB: $_background_job"
     ( eval "$_background_job" ) &
     background_jobs_pids+=("$!")
