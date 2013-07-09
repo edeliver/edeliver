@@ -126,7 +126,7 @@ copy_release_to_release_store() {
   __detect_release_store_type
   local _release_type="$1"
   local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
-  
+  status "Copying release to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
@@ -243,8 +243,8 @@ __get_releases_in_store() {
 # as argument (with a leading slash, but no tailing)
 upload_release_archive() {
   local _subdirectory=${1-}
-  status "Uploading archive of release $VERSION"
   __detect_release_store_type
+  status "Uploading archive of release $VERSION from $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
