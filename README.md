@@ -18,10 +18,20 @@ Examples:
 
 Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it on your production hosts:
     
-    ./edeliver build appups --from=v1.0 --to=v2.0  # optional: generate and ...
-    editor ./deliver/appups/v1.0.1-v1.0.2/*.appup  # modify appup files
+    # optional: generate default appup upgrade files and edit them 
     
-    ./edeliver build upgrade --from=v1.0 --to=v2.0
+    ./edeliver build appups --from=v1.0 --to=v2.0  
+    editor ./deliver/appups/v1.0.1-v1.0.2/*.appup  
+    
+    # build upgrade from tag v1.0 to v2.0
+    
+    ./edeliver build upgrade --from=v1.0 --to=v2.0 
+    ./edeliver deploy upgrade to production
+    
+    # or if you have the old release in your release store, 
+    # you can build the upgrade with that old release instead of the old git revision/tag
+    
+    ./edeliver build upgrade --with=v1.0 --to=v2.0
     ./edeliver deploy upgrade to production
 
 The upgrade will be **available immediately, without restarting** your application. If the generated [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) for the hot code upgrade are not sufficient, you can generate and modify these files before by using the `build appups` command.
@@ -99,9 +109,10 @@ Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
-    ./edeliver build upgrade --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+    ./edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
-Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. To perform the live upgrade, you can **provide custom [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)** that will be included in the release upgrade build if they exists in the release store at `appup/OldVersion-NewVersion/*.appup`. They will **overwrite the generated default appup files** See the `build appup` command for how to generated the default appup files and copy it to your release store.
+Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. To perform the live upgrade, you can **provide custom [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)** that will be included in the release upgrade build if they exists in the release store at `appup/OldVersion-NewVersion/*.appup`. They will **overwrite the generated default appup files** See the `build appup` command for how to generated the default appup files and copy it to your release store.
 
 #### Build Restrictions
 
