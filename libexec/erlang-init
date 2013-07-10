@@ -13,7 +13,8 @@ __help() {
   
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
-  edeliver build appups|upgrade --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+  edeliver build appups|upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+                               [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
   
   ${txtbld}Deploy Commands:${txtrst}
   edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
@@ -220,6 +221,8 @@ do
     (*)
       if [[ "${arg}" =~ ^--from= ]]; then
         FROM="${arg##--from=}"
+      elif [[ "${arg}" =~ ^--with= ]]; then
+        WITH="${arg##--with=}"
       elif [[ "${arg}" =~ ^--to= ]]; then
         TO="${arg##--to=}"
       elif [[ "${arg}" =~ ^--revision= ]]; then
@@ -257,8 +260,8 @@ esac
 case "${COMMAND}" in
   (build)
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
-    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]]; then
-      __help; error_message "build command requires --from= argument.\n"; exit 2      
+    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
+      __help; error_message "build command requires --from= or --with argument.\n"; exit 2      
     fi      
   ;;
   (deploy)
@@ -275,3 +278,4 @@ case "${COMMAND}" in
     fi
   ;;
 esac
+

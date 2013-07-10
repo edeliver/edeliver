@@ -92,9 +92,10 @@ Builds an initial release that can be deployed to the production hosts. If you w
 
 #### Generate and Edit Upgrade Files (appup)
 
-    ./edeliver build appups --from=<git-tag-or-revision> [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+    ./edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+                           [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
-Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) that perform the hot code loading when an upgrade is installed. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can (and should) then **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**. 
+Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) that perform the hot code loading when an upgrade is installed. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can (and should) then **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**. 
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 

@@ -7,6 +7,6 @@ run() {
   authorize_hosts  
   authorize_remote_hosts 
   select_release_from_store "upgrade"
-  upload_release_archive "/${APP}/releases"
+  upload_release_archive "${DELIVER_TO}/${APP}/releases"
   upgrade_release
 }

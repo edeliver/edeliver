@@ -4,7 +4,8 @@ REQUIRED_CONFIGS+=("APP")
 REQUIRED_CONFIGS+=("BUILD_HOST")
 REQUIRED_CONFIGS+=("BUILD_USER")
 REQUIRED_CONFIGS+=("BUILD_AT")
-REQUIRED_CONFIGS+=("FROM")
+OPTIONAL_CONFIGS+=("FROM")
+OPTIONAL_CONFIGS+=("WITH")
 OPTIONAL_CONFIGS+=("TO")
 OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 
@@ -14,19 +15,58 @@ set_build_hosts
 
 run() {
   authorize_hosts  
-  init_app_remotely
-  git_push
-  git_reset_remote  
-  git_checkout_remote $FROM
-  rebar_get_and_update_deps
-  rebar_clean_compile
-  rebar_renerate
-  rename_release_add_version
-  OLD_RELEASE_VERSION=${RELEASE_VERSION}  
+  
+  if [[ -n "$WITH" ]]; then
+    validate_release_is_in_store "release" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
+    if [[ $? -ne 0 ]]; then 
+      hint_message "You can build appups also with the --from=<git-tag-or-revision> option\nif the release is not in your release store"; exit 2
+    fi
+    # push current state
+    init_app_remotely
+    git_push
+    git_reset_remote
+    git_stash_remote
+  elif [[ -n "$FROM" ]]; then  
+    # push current state
+    init_app_remotely
+    git_push
+    git_reset_remote
+    git_stash_remote
+    # checkout old version
+    git_checkout_remote $FROM
+    # build old release 
+    rebar_get_and_update_deps
+    rebar_clean_compile
+    rebar_renerate
+    rename_release_add_version
+    OLD_RELEASE_VERSION=$RELEASE_VERSION
+  else
+    error_message "no old version specified"; exit 2
+  fi  
+  
+  # checkout new version
   git_checkout_remote $TO
+  # build new release
   rebar_get_and_update_deps
   rebar_clean_compile
   rebar_renerate
+  
+  if [[ -n "$WITH" ]]; then
+    __detect_remote_release_dir
+    # backup new release
+    rename_release_add_version "new"
+    NEW_RELEASE_VERSION=$RELEASE_VERSION;
+    OLD_RELEASE_VERSION="$WITH"
+    # upload and extract old release
+    upload_release_archive "$(dirname $RELEASE_DIR)" "${APP}_${WITH}.release.tar.gz" "$WITH"
+    remote_extract_release_archive "$WITH" "$(dirname $RELEASE_DIR)"
+    # rename old release
+    rename_release_add_version "old" "$WITH"
+    # restore new release
+    rename_release_remove_version $NEW_RELEASE_VERSION
+  fi  
+  
+  # genrate and copy appups
   rebar_generate_appup $OLD_RELEASE_VERSION
   copy_appups_to_release_store $OLD_RELEASE_VERSION
 }

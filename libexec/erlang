@@ -113,7 +113,7 @@ archive_release_dir() {
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    tar -zcpf $RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz -C $RELEASE_DIR/.. ${APP} $SILENCE
+    tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
   "
 }
 
@@ -125,7 +125,7 @@ copy_release_to_release_store() {
   __detect_remote_release_version
   __detect_release_store_type
   local _release_type="$1"
-  local _release_file="$RELEASE_DIR/../${APP}_${RELEASE_VERSION}.tar.gz"  
+  local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"  
   status "Copying release to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
@@ -196,6 +196,24 @@ select_release_from_store() {
   fi  
 }
 
+# validates that the release or upgrade with the given version is in
+# the release store. 
+# takes the release type as first parameter (release|update|upgrade)
+# and the version that should be in the store as second parameter
+validate_release_is_in_store() {
+  local _release_type="$1"
+  local _release_version="$2"
+  __detect_release_store_type
+  status "Validating ${_release_type} version ${_release_version} is in ${RELEASE_STORE_TYPE} release store"
+  local _release_files=( $(__get_releases_in_store "$_release_type") )
+  for _release_file in "${_release_files[@]}"; do
+    local _current_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
+    [[ "$_current_version" = "$_release_version" ]] && return 0
+  done
+  error_message "\n${_release_type} version ${_release_version} not found in release store\n"
+  return 1  
+}
+
 # lists the available releases in the store
 list_releases_in_store() {
   local _release_type="$1"
@@ -237,29 +255,31 @@ __get_releases_in_store() {
 }
 
 
-# copies the release archive to the production hosts to the DELIVER_TO path.
+# copies the release archive to the production hosts to the given path.
 # the current release file and version must be set in the
-# RELEASE_FILE and VERSION variables. an optional subdirectory can be passed
-# as argument (with a leading slash, but no tailing)
+# RELEASE_FILE and VERSION variables. an optional destination directory
+# can be passed as argument, which is $DELIVER_TO by default
 upload_release_archive() {
-  local _subdirectory=${1-}
+  local _destination_directory=${1:-"$DELIVER_TO"}
+  local _release_file=${2:-"$RELEASE_FILE"}
+  local _release_version=${3:-"$VERSION"}
   __detect_release_store_type
-  status "Uploading archive of release $VERSION from $RELEASE_STORE_TYPE release store"
+  status "Uploading archive of release $_release_version from $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
-      mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
-      cd ${DELIVER_TO}${_subdirectory} $SILENCE
-      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${RELEASE_FILE} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${VERSION}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;"
+      mkdir -p ${_destination_directory} $SILENCE
+      cd ${_destination_directory} $SILENCE
+      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
-      mkdir -p ${DELIVER_TO}${_subdirectory} $SILENCE
+      mkdir -p ${_destination_directory} $SILENCE
     "  
-    __parallel_scp "${RELEASE_STORE}/releases/${RELEASE_FILE}" "${DELIVER_TO}${_subdirectory}/${APP}_${VERSION}.tar.gz"
+    __parallel_scp "${RELEASE_STORE}/releases/${_release_file}" "${_destination_directory}/${APP}_${_release_version}.tar.gz"
   else 
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2    
   fi  
@@ -279,12 +299,14 @@ upgrade_release() {
 
 # installs a release at all production hosts
 remote_extract_release_archive() {
-  local _archive="${APP}_${VERSION}.tar.gz"
+  local _release_version=${1:-"$VERSION"}
+  local _archive_dir=${2:-"$DELIVER_TO"}
+  local _archive="${APP}_${_release_version}.tar.gz"
   status "Extracting archive ${_archive}"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    cd $DELIVER_TO $SILENCE
+    cd ${_archive_dir} $SILENCE
     tar -xzvf ${_archive} $SILENCE
   "  
 }
@@ -327,16 +349,31 @@ git_stash_remote() {
 # renames the release directory on the remote build host
 # by adding the release version to the release folder name
 rename_release_add_version() {
+  local _release_description=${1:-"old"}
   __detect_remote_release_dir
   __detect_remote_release_version
-  status "Moving old release to ${APP}_${RELEASE_VERSION}"
+  local _release_version=${2:-"$RELEASE_VERSION"}
+  status "Moving ${_release_description} release to ${APP}_${_release_version}"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    cd $RELEASE_DIR/.. $SILENCE
-    mv ${APP} ${APP}_${RELEASE_VERSION} $SILENCE
-  "
-  
+    cd $(dirname $RELEASE_DIR) $SILENCE
+    mv ${APP} ${APP}_${_release_version} $SILENCE
+  "  
+}
+
+# renames the release directory on the remote build host
+# by removing the release version on the release folder name
+rename_release_remove_version() {
+  __detect_remote_release_dir
+  local _release_version=${1:-"$RELEASE_VERSION"}
+  status "Removing version ${_release_version} from remote release directory"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $(dirname $RELEASE_DIR) $SILENCE
+    mv ${APP}_${_release_version} ${APP} $SILENCE
+  "  
 }
 
 # generates the upgrade from the old version to the new version
@@ -411,7 +448,7 @@ rebar_generate_appup() {
 # detects the directory that contains the generated release
 # on the remote build host
 __detect_remote_release_dir() {
-  if ! [ -z $RELEASE_DIR ]; then
+  if ! [ -z "$RELEASE_DIR" ]; then
     return
   else
     local _release_directories=($(__remote "
@@ -426,7 +463,7 @@ __detect_remote_release_dir() {
       error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
       error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
       if [ ${#_release_directories[@]} -gt 1 ]; then
-        hint_message "Maybe one of these directories contains the relase:"
+        hint_message "Maybe one of these directories contains the release:"
         for _dir in "${_release_directories[@]}"; do
           hint_message "  ${_dir/\/releases\/RELEASES/}"
         done
