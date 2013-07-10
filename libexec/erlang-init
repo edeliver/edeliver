@@ -265,7 +265,7 @@ case "${COMMAND}" in
     fi      
   ;;
   (deploy)
-    STRATEGY="erlang-install-${COMMAND_INFO}"
+    STRATEGY="erlang-deploy-${COMMAND_INFO}"
   ;;
   (start|stop|restart|ping|version)
     STRATEGY="erlang-node-execute"

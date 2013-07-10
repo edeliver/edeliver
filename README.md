@@ -140,17 +140,17 @@ Deploying to **staging** can be used to test your releases and upgrades before d
 
 #### Deploy an Initial / Clean Release
 
-Installs an initial release at the production hosts.
+Deploys an initial release at the production hosts.
 Requires that the `build release` command was executed before.
-If there are several releases in the release store, you will be asked which release to install or you can pass the version by the `--version=` argument variable. If the nodes on the remote deploy hosts are up, the running old release is not affected. The new release will be **available** only after **starting or restarting** the nodes on the deploy hosts.
+If there are several releases in the release store, you will be asked which release to deploy or you can pass the version by the `--version=` argument variable. If the nodes on the remote deploy hosts are up, the running old release is not affected. The new release will be **available** only after **starting or restarting** the nodes on the deploy hosts.
 
 
 #### Deploy an Upgrade Package for Live Updates at Running Nodes
 
-Installs an upgrade at the production hosts and **upgrades the running nodes** to the new version. 
+Deploys an upgrade at the production hosts and **upgrades the running nodes** to the new version. 
 Requires that the `build upgrade` command was executed before and that there is already an initial release deployed to the production hosts and that the node is running. 
 
-Release archives in your release store that were created by the `build release` command **cannot be used to install an upgrade**.
+Release archives in your release store that were created by the `build release` command **cannot be used to deploy an upgrade**.
 
 This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands.
 
