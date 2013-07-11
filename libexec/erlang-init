@@ -20,7 +20,7 @@ __help() {
   edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
   
   ${txtbld}Node Commands:${txtrst}
-  edeliver start|stop|restart|ping|version staging|production [Options]
+  edeliver start|stop|restart|ping|version [staging|production] [Options]
 
   ${txtbld}Local Commands:${txtrst}
   edeliver check release|config [--version=<release-version>]
@@ -99,16 +99,17 @@ if (( $# )); then
       if (( $# )); then
         arg="$1" && shift
         case "${arg}" in
-          (staging|production)
-            NODE_ENVIRONMENT="${arg}"
-          ;;
           (*)
-            __help; error_message "Unknown environment ${arg}. Use staging|production\n"; exit 2      
+            if [[ "${arg}" =~ ^-- ]]; then
+              NODE_ENVIRONMENT="staging"
+            else
+              NODE_ENVIRONMENT="$arg"
+            fi
           ;;
         esac
-      else # no environment found
-        __help; error_message "No environment found. Use staging|procuction\n"; exit 2
-      fi            
+      else # no environment found, use staging as default
+        NODE_ENVIRONMENT="staging"
+      fi
     ;;
     (check)
       COMMAND="${arg}"

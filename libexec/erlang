@@ -57,6 +57,14 @@ require_deploy_config() {
   OPTIONAL_CONFIGS+=("VERSION")
 }
 
+# sets all required config variables and defaults for node execute strategies
+require_node_config() {
+  local _node_environment_uppercase=$(echo "$NODE_ENVIRONMENT" | tr '[:lower:]' '[:upper:]')
+  local _node_config_variable_name="${_node_environment_uppercase}_NODES"
+  eval NODES=\$$_node_config_variable_name
+  REQUIRED_CONFIGS+=("$_node_config_variable_name")  
+}
+
 
 # clean fetch of rebar dependencies on the remote build host
 rebar_get_and_update_deps() {
