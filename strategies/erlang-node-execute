@@ -9,8 +9,41 @@ require_node_config
 
 run() {
   status "${NODE_ACTION}ing servers"
-  hint_message "executing action on nodes: $NODES"
-  authorize_hosts  
+  authorize_hosts
+  echo
+  local i=1; local _config; local _config_arg
+  for _node in $NODES;
+  do
+    echo "${bldgrn}$NODE_ENVIRONMENT${txtrst} node: $i"
+    echo
+    local _user=${_node%@*}
+    local _host=${_node#*@}
+    local _path=${_host#*:}
+    [[ "$_path" =~ .*\|.* ]] && _config=${_path#*|} || _config=""
+    _path=${_path%|*}
+    _host=${_host%:*}
+    
+    echo "  user    : $_user"
+    echo "  host    : $_host"
+    echo "  path    : $_path"
+    [[ -n "$_config" ]] && echo "  config  : $_config"
+    [[ -n "$_config" ]] && _config_arg="--config=${_config}" || _config_arg=""
+    
+    _remote_job="
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      cd ${_path}/${APP} $SILENCE
+      bin/${APP} $NODE_ACTION ${_config_arg}
+    "
+    local _response=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job")
+    local _exit_status="$?"
+    echo -n "  response: "
+    [[ "$_exit_status" -eq 0 ]] && hint_message "$_response" || error_message "$_response"
+    echo
+    i=$((i+1))
+  done
+  
+    
 }
 
 
