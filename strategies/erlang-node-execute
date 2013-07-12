@@ -35,10 +35,13 @@ run() {
       cd ${_path}/${APP} $SILENCE
       bin/${APP} $NODE_ACTION ${_config_arg}
     "
-    local _response=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job")
-    local _exit_status="$?"
-    echo -n "  response: "
-    [[ "$_exit_status" -eq 0 ]] && hint_message "$_response" || error_message "$_response"
+    
+    _node_action_response=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job")
+    if [[ $? -eq 0 ]]; then
+     echo -n "  response: "; hint_message "$_node_action_response" 
+    else
+      echo -n "  response: "; [[ -z "$_node_action_response" ]] && error_message "failed" || error_message "$_node_action_response"
+    fi
     echo
     i=$((i+1))
   done
