@@ -9,11 +9,10 @@ require_node_config
 
 
 run() {
-  status "${NODE_ACTION}ing servers"
+  [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   authorize_remote_hosts 
   execute_node_command $NODE_ACTION
-  echo $?
 }
 
 # executes a node command asynchronously on all
