@@ -102,6 +102,13 @@ __print_node_command_result() {
   rm -f "$LOCAL_RELEASE_STORE/.tmp/node_command_result_$$_${_node_index}"
   local _status_code=${_node_action_response%|*}
   _node_action_response=${_node_action_response#*|}
+
+  if [[ "$_node_action_response" =~ ": " ]]; then
+    local _node=${_node_action_response%: *}
+    _node_action_response=${_node_action_response#*: }
+    echo "  node    : $_node"
+  fi
+  
   if [[ "$_status_code" = "0" ]]; then
     echo -n "  response: "; hint_message "$_node_action_response" 
   else
