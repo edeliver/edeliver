@@ -2,10 +2,16 @@
 
 # the local or remote (scp) directory where the built
 # releases should be copied to
+if [ -z "$LOCAL_RELEASE_STORE" ]
+then
+  LOCAL_RELEASE_STORE=".deliver"
+fi
 if [ -z "$RELEASE_STORE" ]
 then
-  RELEASE_STORE=".deliver"
+  RELEASE_STORE="$LOCAL_RELEASE_STORE"
 fi
+
+
 
 if [ -z "$REBAR_CONFIG" ]
 then
