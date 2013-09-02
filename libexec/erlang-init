@@ -26,6 +26,7 @@ __help() {
   edeliver check release|config [--version=<release-version>]
   edeliver show releases|appups|relups
   edeliver edit relup|appup
+  edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
 
 ${txtbld}Options:${txtrst}
   -C, --compact         Displays every task as it's run, silences all output. (default mode)
@@ -168,6 +169,28 @@ if (( $# )); then
         __help; error_message "No edit command found. Use appup|relup\n"; exit 2
       fi            
     ;;
+    (increase)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (versions|version)
+            INCREASE_VERSION_TYPE="version"
+            COMMAND_INFO="versions"
+          ;;
+          (minor|major)
+            INCREASE_VERSION_TYPE="$arg"
+            COMMAND_INFO="versions"
+          ;;
+          (*)
+            __help; error_message "Unknown increase command ${arg}. Use versions|major|minor\n"; exit 2      
+          ;;
+        esac
+      else 
+        INCREASE_VERSION_TYPE="minor"
+        COMMAND_INFO="versions"
+      fi            
+    ;;
     (-h|--help)
       __help
       exit 0
@@ -277,6 +300,9 @@ case "${COMMAND}" in
     if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
       __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
     fi
+  ;;
+  (increase)
+    STRATEGY="erlang-increase-versions"
   ;;
 esac
 

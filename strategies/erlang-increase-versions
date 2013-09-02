@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("INCREASE_VERSION_TYPE")
+
+run() {
+  FROM=${FROM:=$(git describe --tags --abbrev=0)}
+  TO=${TO:=HEAD}
+  status "Increasing application and release versions from $FROM to $TO."
+  echo
+  local _srcDir
+  local _relFile
+  local _appFile
+  for _srcDir in $(git diff --name-only ${FROM}..${TO} | grep -Eo ".*src/" | uniq); do
+    for _appFile in $(ls -1 ${_srcDir}*.app.src | head); do
+      local _appVersion=$(grep -Eo "\\{\\s*vsn\\s*,\\s*\"[^\"]+\"\\s*\\}" ${_appFile} | grep -Eo "\"[^\"]+\"")
+      _appVersion=${_appVersion//[\"]/}
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      echo "${_appFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
+      sed -E -e "s/\{[[:space:]]*vsn[[:space:]]*,[[:space:]]*\"${_appVersion}\"[[:space:]]*\}/\{vsn, \"${_newVersion}\"}/g" -i "" ${_appFile}
+    done
+  done
+  echo  
+  local _newReleaseVersion
+  for _relFile in $(find  . -name reltool.config); do
+    local _releaseInfo=$(cat "${_relFile}" | grep -Eo "\\{\\s*rel\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*" | grep -o "${APP}.*");
+    if [[ -n "$_releaseInfo" ]]; then
+      local _appVersion=${_releaseInfo#${APP}\"*}
+      _appVersion=${_appVersion%\"*}
+      _appVersion=${_appVersion#*\"}
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      _newReleaseVersion=$_newVersion
+      echo "${_relFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
+      sed -E -e "s/(\{[[:space:]]*rel[[:space:]]*,[[:space:]]*\"[^\"]+\"[[:space:]]*,[[:space:]]*)\"${_appVersion}\"/\1\"${_newVersion}\"/g" -i "" ${_relFile}
+    fi    
+  done
+  if [[ -n "$_newReleaseVersion" ]]; then
+    hint_message "\nNew release version is: ${bldylw}${_newReleaseVersion}${txtrst}"
+    hint_message "Don't forget to tag the current revision using:\n\ngit tag ${_newReleaseVersion} && git push --tags"
+  fi
+}
+
+increase_version() {
+  local _version=$1
+  local _versionType=${2:-minor} # version | major | minor
+  local _newVersion
+  if [ "${_versionType}" = "version" ]; then
+    _newVersion=${_version%%\.*} 
+    _newVersion="$(($_newVersion+1)).0"
+  else
+    if [[ "$(echo "${_version}" | grep -o "\\." | wc -l)" -gt 1 ]]; then
+      # current version is minor version
+      if [ "${_versionType}" = "minor" ]; then
+        _newVersion=$(increase_last_version_part $_version)
+      else
+        _newVersion=${_version%\.*} 
+        _newVersion=$(increase_last_version_part $_newVersion)
+      fi
+    else
+      # current version is major version
+      if [ "${_versionType}" = "minor" ]; then
+        _newVersion="${_version}.1"
+      else
+        _newVersion=$(increase_last_version_part $_version)
+      fi
+    fi    
+  fi
+
+  echo "$_newVersion"
+}
+
+increase_last_version_part() {
+  local _version="$1"
+  local _newVersion=${_version%\.*} 
+  local _partToIncrease=${_version##*\.}
+  _partToIncrease=$(($_partToIncrease+1))
+  echo "${_newVersion}.${_partToIncrease}"
+}
