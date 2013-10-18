@@ -106,6 +106,7 @@ __print_node_command_result() {
   if [[ "$_node_action_response" =~ ": " ]]; then
     local _node=${_node_action_response%: *}
     _node_action_response=${_node_action_response#*: }
+    _node=$(echo ${_node} | grep -oe "[^ @]\+@.*")
     echo "  node    : $_node"
   fi
   
