@@ -68,7 +68,24 @@ require_node_config() {
   local _node_environment_uppercase=$(echo "$NODE_ENVIRONMENT" | tr '[:lower:]' '[:upper:]')
   local _node_config_variable_name="${_node_environment_uppercase}_NODES"
   eval NODES=\$$_node_config_variable_name
-  REQUIRED_CONFIGS+=("$_node_config_variable_name")  
+  REQUIRED_CONFIGS+=("$_node_config_variable_name")
+  # set user@host:/path as default value if nodes config is not set
+  if [ -z "$NODES" ]; then
+    if [ "$NODE_ENVIRONMENT" = "production" ]; then 
+      local _user=${PRODUCTION_USER}
+      local _path=${$DELIVER_TO}
+    else
+      local _user=${STAGING_USER}
+      local _path=${TEST_AT:-$DELIVER_TO}      
+    fi
+    if [[ -n "$_user" ]] && [[ -n "$_path" ]]; then
+      local _hosts_environment_variable_name="${_node_environment_uppercase}_HOSTS"
+      for i in $(eval echo \$$_hosts_environment_variable_name); do
+        eval $_node_config_variable_name=\"\$$_node_config_variable_name ${_user}@${i}:${_path}\"
+      done
+      eval NODES=\$$_node_config_variable_name 
+    fi
+  fi
 }
 
 
