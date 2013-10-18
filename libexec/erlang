@@ -46,7 +46,7 @@ set_deploy_hosts() {
 # sets all required config variables and defaults for deploy strategies
 require_deploy_config() {
   DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
-  TEST_AT="${DELIVER_TO:=$TEST_AT}"
+  TEST_AT="${TEST_AT:=$DELIVER_TO}"
 
   REQUIRED_CONFIGS+=("APP")
 
