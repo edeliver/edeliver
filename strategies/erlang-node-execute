@@ -109,6 +109,7 @@ __execute_node_command() {
   _host=${_host%:*}
   
   [[ -n "$_config" ]] && _config_arg="--config=${_config}" || _config_arg=""
+  [ "${_node_index}" != "single_node" ] && [ "${_node_command}" = "start" ] &&  _config_arg="$_config_arg --short"
   
   _remote_job="
     set -e
