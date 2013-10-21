@@ -23,15 +23,25 @@ execute_node_command() {
   echo
   background_jobs_pids=()
   background_jobs_nodes=()
-  background_jobs_results=()
-  mkdir -p "$LOCAL_RELEASE_STORE/.tmp"
 
   local i=0; 
   for _node in $NODES;
   do
-    __execute_node_command $i "$_node" "$_node_command" &
+    background_jobs_nodes+=("$_node")    
+    {
+      local _output=""
+      local _lines=-1
+      local _result
+      while read line; do
+        _result=$line
+        _output="${_output}${line}\n"
+        _lines=$(( $_lines + 1 ))
+      done
+      _output=$(echo -e "$_output" | head -n $_lines)
+      __print_node_command_result "$i" "$_result" "$_output"
+      exit $result
+    } < <(__execute_node_command $i "$_node" "$_node_command") &
     background_jobs_pids+=("$!")
-    background_jobs_nodes+=("$_node")
     i=$((i+1))
 
   done
@@ -40,15 +50,12 @@ execute_node_command() {
   for (( i = 0 ; i < ${#background_jobs_pids[@]} ; i++ ))
   do
     wait ${background_jobs_pids[$i]}
-    __print_node_command_result $i
     [[ "$?" = 0 ]] || _had_errors=1
   done
   return $_had_errors  
 }
 
 # executes a node command on a given node.
-# the result is written to $LOCAL_RELEASE_STORE/.tmp/node_command_result_$$_${_node_index} 
-# in format "StatusCode|Output"
 __execute_node_command() {
   local _node_index=$1
   local _node_name=$2
@@ -71,10 +78,8 @@ __execute_node_command() {
     bin/${APP} ${_node_command} ${_config_arg}
   "
   
-  node_execute_result=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job")
-  local _status_code="$?"
-  echo "${_status_code}|${node_execute_result}" > "$LOCAL_RELEASE_STORE/.tmp/node_command_result_$$_${_node_index}"
-  # echo "command for node $_node_name and index $_node_index finished with status code $_status_code and result ${node_execute_result} | ${PPID} | $$"
+  ssh -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
+  echo -e "\n$?"
 }
 
 # prints the result from the execution of a node command on a remote node.
@@ -82,10 +87,12 @@ __execute_node_command() {
 # in format "StatusCode|Output"
 __print_node_command_result() {
   local _node_index=$1
+  local _status_code=$2
+  local _node_action_response=$3
   local _node_name=${background_jobs_nodes[$_node_index]}
   local _config; local _config_arg
-  echo "${bldgrn}$NODE_ENVIRONMENT${txtrst} node: $_node_index"
-  echo
+  local _message=""
+  _message="${bldgrn}$NODE_ENVIRONMENT${txtrst} node: $_node_index\n\n"
   local _user=${_node_name%@*}
   local _host=${_node_name#*@}
   local _path=${_host#*:}
@@ -93,29 +100,32 @@ __print_node_command_result() {
   _path=${_path%|*}
   _host=${_host%:*}
   
-  echo "  user    : $_user"
-  echo "  host    : $_host"
-  echo "  path    : $_path"
-  [[ -n "$_config" ]] && echo "  config  : $_config"
+  _message="${_message}  user    : $_user\n"
+  _message="${_message}  host    : $_host\n"
+  _message="${_message}  path    : $_path\n"
+  [[ -n "$_config" ]] && _message="${_message}  config  : $_config\n"
   
-  local _node_action_response=$(cat < $LOCAL_RELEASE_STORE/.tmp/node_command_result_$$_${_node_index})
-  rm -f "$LOCAL_RELEASE_STORE/.tmp/node_command_result_$$_${_node_index}"
-  local _status_code=${_node_action_response%|*}
-  _node_action_response=${_node_action_response#*|}
-
   if [[ "$_node_action_response" =~ ": " ]]; then
     local _node=${_node_action_response%: *}
     _node_action_response=${_node_action_response#*: }
     _node=$(echo ${_node} | grep -oe "[^ @]\+@.*")
-    echo "  node    : $_node"
+    _message="${_message}  node    : $_node\n"
   fi
   
   if [[ "$_status_code" = "0" ]]; then
-    echo -n "  response: "; hint_message "$_node_action_response" 
+    _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n" 
   else
-    echo -n "  response: "; [[ -z "$_node_action_response" ]] && error_message "failed" || error_message "$_node_action_response"
+    _message="${_message}  response: ${bldred}failed${txtrst}\n";
+    [[ -n "$_node_action_response" ]] && {
+      local lines=0
+      while read line; do
+        [[ "$lines" = "0" ]] && _message="${_message}  error   : ${line}\n" || _message="${_message}            ${line}\n"
+        lines=$(($lines+1))
+      done < <(echo -e "$_node_action_response")
+    } 
+    _message="$_message\n${txtrst}"
   fi
-  echo 
+  echo -e "${_message}"
   [[ "$_status_code" = "0" ]] && return 0 || return 1   
 }
 
