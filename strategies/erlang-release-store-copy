@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("RELEASE_STORE")
+
+REQUIRED_CONFIGS+=("COMMAND")
+OPTIONAL_CONFIGS+=("RELEASE_FILE")
+OPTIONAL_CONFIGS+=("DESTINATION_FILE")
+OPTIONAL_CONFIGS+=("COMMAND_INFO")
+OPTIONAL_CONFIGS+=("VERSION")
+
+run() {
+  if [ -z "$RELEASE_FILE" ]; then
+    if [ -n "$VERSION" ] && [ -n "$COMMAND_INFO" ] && [ -n "$APP" ]; then
+      RELEASE_FILE="${APP}_${VERSION}.${COMMAND_INFO}.tar.gz"
+    else
+      __help; error_message "No $COMMAND_INFO version given\n"; exit 2
+    fi
+  fi
+  
+  [ -z "$DESTINATION_FILE" ] && DESTINATION_FILE="$RELEASE_FILE"
+  
+  [ -d "$DESTINATION_FILE" ] && DESTINATION_FILE="${DESTINATION_FILE%%/}/$RELEASE_FILE"
+  
+  __detect_release_store_type
+  
+  if [ "$RELEASE_STORE_TYPE" != "s3" ]; then
+    error_message "Cannot $COMMAND releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
+  fi
+  
+  if [[ "$COMMAND" = "download" ]]; then
+    __download_file_from_s3_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
+  elif [[ "$COMMAND" = "upload" ]]; then
+    __upload_file_to_s3_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
+  fi
+}
+
+
+__download_file_from_s3_release_store() {
+  local _source_file=$1
+  local _destination_file=$2
+  if [ -f "$_destination_file" ] && [ "$FORCE" != "true" ]; then
+    read -n1 -p "${txtylw}Destination File '$_destination_file' already exists. Overwrite? (y/n)${txtrst}"
+    echo
+    [[ $REPLY = [yY] ]] || exit 1
+  fi
+  __file_exists_in_store $_source_file || {
+    error "\nFAILED to download $_source_file.\nFile does not exist in remote release store.\n"
+    exit 2
+  }
+  status "Downloading $_source_file to $_destination_file"  
+  AWS_ARGUMENTS="get ${AWS_BUCKET_NAME}/${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws 2>/dev/null > "$_destination_file" || {
+      [[ -f "$_destination_file" ]] && [[ ! -s "$_destination_file" ]] && rm "$_destination_file"
+      error "\nFAILED to download $_source_file\n"
+  }
+}
+
+__upload_file_to_s3_release_store() {
+  local _source_file=$1
+  local _destination_file=$(basename "$2")
+  [ ! -f "$_source_file" ] && error "\nFAILED to upload $_source_file.\nFile does not exist.\n" && exit 2
+  [ "$FORCE" != "true" ] && __file_exists_in_store $_destination_file && {
+    read -n1 -p "${txtylw}Destination File '$_destination_file' already uploaded. Overwrite? (y/n)${txtrst}"
+    echo
+    [[ $REPLY = [yY] ]] || exit 1
+  }
+  status "Uploading file $_source_file to $_destination_file"
+  AWS_ARGUMENTS="put ${AWS_BUCKET_NAME}/${_destination_file} ${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws || {
+      error "\nFAILED to upload $_source_file\n"
+  }
+}
+
+__file_exists_in_store() {
+  local _file=$1
+  for i in $(__get_releases_in_store "$_release_type"); do
+    [[ "$i" = "$_file" ]] && return 0
+  done
+  return 1;
+}

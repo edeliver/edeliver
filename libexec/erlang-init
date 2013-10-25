@@ -26,6 +26,7 @@ __help() {
   edeliver check release|config [--version=<release-version>]
   edeliver show releases|appups|relups
   edeliver edit relup|appup
+  edeliver upload|download [release|upgrade <release-version>]|<src-file-name> [<dest-file-name>]
   edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
 
 ${txtbld}Options:${txtrst}
@@ -34,6 +35,7 @@ ${txtbld}Options:${txtrst}
   -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
   -D, --debug           Runs in shell debug mode, displays everything.
   -S, --skip-existing   Skip copying release archives if they exist already on the deploy hosts.
+  -F, --force           Do not ask, just do, overwrite, delete or destroy everything
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).  
@@ -150,6 +152,30 @@ if (( $# )); then
         __help; error_message "No show command found. Use releases|appups|relups\n"; exit 2
       fi            
     ;;
+    (upload|download)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|upgrade)
+            COMMAND_INFO="${arg}"
+            if (( $# )); then
+              arg="$1" && shift
+              VERSION="${arg}"
+              (( $# )) && ! [[ "$1" =~ ^- ]] && DESTINATION_FILE="$1" && shift
+            else 
+              __help; error_message "No $COMMAND_INFO version given\n"; exit 2      
+            fi            
+          ;;
+          (*)
+            RELEASE_FILE="${arg}"
+            (( $# )) && ! [[ "$1" =~ ^- ]] && DESTINATION_FILE="$1" && shift
+          ;;
+        esac
+      else # no build type found
+        __help; error_message "No file to $COMMAND found. Use release|upgrade <version> or file name\n"; exit 2
+      fi      
+    ;;
     (edit)
       COMMAND="${arg}"
       if (( $# )); then
@@ -227,6 +253,9 @@ do
       # this was already captured in libexec/output
       # noop
     ;;
+    (-F|--force)
+      FORCE="true"
+    ;;
     (-h|--help)
       __help
       exit 0
@@ -300,6 +329,9 @@ case "${COMMAND}" in
     if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
       __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
     fi
+  ;;
+  (upload|download)
+    STRATEGY="erlang-release-store-copy"
   ;;
   (increase)
     STRATEGY="erlang-increase-versions"
