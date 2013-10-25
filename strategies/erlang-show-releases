@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-require_deploy_config
-set_deploy_hosts
 
 run() {
   list_releases_in_store "*"
