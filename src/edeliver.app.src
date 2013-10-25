@@ -4,5 +4,6 @@
   {vsn, "1.0"},
   {registered, []},
   {applications, []},
+  {modules, []},
   {env, []}
  ]}.
