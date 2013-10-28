@@ -21,6 +21,8 @@ else
 fi
 
 REBAR_CMD="./rebar $REBAR_OPTIONS"
+MIX_CMD="./mix"
+RELX_CMD="./relx"
 
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
@@ -89,54 +91,100 @@ require_node_config() {
 }
 
 
-# clean fetch of rebar dependencies on the remote build host
-rebar_get_and_update_deps() {
-  __exec_if_defined "pre_rebar_get_and_update_deps"
+# clean fetch of dependencies on the remote build host
+erlang_get_and_update_deps() {
+  __exec_if_defined "pre_erlang_get_and_update_deps"
 
-  status "Fetching rebar dependencies"
+  status "Fetching / Updating dependencies"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD update-deps get-deps $SILENCE
+    if [ \"$BUILD_CMD\" = \"rebar\" ]; then
+      echo \"using rebar to fetch and update deps\" $SILENCE
+      $REBAR_CMD update-deps get-deps $SILENCE
+    elif [ \"$BUILD_CMD\" = \"mix\" ]; then
+      echo \"using mix to fetch and update deps\" $SILENCE
+      if [ ! -f ~/.mix/rebar ]; then
+        $MIX_CMD local.rebar $SILENCE
+      else 
+        echo \"rebar for mix was built already\" $SILENCE
+      fi
+      $MIX_CMD deps.get $SILENCE
+    fi
   "
-
-  __exec_if_defined "pos_rebar_get_and_update_deps"
+  __exec_if_defined "pos_erlang_get_and_update_deps"
 }
 
-# compiles the sources on the remote build host
-rebar_clean_compile() {
-  __exec_if_defined "pre_rebar_clean_compile"
+
+# compiles the sources on the remote build host 
+erlang_clean_compile() {
+  __exec_if_defined "pre_erlang_clean_compile"
 
   status "Compiling sources"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD clean skip_deps=true $SILENCE
-    $REBAR_CMD compile $SILENCE
+    if [ \"$BUILD_CMD\" = \"rebar\" ]; then
+      echo \"using rebar to compile files\" $SILENCE
+      $REBAR_CMD clean skip_deps=true $SILENCE
+      $REBAR_CMD compile $SILENCE
+    elif [ \"$BUILD_CMD\" = \"mix\" ]; then
+      echo \"using mix to compile files\" $SILENCE
+      $MIX_CMD do clean, deps.compile $SILENCE
+    fi
   "
 
-  __exec_if_defined "post_rebar_clean_compile"
+  __exec_if_defined "post_erlang_clean_compile"
 }
 
+
+
+
 # generates the release on the remote build host
-rebar_renerate() {
-  __exec_if_defined "pre_rebar_renerate"
+erlang_generate_release() {
+  __exec_if_defined "pre_erlang_generate_release"
 
   status "Generating release"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    $REBAR_CMD -f generate $SILENCE
+    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then 
+      echo \"using rebar to generate release\" $SILENCE
+      $REBAR_CMD -f generate $SILENCE
+    elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
+      echo \"using relx to generate release\" $SILENCE
+      $RELX_CMD release $SILENCE
+    fi    
   "
 
-  __exec_if_defined "post_rebar_renerate"
+  __exec_if_defined "post_erlang_generate_release"
+}
+
+# generates an relup upgrade package with relx
+# expects that in _rel folder is the old release
+# and in compiled sources the new release
+relx_generate_relup() {
+  __exec_if_defined "pre_relx_generate_relup"
+
+  __detect_remote_release_dir
+  RELEASE_VERSION="" # redetect new version
+  __detect_remote_release_version
+  status "Generating relup to version ${RELEASE_VERSION}"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO $SILENCE
+    $RELX_CMD relup $SILENCE
+  "
+
+  __exec_if_defined "post_relx_generate_relup" 
 }
 
 # creates a tar.gz of the built release
-archive_release_dir() {
+erlang_archive_release() {
   __detect_remote_release_dir
   __detect_remote_release_version
   status "Building archive of release ${RELEASE_VERSION}"  
@@ -144,7 +192,13 @@ archive_release_dir() {
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
-    tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
+    cd $DELIVER_TO $SILENCE
+    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then 
+      tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
+    elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
+      echo \"using relx to archive release\" $SILENCE
+      $RELX_CMD tar $SILENCE
+    fi    
   "
 }
 
@@ -156,7 +210,11 @@ copy_release_to_release_store() {
   __detect_remote_release_version
   __detect_release_store_type
   local _release_type="$1"
-  local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"  
+  if [[ "$RELEASE_CMD" = "relx" ]]; then
+    local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"  
+  else # used rebar to generate release  
+    local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"  
+  fi
   status "Copying release to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
@@ -482,24 +540,39 @@ __detect_remote_release_dir() {
   if ! [ -z "$RELEASE_DIR" ]; then
     return
   else
-    local _release_directories=($(__remote "
-      set -e
-      [ -f ~/.profile ] && source ~/.profile
-      cd $DELIVER_TO $SILENCE
-      find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
-    "))  
-    if [ ${#_release_directories[@]} -eq 1 ]; then
-      RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
-    else
-      error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
-      error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
-      if [ ${#_release_directories[@]} -gt 1 ]; then
-        hint_message "Maybe one of these directories contains the release:"
-        for _dir in "${_release_directories[@]}"; do
-          hint_message "  ${_dir/\/releases\/RELEASES/}"
-        done
+    if [ "$RELEASE_CMD" = "relx" ]; then
+      local _relx_release_dir_exists=($(__remote "
+        set -e
+        [ -f ~/.profile ] && source ~/.profile
+        cd $DELIVER_TO $SILENCE
+        [[ -d ./_rel ]] && echo true || echo false
+      "))  
+      if [ "$_relx_release_dir_exists" = "true" ]; then
+        RELEASE_DIR=${DELIVER_TO%%/}/_rel
+      else
+        error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO/_rel\n"
+        exit 1
       fi
-      exit 1
+    else # built with rebar
+      local _release_directories=($(__remote "
+        set -e
+        [ -f ~/.profile ] && source ~/.profile
+        cd $DELIVER_TO $SILENCE
+        find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
+      "))  
+      if [ ${#_release_directories[@]} -eq 1 ]; then
+        RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
+      else
+        error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
+        error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
+        if [ ${#_release_directories[@]} -gt 1 ]; then
+          hint_message "Maybe one of these directories contains the release:"
+          for _dir in "${_release_directories[@]}"; do
+            hint_message "  ${_dir/\/releases\/RELEASES/}"
+          done
+        fi
+        exit 1
+      fi      
     fi
   fi
 }

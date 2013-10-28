@@ -74,3 +74,17 @@ if [ -z "$GENERATED_BRANCH" ]
 then
   GENERATED_BRANCH="generated"
 fi
+
+# command to compile the source the remote build host
+# rebar | mix
+if [ -z "$BUILD_CMD" ]; then
+  [[ -f "./mix.exs" ]] && BUILD_CMD=${BUILD_CMD:=mix} || BUILD_CMD=${BUILD_CMD:=rebar}
+fi
+
+# command to generate the release on the remote build host
+# rebar | relx
+if [ -z "$RELEASE_CMD" ]; then
+  [[ -f "./relx.config" ]] && RELEASE_CMD=${RELEASE_CMD:=relx} || RELEASE_CMD=${RELEASE_CMD:=rebar}
+fi
+
+

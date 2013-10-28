@@ -310,6 +310,8 @@ case "${MODE}" in
   ;;
 esac
 
+
+
 case "${COMMAND}" in
   (build)
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"

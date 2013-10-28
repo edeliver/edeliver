@@ -35,9 +35,9 @@ run() {
     # checkout old version
     git_checkout_remote $FROM
     # build old release 
-    rebar_get_and_update_deps
-    rebar_clean_compile
-    rebar_renerate
+    erlang_get_and_update_deps
+    erlang_clean_compile
+    erlang_generate_release
     rename_release_add_version
     OLD_RELEASE_VERSION=$RELEASE_VERSION
   else
@@ -47,9 +47,9 @@ run() {
   # checkout new version
   git_checkout_remote $TO
   # build new release
-  rebar_get_and_update_deps
-  rebar_clean_compile
-  rebar_renerate
+  erlang_get_and_update_deps
+  erlang_clean_compile
+  erlang_generate_release
   
   if [[ -n "$WITH" ]]; then
     __detect_remote_release_dir

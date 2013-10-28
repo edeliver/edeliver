@@ -34,10 +34,10 @@ run() {
     # checkout old version
     git_checkout_remote $FROM
     # build old release 
-    rebar_get_and_update_deps
-    rebar_clean_compile
-    rebar_renerate
-    rename_release_add_version
+    erlang_get_and_update_deps
+    erlang_clean_compile
+    erlang_generate_release
+    [[ "$RELEASE_CMD" != "relx" ]] && rename_release_add_version
     OLD_RELEASE_VERSION=${RELEASE_VERSION}  
   else
     error_message "no old version specified"; exit 2
@@ -46,9 +46,14 @@ run() {
   # checkout new version
   git_checkout_remote $TO
   # build new release
-  rebar_get_and_update_deps
-  rebar_clean_compile
-  rebar_renerate
+  erlang_get_and_update_deps
+  erlang_clean_compile
+  
+  if [[ "$RELEASE_CMD" = "relx" ]]; then
+    relx_generate_relup
+  else
+    erlang_generate_release
+  fi
 
   if [[ -n "$WITH" ]]; then
     __detect_remote_release_dir
@@ -60,17 +65,21 @@ run() {
     upload_release_archive "$(dirname $RELEASE_DIR)" "${APP}_${WITH}.release.tar.gz" "$WITH"
     remote_extract_release_archive "$WITH" "$(dirname $RELEASE_DIR)"
     # rename old release
-    rename_release_add_version "old" "$WITH"
+    [[ "$RELEASE_CMD" != "relx" ]] && rename_release_add_version "old" "$WITH"
     # restore new release
-    rename_release_remove_version $NEW_RELEASE_VERSION
+    [[ "$RELEASE_CMD" != "relx" ]] && rename_release_remove_version $NEW_RELEASE_VERSION
   fi  
 
-  # genrate default appups
-  rebar_generate_appup $OLD_RELEASE_VERSION
+  # generate default appups
+  [[ "$RELEASE_CMD" != "relx" ]] && rebar_generate_appup $OLD_RELEASE_VERSION
   # overwrite default appups with custom appups
-  copy_appups_from_release_store_to_build_host $OLD_RELEASE_VERSION
+  [[ "$RELEASE_CMD" != "relx" ]] && copy_appups_from_release_store_to_build_host $OLD_RELEASE_VERSION
   # generate upgrade package and copy it to release store
-  rebar_generate_upgrade $OLD_RELEASE_VERSION
+  if [[ "$RELEASE_CMD" = "relx" ]]; then
+    erlang_archive_release
+  else
+    rebar_generate_upgrade $OLD_RELEASE_VERSION
+  fi
   copy_release_to_release_store "upgrade"
 }
 
