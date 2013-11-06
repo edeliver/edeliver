@@ -75,7 +75,7 @@ require_node_config() {
   if [ -z "$NODES" ]; then
     if [ "$NODE_ENVIRONMENT" = "production" ]; then 
       local _user=${PRODUCTION_USER}
-      local _path=${$DELIVER_TO}
+      local _path=${DELIVER_TO}
     else
       local _user=${STAGING_USER}
       local _path=${TEST_AT:-$DELIVER_TO}      
