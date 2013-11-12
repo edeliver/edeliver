@@ -36,6 +36,7 @@ ${txtbld}Options:${txtrst}
   -D, --debug           Runs in shell debug mode, displays everything.
   -S, --skip-existing   Skip copying release archives if they exist already on the deploy hosts.
   -F, --force           Do not ask, just do, overwrite, delete or destroy everything
+      --clean-deploy    Delete the release, lib and erts-* directories before deploying the release
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).  
@@ -255,6 +256,9 @@ do
     ;;
     (-F|--force)
       FORCE="true"
+    ;;
+    (--clean-deploy)
+      CLEAN_DEPLOY="true"
     ;;
     (-h|--help)
       __help
