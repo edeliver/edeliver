@@ -17,8 +17,8 @@ BASE_PATH="$(cd "$DIR/.." && pwd)"
 # You can overwrite them, but ideally they should be left alone.
 # Remember Demeter: http://ablogaboutcode.com/2012/02/27/understanding-the-law-of-demeter/
 
-source "$BASE_PATH/libexec/output"
 source "$BASE_PATH/libexec/defaults"
+source "$BASE_PATH/libexec/output"
 source "$BASE_PATH/libexec/deprecations"
 source "$BASE_PATH/libexec/core"
 source "$BASE_PATH/libexec/common"
