@@ -399,31 +399,35 @@ remote_clean_release_dir() {
     cd ${_archive_dir} $SILENCE
     _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))  
     [[ -n \"\$_app_folder\" ]]
-    cd \${_app_folder}
-    if [[ -d releases ]]; then
-      echo \"deleting releases dir in \${_app_folder}\" $SILENCE
-      rm -rf releases $SILENCE
-    else
-      echo \"releases dir already deleted in \${_app_folder}\" $SILENCE
+    if [[ -d \$_app_folder ]]; then
+      cd \${_app_folder}
+      if [[ -d releases ]]; then
+        echo \"deleting releases dir in \${_app_folder}\" $SILENCE
+        rm -rf releases $SILENCE
+      else
+        echo \"releases dir already deleted in \${_app_folder}\" $SILENCE
+      fi
+      if [[ -d lib ]]; then
+        echo \"deleting lib dir in \${_app_folder}\" $SILENCE
+        rm -rf lib $SILENCE
+      else
+        echo \"lib dir already deleted in \${_app_folder}\" $SILENCE
+      fi
+      ls -al | grep erts- > /dev/null && {
+        for erts_dir in erts-*; do
+          if [[ -n \"\$erts_dir\" ]] && [[ -d \$erts_dir ]]; then
+            echo \"deleting \${erts_dir} in \${_app_folder}\" $SILENCE
+            rm -rf \${erts_dir} $SILENCE
+          else
+            echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
+          fi    
+        done
+      } || {
+        echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
+      }      
+    else 
+      echo \"\${_app_folder} does not exist\" $SILENCE
     fi
-    if [[ -d lib ]]; then
-      echo \"deleting lib dir in \${_app_folder}\" $SILENCE
-      rm -rf lib $SILENCE
-    else
-      echo \"lib dir already deleted in \${_app_folder}\" $SILENCE
-    fi
-    ls -al | grep erts- > /dev/null && {
-      for erts_dir in erts-*; do
-        if [[ -n \"\$erts_dir\" ]] && [[ -d \$erts_dir ]]; then
-          echo \"deleting \${erts_dir} in \${_app_folder}\" $SILENCE
-          rm -rf \${erts_dir} $SILENCE
-        else
-          echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
-        fi    
-      done
-    } || {
-      echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
-    }
       "  
 }
 
