@@ -781,7 +781,7 @@ if ((!@ARGV || join(@ARGV, "") == "-") && $ENV{"AWS_ARGUMENTS"}) {
     @meta{qw(1 assume cmd0 content_length curl curl_options cut d delimiter dns_alias dump_xml exec expire_time fail h help http
 	     insecure insecure_signing insecure_aws insecureaws install json l limit_rate link
 	     max_time marker md5 no_vhost parts prefix private progress public queue r region request requester retry role ruby quiet
-	     s3host sanity_check secrets_file set_acl sha1 sign silent simple sts_host t v verbose vv vvv wait xml yaml)} = undef;
+	     s3host sanity_check set_acl sha1 sign silent simple sts_host t v verbose vv vvv wait xml yaml)} = undef;
 
     my @awsrc = "";
     for (split(/(?:\#.*?(?=\n)|'(.*?)'|"((?:\\[\\\"]|.)*?)"|((?:\\.|\$.|[^\s\'\"\#])+))/s, load_file_silent("$home/.awsrc")))
@@ -909,18 +909,6 @@ $silent ||= !-t;
 $retry = 3 unless length($retry);
 
 
-$secrets_file ||= "$home/.awssecret" if -e "$home/.awssecret";
-$secrets_file ||= "$home/.s3cfg" if -e "$home/.s3cfg";
-$secrets_file ||= "$home/.passwd-s3fs" if -e "$home/.passwd-s3fs";
-
-foreach (qw/authinfo netrc/)
-{
-    $secrets_file ||= "$home/.$_" if -e "$home/.$_";
-    $secrets_file ||= "$home/.$_.gpg" if -e "$home/.$_.gpg";
-}
-
-$secrets_file ||= "$home/.awssecret";
-
 if ($role)
 {
     if ($role == 1)
@@ -945,62 +933,6 @@ unless ($awskey && $secret)
     ($awskey, $secret, $session) = @ENV{qw(AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN)};
 }
 
-unless ($awskey && $secret)
-{
-    ($awskey, $secret, $session) = @ENV{qw(EC2_ACCESS_KEY EC2_SECRET_KEY AWS_SESSION_TOKEN)};
-}
-
-unless ($awskey && $secret)
-{
-    if (-s $secrets_file)
-    {
-	if ($secrets_file =~ /\.gpg$/)
-	{
-	    # if the secrets_file ends with .gpg, try to decrypt it
-            $secrets_file = "gpg --decrypt $secrets_file|";
-            print STDERR "Overriding --secrets-file to [$secrets_file" if $v;
-	}
-
-	if ($secrets_file =~ /s3cfg$/)
-	{
-	    # if the secrets_file ends with s3cfg, treat it as a s3cmd init file
-	    # 	(can be tested with --secrets-file=s3cfg)
-	    # Poor man's ini parser
-	    my $s3cfg = load_file($secrets_file);
-	    ($awskey, $secret, $session) = map {$s3cfg =~ /^$_\s*=\s*(\S+)/im} qw/access_key secret_key/;
-	}
-	else
-	{
-           my $secret_data = load_file($secrets_file);
-
-           # handle authinfo/netrc format
-           if ($secret_data =~ /^\s*
-	       machine\s+AWS\s+.*?
-	       login\s+(\S+)\s+.*?
-	       password\s+(\S+)\s+.*?
-	       (\s+session\s+(\S+?))?/xm)
-           {
-	       ($awskey, $secret, $session) = ($1, $2, $4),
-           }
-           else # normal space-separated tokens
-           {
-	       ($awskey, $secret, $session) = split(/[\r\s:]+/s, $secret_data);
-           }
-	}
-    }
-}
-
-unless ($awskey && $secret)
-{
-    ($role) = qx[$curl -s --fail --max-time 1 http://169.254.169.254/latest/meta-data/iam/security-credentials/];
-    if ($role)
-    {
-	my $json = qx[$curl -s --fail http://169.254.169.254/latest/meta-data/iam/security-credentials/$role];
-	($awskey) = $json =~ /"AccessKeyId" : "(.*?)"/;
-	($secret) = $json =~ /"SecretAccessKey" : "(.*?)"/;
-	($session) = $json =~ /"Token" : "(.*?)"/;
-    }
-}
 
 if ($assume)
 {
@@ -1078,25 +1010,6 @@ if (!-e "$home/.awsrc" || $sanity_check)
 	}
 	elsif (($ENV{AWS_SECRET_ACCESS_KEY} && $ENV{AWS_ACCESS_KEY_ID}) || ($ENV{EC2_SECRET_KEY} && $ENV{EC2_ACCESS_KEY}))
 	{
-	}
-	elsif (!-e $secrets_file && $secrets_file !~ m/\|$/)
-	{
-	    warn "sanity-check: \"$secrets_file\": file is missing.  (Format: AccessKeyID\\nSecretAccessKey\\n)\n";
-	}
-	elsif (!-r $secrets_file)
-	{
-	    warn "sanity-check: \"$secrets_file\": file is not readable\n";
-	}
-	elsif ($isUnix)
-	{
-	    my $stat = (stat $secrets_file)[2] & 0777;
-
-	    if (($stat & 0477) != 0400)
-	    {
-		my @perm = (qw(x r w)) x 4;
-		my $perm = join("", map {my $s = shift @perm; $_? $s: "-"} (split//, (unpack("B*", pack("n", $stat))))[6 .. 15]);
-		warn "sanity-check: \"$secrets_file\": file permissions are $perm.  Should be -rw-------\n";
-	    }
 	}
     }
 
