@@ -332,7 +332,7 @@ __get_releases_in_store() {
   local _release_type="$1"
   __detect_release_store_type
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
-    AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY ${BASE_PATH}/libexec/aws ls ${AWS_BUCKET_NAME} 2>/dev/null | grep -o "${APP}_.*.${_release_type}.tar.gz" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
+    AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" ${BASE_PATH}/libexec/aws ls ${AWS_BUCKET_NAME} 2>/dev/null | grep -o "${APP}_.*.${_release_type}.tar.gz" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     local _release_file;
     for _release_file in $(ls -1 ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n); do
