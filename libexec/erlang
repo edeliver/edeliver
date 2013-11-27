@@ -377,6 +377,7 @@ upload_release_archive() {
 # upgrades the remote hosts with running nodes to
 # the new release version.
 upgrade_release() {
+  __exec_if_defined "pre_upgrade_release"
   status "Upgrading release to $VERSION"  
   __remote "
     set -e
@@ -384,6 +385,7 @@ upgrade_release() {
     cd ${DELIVER_TO}/${APP} $SILENCE
     bin/${APP} upgrade ${APP}_${VERSION} $SILENCE
   "
+  __exec_if_defined "post_upgrade_release"
 }
 
 # deletes the $APP/releases, $APP/lib and $APP/erts* 
