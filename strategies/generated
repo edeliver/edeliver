@@ -9,8 +9,7 @@
 # Every deliver is a commit on the generated branch. This then gets pushed out
 # to all remote hosts (or just to github:pages).
 
-REQUIRED_CONFIGS+=("HOSTS")
-OPTIONAL_CONFIGS+=("GENERATED_DIR" "GENERATED_BRANCH" "GENERATE_CMD")
+OPTIONAL_CONFIGS+=(GENERATED_DIR GENERATED_BRANCH GENERATE_CMD HOSTS)
 
 REFSPEC="$GENERATED_BRANCH"
 

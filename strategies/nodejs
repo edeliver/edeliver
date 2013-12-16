@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-REQUIRED_CONFIGS+=("HOSTS")
-OPTIONAL_CONFIGS+=("SUPERVISOR")
+REQUIRED_CONFIGS+=(HOSTS)
+OPTIONAL_CONFIGS+=(SUPERVISOR)
 
 # Sincer deliver leverages foreman,
 # it supports all the supervisors that foreman does
@@ -19,5 +19,5 @@ run() {
   git_submodules
   npm_install
   foreman_export
-  launch
+  upstart
 }
