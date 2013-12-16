@@ -26,7 +26,8 @@ efficient deployment tool that just works.
 Your server is running Ubuntu, preferably 10.04 LTS.
 
 Ubuntu + upstart are by no means the holy grail, but they work very
-well. By leveraging foreman, deliver supports all foreman supervisors.
+well. By leveraging foreman, deliver supports all process supervisors
+that foreman supports.
 
 ### 1.2 Remote logins and privileges
 

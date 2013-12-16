@@ -2,8 +2,12 @@
 
 * **shared** strategy with file permissions support (think www-data,
   php-fpm, etc.)
+* **s3** strategy for deploying your website to an S3 bucket (thanks
+  @TheDeveloper)
 * reset remotes to specific **REVISION** (see `deliver check`)
 * configurable **GIT_PUSH** (--all, --mirror, --tags etc.)
+* bluepill & smf support (thanks @jedahan)
+* `-p|--plain` mode, as in no colours, great for CIs such as Jenkins
 
 #### Notices
 

@@ -1,8 +1,3 @@
-"Rather than fitting a large number of complex primitives, choose a small
-number of simple primitives that can be combined in an infinite way to
-produce complex results. What was left out is more important than what
-was put in.| [AT&T - the UNIX operating system][att_unix]
-
 Deliver is a pure bash deployment tool with virtually no dependencies.
 It only cares about having enough info in the shell environment to do
 its job. Why add Ruby or Python wrappers on top of system commands when
@@ -31,8 +26,10 @@ default, it comes with strategies for:
 
   * [generated][10]
 
-You can also add your own, project-specific strategies, or overload existing ones. [Read more about deliver
-strategies.][6]
+  * [s3][11]
+
+You can also add your own, project-specific strategies, or customise
+existing ones. [Read more about deliver strategies.][6]
 
 
 ## 1 INSTALLATION
@@ -145,10 +142,10 @@ exposed an API and had decent test coverage, anything went. Yes,
 
 ## INSPIRATION
 
-_Rather than fitting a large number of complex primitives, choose a small
+"Rather than fitting a large number of complex primitives, choose a small
 number of simple primitives that can be combined in an infinite way to
 produce complex results. What was left out is more important than what
-was put in._ [AT&T - the UNIX operating system][att_unix]
+was put in." [AT&T - the UNIX operating system][att_unix]
 
 
 
@@ -162,4 +159,5 @@ was put in._ [AT&T - the UNIX operating system][att_unix]
 [8]: http://gerhard.github.com/deliver
 [9]: http://c2990942.r42.cf0.rackcdn.com/deliver-check.png
 [10]: strategies/generated
+[11]: strategies/s3
 [att_unix]: http://www.youtube.com/watch?v=tc4ROCJYbm0
