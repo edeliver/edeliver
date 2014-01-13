@@ -25,7 +25,7 @@ __help() {
   ${txtbld}Local Commands:${txtrst}
   edeliver check release|config [--version=<release-version>]
   edeliver show releases|appups|relups
-  edeliver edit relup|appup
+  edeliver edit relup|appups [--version=<release-version>]
   edeliver upload|download [release|upgrade <release-version>]|<src-file-name> [<dest-file-name>]
   edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
 
@@ -183,10 +183,10 @@ if (( $# )); then
         arg="$1" && shift
         case "${arg}" in
           (appup|appups)
-            EDIT_CMD="appups"
+            COMMAND_INFO="appups"
           ;;
           (relup|relups)
-            EDIT_CMD="relups"
+            COMMAND_INFO="relup"
           ;;
           (*)
             __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2      
@@ -331,6 +331,7 @@ case "${COMMAND}" in
     NODE_ACTION="${COMMAND}"
   ;;
   (check|show|edit)
+    echo "command info ${COMMAND_INFO}"
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
     if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
       __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      

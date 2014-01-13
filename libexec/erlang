@@ -233,6 +233,64 @@ copy_release_to_release_store() {
 
 }
 
+# copies the release from the release store
+# to a local temp dir which is set to LOCAL_RELEASE_TMP_DIR
+# arg1 : release type: (release|upgrade)
+# arg2 : release version
+copy_release_to_local_temp_dir() {
+  __detect_release_store_type
+  local _release_type="$1"
+  local _release_version="$2"
+  status "Copying release from $RELEASE_STORE_TYPE release store to local temp dir"
+  mkdir -p "${LOCAL_RELEASE_STORE}/.tmp"
+  local _local_tmp_dir=$(mktemp -d "${LOCAL_RELEASE_STORE}/.tmp/${APP}_${_release_version}.${_release_type}.XXXXXX")
+  [[ "$MODE" = "verbose" ]] && echo "Temp dir: ${_local_tmp_dir}" 
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
+    download_file_from_s3_release_store "${APP}_${_release_version}.${_release_type}.tar.gz" "${_local_tmp_dir}/${APP}_${_release_version}.${_release_type}.tar.gz"
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
+    cp ${RELEASE_STORE}/releases/${APP}_${_release_version}.${_release_type}.tar.gz ${_local_tmp_dir}
+  else 
+    error_message "Cannot copy releases from store for store type ${RELEASE_STORE_TYPE}"; exit 2
+  fi
+  LOCAL_RELEASE_TMP_DIR="$_local_tmp_dir"
+}
+
+# copies a local file to the local or remote release store
+upload_file_to_release_store() {
+  __detect_release_store_type
+  local _source_file="$1"
+  local _destination_file="$2"
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
+    upload_file_to_s3_release_store "$_source_file" "$_destination_file"
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
+    status "Copying ${_source_file} to local release store"
+    [ "$FORCE" != "true" ] && file_exists_in_store $(basename $_destination_file) && {
+      read -n1 -p "${txtylw}Destination File '$_destination_file' already uploaded. Overwrite? (y/n)${txtrst}"
+      echo
+      [[ $REPLY = [yY] ]] || exit 1
+    }    
+    cp $_source_file ${RELEASE_STORE}/releases/${_destination_file} || exit 2
+  else 
+    error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
+  fi  
+}
+
+upload_file_to_s3_release_store() {
+  local _source_file=$1
+  local _destination_file=$(basename "$2")
+  [ ! -f "$_source_file" ] && error "\nFAILED to upload $_source_file.\nFile does not exist.\n" && exit 2
+  [ "$FORCE" != "true" ] && file_exists_in_store $_destination_file && {
+    read -n1 -p "${txtylw}Destination File '$_destination_file' already uploaded. Overwrite? (y/n)${txtrst}"
+    echo
+    [[ $REPLY = [yY] ]] || exit 1
+  }
+  status "Uploading file $_source_file to $_destination_file"
+  AWS_ARGUMENTS="put ${AWS_BUCKET_NAME}/${_destination_file} ${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws || {
+      error "\nFAILED to upload $_source_file\n"
+  }
+}
+
+
 # copies the generated appup files from the remote build host
 # to the release store
 copy_appups_to_release_store() {
@@ -247,12 +305,40 @@ copy_appups_to_release_store() {
   __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_appup_files} ${RELEASE_STORE}/appup/${_old_version}-${RELEASE_VERSION}"
 }
 
+file_exists_in_store() {
+  local _file=$1
+  local _release_type=${2:-*}
+  for i in $(__get_releases_in_store "$_release_type"); do
+    [[ "$i" = "$_file" ]] && return 0
+  done
+  return 1;
+}
+
+download_file_from_s3_release_store() {
+  local _source_file=$1
+  local _destination_file=$2
+  if [ -f "$_destination_file" ] && [ "$FORCE" != "true" ]; then
+    read -n1 -p "${txtylw}Destination File '$_destination_file' already exists. Overwrite? (y/n)${txtrst}"
+    echo
+    [[ $REPLY = [yY] ]] || exit 1
+  fi
+  file_exists_in_store $_source_file || {
+    error "\nFAILED to download $_source_file.\nFile does not exist in remote release store.\n"
+    exit 2
+  }
+  status "Downloading $_source_file to $_destination_file"  
+  AWS_ARGUMENTS="get ${AWS_BUCKET_NAME}/${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws 2>/dev/null > "$_destination_file" || {
+      [[ -f "$_destination_file" ]] && [[ ! -s "$_destination_file" ]] && rm "$_destination_file"
+      error "\nFAILED to download $_source_file\n"
+  }
+}
 
 # reselects the release or update to deploy to productions hosts
 # from the release store. Sets the RELEASE_FILE and VERSION variables
 # takes the release type as parameter (release|update|upgrade)
 select_release_from_store() {
   local _release_type="$1"
+  local _action=${2:-deploy}
   if ! [ -z $VERSION ]; then
     RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
     return
@@ -269,8 +355,8 @@ select_release_from_store() {
       exit 2
     else
       status "Selecting release"
-      hint_message "Found ${#_release_files[@]} different versions to deploy."
-      hint_message "Type the version you want to deploy"
+      hint_message "Found ${#_release_files[@]} different versions to ${_action}."
+      hint_message "Type the version you want to ${_action}"
       hint_message "or set --version=X in the command line."
       hint_message "Versions:"
       local _release_file
