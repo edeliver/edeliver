@@ -10,6 +10,7 @@ run() {
   echo
   local _srcDir
   local _relFile
+  local _relxFile
   local _appFile
   for _srcDir in $(git diff --name-only ${FROM}..${TO} | grep -Eo ".*src/" | uniq); do
     for _appFile in $(ls -1 ${_srcDir}*.app.src | head); do
@@ -32,6 +33,18 @@ run() {
       _newReleaseVersion=$_newVersion
       echo "${_relFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
       sed -E -e "s/(\{[[:space:]]*rel[[:space:]]*,[[:space:]]*\"[^\"]+\"[[:space:]]*,[[:space:]]*)\"${_appVersion}\"/\1\"${_newVersion}\"/g" -i "" ${_relFile}
+    fi    
+  done
+  for _relxFile in $(find  . -name relx.config); do
+    local _releaseInfo=$(cat "${_relxFile}" | grep -Eo "\\{\\s*release\\s*,\\s*\\{\\s*'[^']+'\\s*,\\s*\"[^\"]+\"\\s*\\}" | grep -o "${APP}.*");
+    if [[ -n "$_releaseInfo" ]]; then
+      local _appVersion=${_releaseInfo#${APP}\'*}
+      _appVersion=${_appVersion%\"*}
+      _appVersion=${_appVersion#*\"}
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      _newReleaseVersion=$_newVersion
+      echo "${_relxFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
+      sed -E -e "s/(\{[[:space:]]*release[[:space:]]*,[[:space:]]*\{[[:space:]]*'[^']+'[[:space:]]*,[[:space:]]*)\"${_appVersion}\"/\1\"${_newVersion}\"/g" -i "" ${_relxFile}
     fi    
   done
   if [[ -n "$_newReleaseVersion" ]]; then
