@@ -153,7 +153,7 @@ erlang_generate_release() {
     cd $DELIVER_TO $SILENCE
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then 
       echo \"using rebar to generate release\" $SILENCE
-      $REBAR_CMD -f generate $SILENCE
+      $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate $SILENCE
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to generate release\" $SILENCE
       $RELX_CMD release $SILENCE
