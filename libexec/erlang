@@ -132,7 +132,7 @@ erlang_clean_compile() {
       $REBAR_CMD compile $SILENCE
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\" $SILENCE
-      $MIX_CMD do clean, deps.compile $SILENCE
+      APP=\"$APP\" $MIX_CMD do clean, deps.compile $SILENCE
     fi
   "
 
