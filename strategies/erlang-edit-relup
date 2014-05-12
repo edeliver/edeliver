@@ -16,6 +16,7 @@ run() {
   tar -C "${LOCAL_RELEASE_TMP_DIR}" -xz${_tar_verobose}f "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}"
   [[ "$(uname -s)" = "Darwin" ]] && local _modification_time_cmd='stat -f "%m"' || local _modification_time_cmd='stat -c "%Z"'
   local _modification_time=$(${_modification_time_cmd} "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup")
+  __exec_if_defined "pre_edit_relup" "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup" && status "Patched ${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup"
   ${EDELIVER_EDITOR} "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup"
   while cat "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup" | erl | grep "syntax error"  ; do
     read -n1 -p "${txtylw}Relup file contains no valid erlang term. Edit again? (y/n)${txtrst}"; echo
