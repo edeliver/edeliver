@@ -305,5 +305,6 @@ __log() {
 #
 __exec_if_defined() {
   local _function="$1"
-  declare -F "$_function" > /dev/null && eval "$_function"
+  shift
+  declare -F "$_function" > /dev/null && eval "$_function $@"
 }
