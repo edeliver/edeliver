@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+OPTIONAL_CONFIGS+=("REBAR_CONFIG")
+
+EDELIVER_EDITOR=${EDELIVER_EDITOR:=$GIT_EDITOR}
+EDELIVER_EDITOR=${EDELIVER_EDITOR:=vi}
+
+
+run() {
+  select_release_from_store "upgrade"  
+  copy_release_to_local_temp_dir "upgrade" "$VERSION"
+  [[ "$MODE" = "verbose" ]] && local _tar_verobose="v" || _tar_verobose=""
+  local _release_file_name="${APP}_${VERSION}.upgrade.tar.gz"
+  status "Extracting tar to ${LOCAL_RELEASE_TMP_DIR} temp dir"
+  tar -C "${LOCAL_RELEASE_TMP_DIR}" -xz${_tar_verobose}f "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}"
+  [[ "$(uname -s)" = "Darwin" ]] && local _modification_time_cmd='stat -f "%m"' || local _modification_time_cmd='stat -c "%Z"'
+  local _modification_time=$(${_modification_time_cmd} "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup")
+  ${EDELIVER_EDITOR} "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup"
+  while cat "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup" | erl | grep "syntax error"  ; do
+    read -n1 -p "${txtylw}Relup file contains no valid erlang term. Edit again? (y/n)${txtrst}"; echo
+    [[ $REPLY = [yY] ]] && ${EDELIVER_EDITOR} "${LOCAL_RELEASE_TMP_DIR}/releases/${VERSION}/relup" || break    
+  done
+  
+  if [[ -n "$_modification_time" ]] && [[ "$_modification_time" = $(${_modification_time_cmd} "$LOCAL_RELEASE_TMP_DIR/releases/${VERSION}/relup") ]]; then
+    hint_message "\n\tRelup file has not been changed\n"
+  else
+    local _cur_dir=$(pwd)
+    status "Creating tar ${_release_file_name}"
+    cd "${LOCAL_RELEASE_TMP_DIR}" && tar --exclude "${_release_file_name}"  -cz${_tar_verobose}f "$_release_file_name" * && cd "$_cur_dir"
+    upload_file_to_release_store "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}" "${_release_file_name}"
+  fi
+  [[ -d "${LOCAL_RELEASE_TMP_DIR}" ]] && \
+  [[ -n "${LOCAL_RELEASE_TMP_DIR}" ]] && \
+  [[ -d "${LOCAL_RELEASE_TMP_DIR}/lib" ]] && \
+  [[ -d "${LOCAL_RELEASE_TMP_DIR}/releases" ]] && \
+  [[ -f "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}" ]] && \
+  status "Cleaning up tmp dir ${LOCAL_RELEASE_TMP_DIR}" && rm -rf "${LOCAL_RELEASE_TMP_DIR}"
+}
+
+
+
+  
