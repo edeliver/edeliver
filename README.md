@@ -60,7 +60,7 @@ of if using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to 
 And link the `edeliver` binary to the root of your project directory: 
 
     ./rebar get-deps # when using rebar, or ...
-    ./mix do deps.get, deps.compile # … when using mix
+    mix do deps.get, deps.compile # … when using mix
     ln -s ./deps/edeliver/bin/edeliver .
     
 ### Configuration
