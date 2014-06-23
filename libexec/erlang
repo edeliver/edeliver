@@ -21,7 +21,7 @@ else
 fi
 
 REBAR_CMD="./rebar $REBAR_OPTIONS"
-MIX_CMD="./mix"
+MIX_CMD="mix"
 RELX_CMD="./relx"
 
 # sets the build host, user and path as deliver hosts and path
