@@ -293,7 +293,7 @@ do
       elif [[ "${arg}" =~ ^--version= ]]; then
         VERSION=${arg##--version=}
       else
-        hint_message "Unknown argument ${arg} ignored"
+        [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi      
     ;;
   esac
