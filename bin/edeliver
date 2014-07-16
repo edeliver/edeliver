@@ -27,6 +27,9 @@ source "$BASE_PATH/libexec/erlang"
 
 trap __graceful_stop SIGINT SIGTERM
 
+if [ -f "$ORIGIN_DIR/.deliver/help" ]; then
+  source "$ORIGIN_DIR/.deliver/help"
+fi
 source "$BASE_PATH/libexec/erlang-init"
 
 __capture_runtime_configs

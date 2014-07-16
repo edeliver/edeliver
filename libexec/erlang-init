@@ -28,8 +28,9 @@ __help() {
   edeliver edit relup|appups [--version=<release-version>]
   edeliver upload|download [release|upgrade <release-version>]|<src-file-name> [<dest-file-name>]
   edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
-
-${txtbld}Options:${txtrst}
+"
+  __exec_if_defined "print_custom_commands_help"
+  echo -e "${txtbld}Options:${txtrst}
   -C, --compact         Displays every task as it's run, silences all output. (default mode)
   -V, --verbose         Same as above, does not silence output.
   -P, --plain           Displays every task as it's run, silences all output. No colouring. (CI)
