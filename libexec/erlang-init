@@ -287,7 +287,7 @@ do
         REVISION="${arg##--revision=}"
       elif [[ "${arg}" =~ ^--tag= ]]; then
         TAG="${arg##--tag=}"
-        REVISION="${REVISION:=$TAG}"
+        REVISION="$(git rev-parse $TAG)"
       elif [[ "${arg}" =~ ^--branch= ]]; then
         BRANCH=${arg##--branch=}
       elif [[ "${arg}" =~ ^--version= ]]; then
