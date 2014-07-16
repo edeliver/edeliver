@@ -227,7 +227,7 @@ if (( $# )); then
       exit 0
     ;;
     (*)
-      __help; error_message "Unknown command ${arg}.\n"; exit 2      
+      COMMAND="${arg}"; 
     ;;
   esac
 else # no command found
@@ -330,18 +330,20 @@ case "${COMMAND}" in
     STRATEGY="erlang-node-execute"
     NODE_ACTION="${COMMAND}"
   ;;
-  (check|show|edit)
-    echo "command info ${COMMAND_INFO}"
-    STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
-    if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
-      __help; error_message "Command ${COMMAND} not implemented yet.\n"; exit 2      
-    fi
-  ;;
   (upload|download)
     STRATEGY="erlang-release-store-copy"
   ;;
   (increase)
     STRATEGY="erlang-increase-versions"
+  ;;
+  (*)
+    STRATEGY="erlang-${COMMAND}"
+    [[ -n "${COMMAND_INFO}" ]] && STRATEGY="${STRATEGY}-${COMMAND_INFO}"
+    if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
+      if ! [[ -f "$ORIGIN_DIR/.deliver/strategies/${STRATEGY}" ]]; then
+        __help; error_message "Unknown command ${COMMAND}.\n"; exit 2      
+      fi
+    fi
   ;;
 esac
 
