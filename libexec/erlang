@@ -203,13 +203,15 @@ erlang_archive_release() {
 }
 
 # copies the generated release from the remote build host
-# to the release store. takes the release type as parameter
-# (release|upgrade)
+# to the release store. takes the release type as first
+# parameter (release|upgrade) and the revision starting
+# with a dash as optional second parameter (e.g. "-abc123")
 copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
   __detect_release_store_type
   local _release_type="$1"
+  local _release_revision="$2"
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"  
   else # used rebar to generate release  
@@ -222,11 +224,11 @@ copy_release_to_release_store() {
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $(dirname ${_release_file}) $SILENCE
-      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
+      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
     status "Copying $(basename $_release_file) to release store"    
     __create_directory_in_release_store "/releases"
-    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}.${_release_type}.tar.gz"
+    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
   else 
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
