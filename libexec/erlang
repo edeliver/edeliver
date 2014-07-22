@@ -454,8 +454,7 @@ upload_release_archive() {
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
-      mkdir -p ${_destination_directory} $SILENCE
-    "  
+      mkdir -p ${_destination_directory} "  
     __parallel_scp "${RELEASE_STORE}/releases/${_release_file}" "${_destination_directory}/${APP}_${_release_version}.tar.gz"
   else 
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2    
@@ -531,8 +530,7 @@ remote_extract_release_archive() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE
-  "  
+    tar -xzvf ${_archive} $SILENCE "  
 }
 
 # gets the sha hash of the latest commit of the branch to deploy
