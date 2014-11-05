@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("RELEASE_STORE")
+REQUIRED_CONFIGS+=("LOCAL_RELEASE_STORE")
+
+REQUIRED_CONFIGS+=("COMMAND")
+REQUIRED_CONFIGS+=("COMMAND_INFO")
+OPTIONAL_CONFIGS+=("VERSION")
+
+run() {
+  
+  local _release_type="$COMMAND_INFO"
+  [[ "$MODE" = "verbose" ]] && local _tar_verobose="v" || local _tar_verobose=""
+  if [[ "$COMMAND" = "unpack" ]]; then
+    select_release_from_store "${_release_type}"
+    validate_release_is_in_store "${_release_type}" "$VERSION"
+    [[ $? -ne 0 ]] && exit 1
+    trap '__cleanup' EXIT
+    copy_release_to_local_temp_dir "$_release_type" "$VERSION"
+    local _release_file_name="${APP}_${VERSION}.${_release_type}.tar.gz"
+    local _unpacked_dir=${LOCAL_RELEASE_TMP_DIR%.*}
+    status "Extracting tar ${LOCAL_RELEASE_TMP_DIR} to temp dir"
+    if [[ -d "${_unpacked_dir}" && "$FORCE" != "true" ]]; then
+      read -n1 -p "${txtylw}Extracted ${_release_type} dir '$_unpacked_dir' already exist. Overwrite? (y/n)${txtrst}"
+      echo
+      [[ $REPLY = [yY] ]] && rm -rf ${_unpacked_dir} || exit 1
+    fi
+    mkdir "${_unpacked_dir}"
+    tar -C "${_unpacked_dir}" -xz${_tar_verobose}f "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}"
+    status "Extracted tar to temp dir ${_unpacked_dir}"
+    __cleanup
+  elif [[ "$COMMAND" = "pack" ]]; then
+    [[ -z "$VERSION" ]] && __select_version_to_pack "$_release_type"
+    local _unpacked_dir="${LOCAL_RELEASE_STORE}/.tmp/${APP}_${VERSION}.${_release_type}"
+    [[ ! -d "$_unpacked_dir" ]] && error_message "${_unpacked_dir} does not exist!" && exit 1
+    status "Creating tar for $_unpacked_dir"
+    trap '__cleanup' EXIT
+    LOCAL_RELEASE_TMP_DIR=$(mktemp -d "${_unpacked_dir}.XXXXXX")
+    local _cur_dir=$(pwd)
+    local _release_file_name="${APP}_${VERSION}.${_release_type}.tar.gz"
+    status "Creating tar ${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}"
+    cd "${_unpacked_dir}" && pwd && tar -cz${_tar_verobose}f "${_cur_dir}/${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}" * && cd "$_cur_dir"
+    upload_file_to_release_store "${LOCAL_RELEASE_TMP_DIR}/${_release_file_name}" "${_release_file_name}"
+    __cleanup
+  else
+    error_message "Unknown command"
+  fi
+}
+
+__cleanup() {
+  if [[ -n "$LOCAL_RELEASE_TMP_DIR" && -d "$LOCAL_RELEASE_TMP_DIR" ]]; then
+    status "Cleaning up tmp dir ${LOCAL_RELEASE_TMP_DIR}" && rm -rf "${LOCAL_RELEASE_TMP_DIR}" 
+  fi
+}
+
+__select_version_to_pack() {
+  local _release_type="$1" 
+  local _tmp_dir="${LOCAL_RELEASE_STORE}/.tmp/"
+  local _file _file_name _version
+  local _release_versions=()
+  while read _version; do
+    _release_versions+=($_version)
+  done < <(
+  {
+    for _file in ${_tmp_dir}*; do
+      _file_name=$(basename $_file)
+      [[ -d "$_file" && "$_file_name" =~ ^${APP}_.*\.${_release_type}$ ]] && _version=${_file_name%.${_release_type}*} && _version=${_version/${APP}_/} && echo "$_version"
+    done 
+  } | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n )
+  if [ ${#_release_versions[@]} -eq 1 ]; then
+    VERSION=${_release_versions[0]}
+  elif [ ${#_release_versions[@]} -eq 0 ]; then
+    error_message "No $_release_type(s) found in ${_tmp_dir}."
+    exit 2
+  else
+    status "Selecting version"
+    hint_message "Found ${#_release_versions[@]} different ${_release_type} versions to ${COMMAND}."
+    hint_message "Type the version you want to ${COMMAND}"
+    hint_message "or set --version=X in the command line."
+    hint_message "Versions:"
+    for _version in "${_release_versions[@]}"; do
+      hint_message " $_version"
+    done
+    hint_message "Enter Version:"
+    read VERSION
+  fi
+}
+
+

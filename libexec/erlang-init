@@ -28,6 +28,7 @@ __help() {
   edeliver edit relup|appups [--version=<release-version>]
   edeliver upload|download [release|upgrade <release-version>]|<src-file-name> [<dest-file-name>]
   edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
+  edeliver unpack|pack release|upgrade [--version=<release-version>]
 "
   __exec_if_defined "print_custom_commands_help"
   echo -e "${txtbld}Options:${txtrst}
@@ -131,6 +132,22 @@ if (( $# )); then
       else 
         __help; error_message "No check type found. Use release|config\n"; exit 2
       fi            
+    ;;
+    (unpack|pack)
+      COMMAND="${arg}"
+      if (( $# )); then
+        arg="$1" && shift
+        case "${arg}" in
+          (release|upgrade)
+            COMMAND_INFO="${arg}"
+          ;;
+          (*)
+            __help; error_message "Unknown release type ${arg}. Use release|upgrade\n"; exit 2      
+          ;;
+        esac
+      else # no build type found
+        __help; error_message "No release type found. Use release|upgrade\n"; exit 2
+      fi      
     ;;
     (show)
       COMMAND="${arg}"
@@ -333,6 +350,9 @@ case "${COMMAND}" in
   ;;
   (upload|download)
     STRATEGY="erlang-release-store-copy"
+  ;;
+  (unpack|pack)
+    STRATEGY="erlang-unpack-pack"
   ;;
   (increase)
     STRATEGY="erlang-increase-versions"
