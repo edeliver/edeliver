@@ -346,7 +346,7 @@ select_release_from_store() {
     return
   else
     __detect_release_store_type
-    local _release_files=( $(__get_releases_in_store "$_release_type") )
+    local _release_files=( $(__get_releases_in_store "$_release_type" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=${RELEASE_FILE/${APP}_/}
