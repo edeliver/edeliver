@@ -157,7 +157,11 @@ erlang_generate_release() {
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to generate release\" $SILENCE
       $RELX_CMD release $SILENCE
+    elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
+      echo \"using mix to generate release\" $SILENCE
+      MIX_ENV=prod $MIX_CMD release $SILENCE
     fi    
+
   "
 
   __exec_if_defined "post_erlang_generate_release"
