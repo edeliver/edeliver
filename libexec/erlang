@@ -191,6 +191,7 @@ relx_generate_relup() {
 erlang_archive_release() {
   __detect_remote_release_dir
   __detect_remote_release_version
+  [[ "$RELEASE_CMD" = "mix" ]] && return 0 # mix archives release automatically
   status "Building archive of release ${RELEASE_VERSION}"  
   # create tar
   __remote "
@@ -218,6 +219,8 @@ copy_release_to_release_store() {
   local _release_revision="$2"
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"  
+  elif [[ "$RELEASE_CMD" = "mix" ]]; then
+    local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"  
   else # used rebar to generate release  
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"  
   fi
