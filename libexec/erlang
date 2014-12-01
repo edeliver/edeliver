@@ -529,6 +529,25 @@ remote_clean_release_dir() {
       "  
 }
 
+# starts the deployed release. if release is already running,
+# it is restarted.
+force_start_release() {
+  status "Starting deployed release"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd ${DELIVER_TO}/${APP} $SILENCE
+    ping_result=\$(bin/${APP} ping || :)
+    if [[ \"\$ping_result\" = \"pong\" ]]; then
+      echo \"restarting node\" $SILENCE
+      bin/${APP} restart $SILENCE
+    else
+      echo \"starting node\" $SILENCE
+      bin/${APP} start $SILENCE
+    fi
+  "  
+}
+
 # installs a release at all production hosts
 remote_extract_release_archive() {
   local _release_version=${1:-"$VERSION"}

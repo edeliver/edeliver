@@ -2,6 +2,7 @@
 
 
 OPTIONAL_CONFIGS+=("CLEAN_DEPLOY")
+OPTIONAL_CONFIGS+=("START_DEPLOY")
 
 require_deploy_config
 set_deploy_hosts
@@ -13,4 +14,5 @@ run() {
   upload_release_archive
   [[ "$CLEAN_DEPLOY" = "true" ]] && remote_clean_release_dir
   remote_extract_release_archive
+  [[ "$START_DEPLOY" = "true" ]] && force_start_release
 }
