@@ -245,7 +245,11 @@ copy_release_to_release_store() {
       set -e
       [ -f ~/.profile ] && source ~/.profile
       [ -f \"$_release_file\" ] 
-      cat $_release_file | ssh $_release_store_host \"cat > $_dest_file_name\"
+      if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then 
+        cp $_release_file $_dest_file_name 
+      else 
+        cat $_release_file | ssh $_release_store_host \"cat > $_dest_file_name\"
+      fi
       exit
     "
     ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
@@ -543,7 +547,11 @@ upload_release_archive() {
     "
     for _host in $_deploy_hosts; do
       _remote_job="$_remote_job
-        cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &       
+        if [[ \"$_host\" = \"$_release_store_host\" ]]; then 
+          cp $_release_file $_dest_file_name &
+        else 
+          cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &       
+        fi
         background_jobs_pids+=(\"\$!\")
       "        
     done
