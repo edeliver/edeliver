@@ -466,13 +466,11 @@ list_releases_in_store() {
   printf "+---------+---------+---------------------\n"
   local _release_file
   for _release_file in "${_release_files[@]}"; do
-    # echo $_release_file
     local _release_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
     local _removed_app_name=${_release_file/${APP}_/}
     local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
     local _current_release_type=${_removed_archive_extension/$_release_version./}
     printf " %${_app_column_width}s | %7s | %7s | %s\n" "$APP" "$_release_version"  "$_current_release_type" "$_release_file"
-    
   done
 }
 
@@ -494,7 +492,7 @@ __get_releases_in_store() {
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $_release_store_path
-      ls -1
+      ls -1 ${APP}_*.${_release_type}.tar.gz 
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
