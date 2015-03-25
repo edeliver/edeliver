@@ -117,7 +117,7 @@ __find_all_strategies() {
     strategies_path+=("$ORIGIN_DIR/.deliver/strategies")
   fi
 
-  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9/.-]*$' -type f ! -iname 'readme*')
+  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9_/.-]*$' -type f ! -iname 'readme*')
   for strategy in $STRATEGIES
   do
     STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
