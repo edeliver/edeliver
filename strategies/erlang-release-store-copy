@@ -17,28 +17,28 @@ run() {
       __help; error_message "No $COMMAND_INFO version given\n"; exit 2
     fi
   fi
-  
+
   [ -z "$DESTINATION_FILE" ] && DESTINATION_FILE="$RELEASE_FILE"
-  
+
   [ -d "$DESTINATION_FILE" ] && DESTINATION_FILE="${DESTINATION_FILE%%/}/$RELEASE_FILE"
-  
+
   __detect_release_store_type
-    
+
   if [[ "$COMMAND" = "download" ]]; then
     if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
       download_file_from_s3_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
     elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
-      download_file_from_remote_release_store "$RELEASE_FILE" "$DESTINATION_FILE"      
-    else 
-      error_message "Cannot download releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
+      download_file_from_remote_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
+    else
+      error_message "Cannot download releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
     fi
   elif [[ "$COMMAND" = "upload" ]]; then
     if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
       upload_file_to_s3_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
     elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
       upload_file_to_remote_release_store "$RELEASE_FILE" "$DESTINATION_FILE"
-    else 
-      error_message "Cannot upload releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
+    else
+      error_message "Cannot upload releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
     fi
   fi
 }

@@ -4,8 +4,8 @@ require_deploy_config
 set_deploy_hosts
 
 run() {
-  authorize_hosts  
-  authorize_remote_hosts 
+  authorize_hosts
+  authorize_remote_hosts
   select_release_from_store "upgrade"
   upload_release_archive "${DELIVER_TO}/${APP}/releases"
   upgrade_release

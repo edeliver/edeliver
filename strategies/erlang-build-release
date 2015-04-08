@@ -9,12 +9,12 @@ OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 set_build_hosts
 
 run() {
-  authorize_hosts  
+  authorize_hosts
   init_app_remotely
   git_push
-  git_reset_remote 
+  git_reset_remote
   git_stash_remote
-  authorize_remote_hosts 
+  authorize_remote_hosts
   erlang_get_and_update_deps
   erlang_clean_compile
   erlang_generate_release
@@ -24,4 +24,3 @@ run() {
 
 
 
-  

@@ -14,10 +14,10 @@ TO="${TO:=$(get_latest_commit)}"
 set_build_hosts
 
 run() {
-  authorize_hosts  
+  authorize_hosts
   if [[ -n "$WITH" ]]; then
     validate_release_is_in_store "release" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
-    if [[ $? -ne 0 ]]; then 
+    if [[ $? -ne 0 ]]; then
       hint_message "You can build appups also with the --from=<git-tag-or-revision> option\nif the release is not in your release store"; exit 2
     fi
     # push current state
@@ -25,30 +25,30 @@ run() {
     git_push
     git_reset_remote
     git_stash_remote
-  elif [[ -n "$FROM" ]]; then  
+  elif [[ -n "$FROM" ]]; then
     # push current state
     init_app_remotely
     git_push
-    git_reset_remote  
+    git_reset_remote
     git_stash_remote
     # checkout old version
     git_checkout_remote $FROM
-    # build old release 
+    # build old release
     erlang_get_and_update_deps
     erlang_clean_compile
     erlang_generate_release
     [[ "$RELEASE_CMD" != "relx" ]] && rename_release_add_version
-    OLD_RELEASE_VERSION=${RELEASE_VERSION}  
+    OLD_RELEASE_VERSION=${RELEASE_VERSION}
   else
     error_message "no old version specified"; exit 2
-  fi  
+  fi
 
   # checkout new version
   git_checkout_remote $TO
   # build new release
   erlang_get_and_update_deps
   erlang_clean_compile
-  
+
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     relx_generate_relup
   else
@@ -68,7 +68,7 @@ run() {
     [[ "$RELEASE_CMD" != "relx" ]] && rename_release_add_version "old" "$WITH"
     # restore new release
     [[ "$RELEASE_CMD" != "relx" ]] && rename_release_remove_version $NEW_RELEASE_VERSION
-  fi  
+  fi
 
   # generate default appups
   [[ "$RELEASE_CMD" != "relx" ]] && rebar_generate_appup $OLD_RELEASE_VERSION

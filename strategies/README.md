@@ -48,7 +48,7 @@ as this user, without any password.
 
 If you're already using chef,
 [bootstrap-cookbook](https://github.com/gchef/bootstrap-cookbook) with the
-`apps` recipe will set everything up for you. 
+`apps` recipe will set everything up for you.
 
 ### 1.4 [RVM](http://beginrescueend.com/)
 

@@ -16,12 +16,12 @@ run() {
     for _appFile in $(ls -1 ${_srcDir}*.app.src | head); do
       local _appVersion=$(grep -Eo "\\{\\s*vsn\\s*,\\s*\"[^\"]+\"\\s*\\}" ${_appFile} | grep -Eo "\"[^\"]+\"")
       _appVersion=${_appVersion//[\"]/}
-      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE)
       echo "${_appFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
       sed -E -e "s/\{[[:space:]]*vsn[[:space:]]*,[[:space:]]*\"${_appVersion}\"[[:space:]]*\}/\{vsn, \"${_newVersion}\"}/g" -i "" ${_appFile}
     done
   done
-  echo  
+  echo
   local _newReleaseVersion
   for _relFile in $(find  . -name reltool.config); do
     local _releaseInfo=$(cat "${_relFile}" | grep -Eo "\\{\\s*rel\\s*,\\s*\"[^\"]+\"\\s*,\\s*\"[^\"]+\"\\s*" | grep -o "${APP}.*");
@@ -29,11 +29,11 @@ run() {
       local _appVersion=${_releaseInfo#${APP}\"*}
       _appVersion=${_appVersion%\"*}
       _appVersion=${_appVersion#*\"}
-      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE)
       _newReleaseVersion=$_newVersion
       echo "${_relFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
       sed -E -e "s/(\{[[:space:]]*rel[[:space:]]*,[[:space:]]*\"[^\"]+\"[[:space:]]*,[[:space:]]*)\"${_appVersion}\"/\1\"${_newVersion}\"/g" -i "" ${_relFile}
-    fi    
+    fi
   done
   for _relxFile in $(find  . -name relx.config); do
     local _releaseInfo=$(cat "${_relxFile}" | grep -Eo "\\{\\s*release\\s*,\\s*\\{\\s*'[^']+'\\s*,\\s*\"[^\"]+\"\\s*\\}" | grep -o "${APP}.*");
@@ -41,11 +41,11 @@ run() {
       local _appVersion=${_releaseInfo#${APP}\'*}
       _appVersion=${_appVersion%\"*}
       _appVersion=${_appVersion#*\"}
-      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE) 
+      _newVersion=$(increase_version ${_appVersion} $INCREASE_VERSION_TYPE)
       _newReleaseVersion=$_newVersion
       echo "${_relxFile}: ${bldylw}${_appVersion} -> ${_newVersion}${txtrst}"
       sed -E -e "s/(\{[[:space:]]*release[[:space:]]*,[[:space:]]*\{[[:space:]]*'[^']+'[[:space:]]*,[[:space:]]*)\"${_appVersion}\"/\1\"${_newVersion}\"/g" -i "" ${_relxFile}
-    fi    
+    fi
   done
   if [[ -n "$_newReleaseVersion" ]]; then
     hint_message "\nNew release version is: ${bldylw}${_newReleaseVersion}${txtrst}"
@@ -58,7 +58,7 @@ increase_version() {
   local _versionType=${2:-minor} # version | major | minor
   local _newVersion
   if [ "${_versionType}" = "version" ]; then
-    _newVersion=${_version%%\.*} 
+    _newVersion=${_version%%\.*}
     _newVersion="$(($_newVersion+1)).0"
   else
     if [[ "$(echo "${_version}" | grep -o "\\." | wc -l)" -gt 1 ]]; then
@@ -66,7 +66,7 @@ increase_version() {
       if [ "${_versionType}" = "minor" ]; then
         _newVersion=$(increase_last_version_part $_version)
       else
-        _newVersion=${_version%\.*} 
+        _newVersion=${_version%\.*}
         _newVersion=$(increase_last_version_part $_newVersion)
       fi
     else
@@ -76,7 +76,7 @@ increase_version() {
       else
         _newVersion=$(increase_last_version_part $_version)
       fi
-    fi    
+    fi
   fi
 
   echo "$_newVersion"
@@ -84,7 +84,7 @@ increase_version() {
 
 increase_last_version_part() {
   local _version="$1"
-  local _newVersion=${_version%\.*} 
+  local _newVersion=${_version%\.*}
   local _partToIncrease=${_version##*\.}
   _partToIncrease=$(($_partToIncrease+1))
   echo "${_newVersion}.${_partToIncrease}"

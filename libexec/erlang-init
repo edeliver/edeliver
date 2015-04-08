@@ -6,19 +6,19 @@ __version() {
 
 __help() {
   __version
-  
+
   echo -e "${txtbld}Usage:${txtrst}
   edeliver <build-command|deploy-command|node-command|local-command> command-info [Options]
   edeliver --help|--version
-  
+
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
-  edeliver build appups|upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+  edeliver build appups|upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
                                [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
-  
+
   ${txtbld}Deploy Commands:${txtrst}
   edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
-  
+
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version [staging|production] [Options]
 
@@ -42,9 +42,9 @@ __help() {
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
 
 ${txtbld}Miscellaneous:${txtrst}
-  Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).  
+  Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).
   You can overwrite any config at runtime:
-  
+
   BUILD_HOST=build-2.acme.com edeliver build release
 "
 }
@@ -78,12 +78,12 @@ if (( $# )); then
             COMMAND_INFO="appup"
           ;;
           (*)
-            __help; error_message "Unknown build type ${arg}. Use release|upgrade\n"; exit 2      
+            __help; error_message "Unknown build type ${arg}. Use release|upgrade\n"; exit 2
           ;;
         esac
       else # no build type found
         __help; error_message "No build type found. Use release|upgrade\n"; exit 2
-      fi      
+      fi
     ;;
     (deploy)
       COMMAND="${arg}"
@@ -94,12 +94,12 @@ if (( $# )); then
             COMMAND_INFO="${arg}"
           ;;
           (*)
-            __help; error_message "Unknown deploy type ${arg}. Use release|upgrade\n"; exit 2      
+            __help; error_message "Unknown deploy type ${arg}. Use release|upgrade\n"; exit 2
           ;;
         esac
       else # no build type found
         __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
-      fi      
+      fi
     ;;
     (start|stop|restart|ping|version)
       COMMAND="${arg}"
@@ -127,12 +127,12 @@ if (( $# )); then
             CHECK_CMD="${arg}"
           ;;
           (*)
-            __help; error_message "Unknown check type ${arg}. Use release|config\n"; exit 2      
+            __help; error_message "Unknown check type ${arg}. Use release|config\n"; exit 2
           ;;
         esac
-      else 
+      else
         __help; error_message "No check type found. Use release|config\n"; exit 2
-      fi            
+      fi
     ;;
     (unpack|pack)
       COMMAND="${arg}"
@@ -143,12 +143,12 @@ if (( $# )); then
             COMMAND_INFO="${arg}"
           ;;
           (*)
-            __help; error_message "Unknown release type ${arg}. Use release|upgrade\n"; exit 2      
+            __help; error_message "Unknown release type ${arg}. Use release|upgrade\n"; exit 2
           ;;
         esac
       else # no build type found
         __help; error_message "No release type found. Use release|upgrade\n"; exit 2
-      fi      
+      fi
     ;;
     (show)
       COMMAND="${arg}"
@@ -165,12 +165,12 @@ if (( $# )); then
             COMMAND_INFO="relups"
           ;;
           (*)
-            __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2      
+            __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2
           ;;
         esac
-      else 
+      else
         __help; error_message "No show command found. Use releases|appups|relups\n"; exit 2
-      fi            
+      fi
     ;;
     (upload|download)
       COMMAND="${arg}"
@@ -183,9 +183,9 @@ if (( $# )); then
               arg="$1" && shift
               VERSION="${arg}"
               (( $# )) && ! [[ "$1" =~ ^- ]] && DESTINATION_FILE="$1" && shift
-            else 
-              __help; error_message "No $COMMAND_INFO version given\n"; exit 2      
-            fi            
+            else
+              __help; error_message "No $COMMAND_INFO version given\n"; exit 2
+            fi
           ;;
           (*)
             RELEASE_FILE="${arg}"
@@ -194,7 +194,7 @@ if (( $# )); then
         esac
       else # no build type found
         __help; error_message "No file to $COMMAND found. Use release|upgrade <version> or file name\n"; exit 2
-      fi      
+      fi
     ;;
     (edit)
       COMMAND="${arg}"
@@ -208,12 +208,12 @@ if (( $# )); then
             COMMAND_INFO="relup"
           ;;
           (*)
-            __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2      
+            __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2
           ;;
         esac
-      else 
+      else
         __help; error_message "No edit command found. Use appup|relup\n"; exit 2
-      fi            
+      fi
     ;;
     (increase)
       COMMAND="${arg}"
@@ -229,13 +229,13 @@ if (( $# )); then
             COMMAND_INFO="versions"
           ;;
           (*)
-            __help; error_message "Unknown increase command ${arg}. Use versions|major|minor\n"; exit 2      
+            __help; error_message "Unknown increase command ${arg}. Use versions|major|minor\n"; exit 2
           ;;
         esac
-      else 
+      else
         INCREASE_VERSION_TYPE="minor"
         COMMAND_INFO="versions"
-      fi            
+      fi
     ;;
     (-h|--help)
       __help
@@ -246,7 +246,7 @@ if (( $# )); then
       exit 0
     ;;
     (*)
-      COMMAND="${arg}"; 
+      COMMAND="${arg}";
     ;;
   esac
 else # no command found
@@ -281,7 +281,7 @@ do
     ;;
     (--start-deploy)
       START_DEPLOY="true"
-    ;;    
+    ;;
     (-h|--help)
       __help
       exit 0
@@ -315,7 +315,7 @@ do
         VERSION=${arg##--version=}
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
-      fi      
+      fi
     ;;
   esac
 done
@@ -342,8 +342,8 @@ case "${COMMAND}" in
   (build)
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
     if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
-      __help; error_message "build command requires --from= or --with argument.\n"; exit 2      
-    fi      
+      __help; error_message "build command requires --from= or --with argument.\n"; exit 2
+    fi
   ;;
   (deploy)
     STRATEGY="erlang-deploy-${COMMAND_INFO}"
@@ -366,7 +366,7 @@ case "${COMMAND}" in
     [[ -n "${COMMAND_INFO}" ]] && STRATEGY="${STRATEGY}-${COMMAND_INFO}"
     if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
       if ! [[ -f "$ORIGIN_DIR/.deliver/strategies/${STRATEGY}" ]]; then
-        __help; error_message "Unknown command ${COMMAND}.\n"; exit 2      
+        __help; error_message "Unknown command ${COMMAND}.\n"; exit 2
       fi
     fi
   ;;

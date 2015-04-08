@@ -11,7 +11,7 @@ require_node_config
 run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
-  authorize_remote_hosts 
+  authorize_remote_hosts
   execute_node_command $NODE_ACTION
 }
 
@@ -23,7 +23,7 @@ run() {
 execute_node_command() {
   local _node_command=$1
   if [[ $(echo $NODES | wc -w) -eq 1 ]] && [[ "$_node_command" = "start" ]]; then
-    __execute_node_command_synchronously "$_node_command" 
+    __execute_node_command_synchronously "$_node_command"
   else
     __execute_node_command_asynchronously "$_node_command"
   fi
@@ -55,18 +55,18 @@ __execute_node_command_asynchronously() {
     i=$((i+1))
 
   done
-  
+
   local _had_errors=0
   for (( i = 0 ; i < ${#background_jobs_pids[@]} ; i++ ))
   do
     wait ${background_jobs_pids[$i]}
     [[ "$?" = 0 ]] || _had_errors=1
   done
-  return $_had_errors    
+  return $_had_errors
 }
 
 
-# executes a node command synchronously on a single 
+# executes a node command synchronously on a single
 # remote node and prints the output of the command
 # continuously.
 __execute_node_command_synchronously() {
@@ -84,9 +84,9 @@ __execute_node_command_synchronously() {
   #       echo -e "  response: $line\n"
   #     elif [[ "$_lines" = "0" ]]; then
   #       echo -e "  response: $line\n"
-  #     else       
+  #     else
   #       echo -e "            $line"
-  #     fi       
+  #     fi
   #     _lines=$(($_lines+1))
   #   done
   # } < <(__execute_node_command "single_node" "$_node" "$_node_command")
@@ -99,7 +99,7 @@ __execute_node_command() {
   local _node_index=$1
   local _node_name=$2
   local _node_command=$3
-  
+
   local _config; local _config_arg
   local _user=${_node_name%@*}
   local _host=${_node#*@}
@@ -107,22 +107,22 @@ __execute_node_command() {
   [[ "$_path" =~ .*\|.* ]] && _config=${_path#*|} || _config=""
   _path=${_path%|*}
   _host=${_host%:*}
-  
+
   [[ -n "$_config" ]] && _config_arg="--config=${_config}" || _config_arg=""
   [ "${_node_index}" != "single_node" ] && [ "${_node_command}" = "start" ] &&  _config_arg="$_config_arg --short"
-  
+
   _remote_job="
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd ${_path}/${APP} $SILENCE
     bin/${APP} ${_node_command} ${_config_arg}
   "
-  
+
   [ "${_node_index}" = "single_node" ] && local _terminal_option=-t || local _terminal_option=
   ssh $_terminal_option -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
   local _status_code="$?"
   [ "${_node_index}" != "single_node" ] && echo -e "\n${_status_code}"
-  [[ "$_status_code" = "0" ]] && return 0 || return 1 
+  [[ "$_status_code" = "0" ]] && return 0 || return 1
 }
 
 # prints the result from the execution of a node command on a remote node.
@@ -141,21 +141,21 @@ __print_node_command_result() {
   [[ "$_path" =~ .*\|.* ]] && _config=${_path#*|} || _config=""
   _path=${_path%|*}
   _host=${_host%:*}
-  
+
   _message="${_message}  user    : $_user\n"
   _message="${_message}  host    : $_host\n"
   _message="${_message}  path    : $_path\n"
   [[ -n "$_config" ]] && _message="${_message}  config  : $_config\n"
-  
+
   if [[ "$_node_action_response" =~ ": " ]]; then
     local _node=${_node_action_response%: *}
     _node_action_response=${_node_action_response#*: }
     _node=$(echo ${_node} | grep -oe "[^ @]\+@.*")
     _message="${_message}  node    : $_node\n"
   fi
-  
+
   if [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
-    _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n" 
+    _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n"
   elif [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldred}failed${txtrst}\n";
     [[ -n "$_node_action_response" ]] && {
@@ -164,11 +164,11 @@ __print_node_command_result() {
         [[ "$lines" = "0" ]] && _message="${_message}  error   : ${line}\n" || _message="${_message}            ${line}\n"
         lines=$(($lines+1))
       done < <(echo -e "$_node_action_response")
-    } 
+    }
     _message="$_message\n${txtrst}"
   fi
   echo -e "${_message}"
-  [[ "$_status_code" = "0" ]] && return 0 || return 1   
+  [[ "$_status_code" = "0" ]] && return 0 || return 1
 }
 
 

@@ -27,21 +27,21 @@ RELX_CMD="./relx"
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
   # use build host and user for remote operations
-  export HOSTS=$BUILD_HOST 
+  export HOSTS=$BUILD_HOST
   export APP_USER=$BUILD_USER
   # use deliver to as built at destination
-  export DELIVER_TO=$BUILD_AT  
+  export DELIVER_TO=$BUILD_AT
 }
 
 # sets the deploy host, user and path as deliver hosts and path
 set_deploy_hosts() {
   if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
-    export HOSTS=$PRODUCTION_HOSTS 
+    export HOSTS=$PRODUCTION_HOSTS
     export APP_USER=$PRODUCTION_USER
-  else 
-    export HOSTS=$STAGING_HOSTS 
+  else
+    export HOSTS=$STAGING_HOSTS
     export APP_USER=$STAGING_USER
-    export DELIVER_TO=$TEST_AT  
+    export DELIVER_TO=$TEST_AT
   fi
 }
 
@@ -55,13 +55,13 @@ require_deploy_config() {
   if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
     REQUIRED_CONFIGS+=("PRODUCTION_HOSTS")
     REQUIRED_CONFIGS+=("PRODUCTION_USER")
-    REQUIRED_CONFIGS+=("DELIVER_TO")  
+    REQUIRED_CONFIGS+=("DELIVER_TO")
   else
     REQUIRED_CONFIGS+=("STAGING_HOSTS")
     REQUIRED_CONFIGS+=("STAGING_USER")
-    REQUIRED_CONFIGS+=("TEST_AT")  
-  fi  
-  
+    REQUIRED_CONFIGS+=("TEST_AT")
+  fi
+
   OPTIONAL_CONFIGS+=("VERSION")
 }
 
@@ -73,19 +73,19 @@ require_node_config() {
   REQUIRED_CONFIGS+=("$_node_config_variable_name")
   # set user@host:/path as default value if nodes config is not set
   if [ -z "$NODES" ]; then
-    if [ "$NODE_ENVIRONMENT" = "production" ]; then 
+    if [ "$NODE_ENVIRONMENT" = "production" ]; then
       local _user=${PRODUCTION_USER}
       local _path=${DELIVER_TO}
     else
       local _user=${STAGING_USER}
-      local _path=${TEST_AT:-$DELIVER_TO}      
+      local _path=${TEST_AT:-$DELIVER_TO}
     fi
     if [[ -n "$_user" ]] && [[ -n "$_path" ]]; then
       local _hosts_environment_variable_name="${_node_environment_uppercase}_HOSTS"
       for i in $(eval echo \$$_hosts_environment_variable_name); do
         eval $_node_config_variable_name=\"\$$_node_config_variable_name ${_user}@${i}:${_path}\"
       done
-      eval NODES=\$$_node_config_variable_name 
+      eval NODES=\$$_node_config_variable_name
     fi
   fi
 }
@@ -107,7 +107,7 @@ erlang_get_and_update_deps() {
       echo \"using mix to fetch and update deps\" $SILENCE
       if [ ! -f ~/.mix/rebar ]; then
         $MIX_CMD local.rebar $SILENCE
-      else 
+      else
         echo \"rebar for mix was built already\" $SILENCE
       fi
       $MIX_CMD deps.get $SILENCE
@@ -117,7 +117,7 @@ erlang_get_and_update_deps() {
 }
 
 
-# compiles the sources on the remote build host 
+# compiles the sources on the remote build host
 erlang_clean_compile() {
   __exec_if_defined "pre_erlang_clean_compile"
 
@@ -154,7 +154,7 @@ erlang_generate_release() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then 
+    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\" $SILENCE
       $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate $SILENCE
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
@@ -163,7 +163,7 @@ erlang_generate_release() {
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\" $SILENCE
       MIX_ENV=prod $MIX_CMD release $SILENCE
-    fi    
+    fi
 
   "
 
@@ -187,7 +187,7 @@ relx_generate_relup() {
     $RELX_CMD relup $SILENCE
   "
 
-  __exec_if_defined "post_relx_generate_relup" 
+  __exec_if_defined "post_relx_generate_relup"
 }
 
 # creates a tar.gz of the built release
@@ -195,18 +195,18 @@ erlang_archive_release() {
   __detect_remote_release_dir
   __detect_remote_release_version
   [[ "$RELEASE_CMD" = "mix" ]] && return 0 # mix archives release automatically
-  status "Building archive of release ${RELEASE_VERSION}"  
+  status "Building archive of release ${RELEASE_VERSION}"
   # create tar
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd $DELIVER_TO $SILENCE
-    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then 
+    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to archive release\" $SILENCE
       $RELX_CMD tar $SILENCE
-    fi    
+    fi
   "
 }
 
@@ -221,22 +221,22 @@ copy_release_to_release_store() {
   local _release_type="$1"
   local _release_revision="$2"
   if [[ "$RELEASE_CMD" = "relx" ]]; then
-    local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"  
+    local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
-    local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"  
-  else # used rebar to generate release  
-    local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"  
+    local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
+  else # used rebar to generate release
+    local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
   status "Copying release to $RELEASE_STORE_TYPE release store"
-  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $(dirname ${_release_file}) $SILENCE
       AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
-  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
-    status "Copying $(basename $_release_file) to release store"    
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
+    status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
     __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
@@ -247,17 +247,17 @@ copy_release_to_release_store() {
     local _remote_job="
       set -e
       [ -f ~/.profile ] && source ~/.profile
-      [ -f \"$_release_file\" ] 
-      if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then 
-        cp $_release_file $_dest_file_name 
-      else 
+      [ -f \"$_release_file\" ]
+      if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then
+        cp $_release_file $_dest_file_name
+      else
         cat $_release_file | ssh $_release_store_host \"cat > $_dest_file_name\"
       fi
       exit
     "
     ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
-  else 
+  else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
 
@@ -274,14 +274,14 @@ copy_release_to_local_temp_dir() {
   status "Copying release from $RELEASE_STORE_TYPE release store to local temp dir"
   mkdir -p "${LOCAL_RELEASE_STORE}/.tmp"
   local _local_tmp_dir=$(mktemp -d "${LOCAL_RELEASE_STORE}/.tmp/${APP}_${_release_version}.${_release_type}.XXXXXX")
-  [[ "$MODE" = "verbose" ]] && echo "Temp dir: ${_local_tmp_dir}" 
-  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
+  [[ "$MODE" = "verbose" ]] && echo "Temp dir: ${_local_tmp_dir}"
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     download_file_from_s3_release_store "${APP}_${_release_version}.${_release_type}.tar.gz" "${_local_tmp_dir}/${APP}_${_release_version}.${_release_type}.tar.gz"
-  elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then  
+  elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     download_file_from_remote_release_store "${APP}_${_release_version}.${_release_type}.tar.gz" "${_local_tmp_dir}/${APP}_${_release_version}.${_release_type}.tar.gz"
-  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     cp ${RELEASE_STORE}/releases/${APP}_${_release_version}.${_release_type}.tar.gz ${_local_tmp_dir}
-  else 
+  else
     error_message "Cannot copy releases from store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
   LOCAL_RELEASE_TMP_DIR="$_local_tmp_dir"
@@ -292,21 +292,21 @@ upload_file_to_release_store() {
   __detect_release_store_type
   local _source_file="$1"
   local _destination_file="$2"
-  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then  
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     upload_file_to_s3_release_store "$_source_file" "$_destination_file"
-  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then 
+  elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying ${_source_file} to local release store"
     [ "$FORCE" != "true" ] && file_exists_in_store $(basename $_destination_file) && {
       read -n1 -p "${txtylw}Destination File '$_destination_file' already uploaded. Overwrite? (y/n)${txtrst}"
       echo
       [[ $REPLY = [yY] ]] || exit 1
-    }    
+    }
     cp $_source_file ${RELEASE_STORE}/releases/${_destination_file} || exit 2
-  elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then  
+  elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     upload_file_to_remote_release_store  "$_source_file" "$_destination_file"
-  else 
+  else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
-  fi  
+  fi
 }
 
 upload_file_to_s3_release_store() {
@@ -336,7 +336,7 @@ upload_file_to_remote_release_store() {
     [[ $REPLY = [yY] ]] || exit 1
   }
   status "Uploading file $_source_file to $_destination_file"
-  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p ${_source_file} ${_release_store_host}:${_release_store_path%%/}/${_destination_file} $SILENCE"  
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p ${_source_file} ${_release_store_host}:${_release_store_path%%/}/${_destination_file} $SILENCE"
 }
 
 # copies the generated appup files from the remote build host
@@ -346,7 +346,7 @@ copy_appups_to_release_store() {
   RELEASE_VERSION="" # redetect new version
   __detect_remote_release_version
   local _old_version=$1
-  local _appup_files="$RELEASE_DIR/lib/*/ebin/*.appup"  
+  local _appup_files="$RELEASE_DIR/lib/*/ebin/*.appup"
   status "Copying generated appup files to release store /appup/${_old_version}-${RELEASE_VERSION}"
   # create release store directory if it is a local directory
   __create_directory_in_release_store "/appup/${_old_version}-${RELEASE_VERSION}"
@@ -374,7 +374,7 @@ download_file_from_s3_release_store() {
     error "\nFAILED to download $_source_file.\nFile does not exist in remote release store.\n"
     exit 2
   }
-  status "Downloading $_source_file to $_destination_file"  
+  status "Downloading $_source_file to $_destination_file"
   AWS_ARGUMENTS="get ${AWS_BUCKET_NAME}/${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws 2>/dev/null > "$_destination_file" || {
       [[ -f "$_destination_file" ]] && [[ ! -s "$_destination_file" ]] && rm "$_destination_file"
       error "\nFAILED to download $_source_file\n"
@@ -395,8 +395,8 @@ download_file_from_remote_release_store() {
     error "\nFAILED to download $_source_file.\nFile does not exist in remote release store.\n"
     exit 2
   }
-  status "Downloading $_source_file to $_destination_file"  
-  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p ${_release_store_host}:${_release_store_path%%/}/${_source_file} ${_destination_file} $SILENCE"  
+  status "Downloading $_source_file to $_destination_file"
+  __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p ${_release_store_host}:${_release_store_path%%/}/${_source_file} ${_destination_file} $SILENCE"
 }
 
 # reselects the release or update to deploy to productions hosts
@@ -432,13 +432,13 @@ select_release_from_store() {
       done
       hint_message "Enter Version:"
       read VERSION
-      RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"      
+      RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
     fi
-  fi  
+  fi
 }
 
 # validates that the release or upgrade with the given version is in
-# the release store. 
+# the release store.
 # takes the release type as first parameter (release|update|upgrade)
 # and the version that should be in the store as second parameter
 validate_release_is_in_store() {
@@ -452,7 +452,7 @@ validate_release_is_in_store() {
     [[ "$_current_version" = "$_release_version" ]] && return 0
   done
   error_message "\n${_release_type} version ${_release_version} not found in release store\n"
-  return 1  
+  return 1
 }
 
 # lists the available releases in the store
@@ -495,12 +495,12 @@ __get_releases_in_store() {
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $_release_store_path
-      ls -1 ${APP}_*.${_release_type}.tar.gz 
+      ls -1 ${APP}_*.${_release_type}.tar.gz
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
-  else 
-    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2    
+  else
+    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
 }
 
@@ -529,36 +529,36 @@ upload_release_archive() {
     __remote "
       set -e
       [ -f ~/.profile ] && source ~/.profile
-      mkdir -p ${_destination_directory} "  
+      mkdir -p ${_destination_directory} "
     __parallel_scp "${RELEASE_STORE}/releases/${_release_file}" "${_destination_directory}/${APP}_${_release_version}.tar.gz"
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
     local _deploy_hosts="${3:-"$HOSTS_APP_USER"}"
     local _dest_file_name="${_destination_directory}/${APP}_${_release_version}.tar.gz"
-      
+
 
     local _remote_job="
       set -e
       [ -f ~/.profile ] && source ~/.profile
       cd $_release_store_path
-      [ -f \"$_release_file\" ] 
+      [ -f \"$_release_file\" ]
       background_jobs_pids=()
-      background_jobs=()  
+      background_jobs=()
     "
     for _host in $_deploy_hosts; do
       _remote_job="$_remote_job
-        if [[ \"$_host\" = \"$_release_store_host\" ]]; then 
+        if [[ \"$_host\" = \"$_release_store_host\" ]]; then
           cp $_release_file $_dest_file_name &
-        else 
-          cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &       
+        else
+          cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &
         fi
         background_jobs_pids+=(\"\$!\")
-      "        
+      "
     done
     _remote_job="$_remote_job
-      for pid in \$(echo \"\${background_jobs_pids[@]}\"); do 
-        while true; do 
+      for pid in \$(echo \"\${background_jobs_pids[@]}\"); do
+        while true; do
           kill -0 \$pid 2>/dev/null && sleep 1 || break
         done
       done
@@ -566,16 +566,16 @@ upload_release_archive() {
     "
     ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
-  else 
-    error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2    
-  fi  
+  else
+    error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
+  fi
 }
 
 # upgrades the remote hosts with running nodes to
 # the new release version.
 upgrade_release() {
   __exec_if_defined "pre_upgrade_release"
-  status "Upgrading release to $VERSION"  
+  status "Upgrading release to $VERSION"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
@@ -585,7 +585,7 @@ upgrade_release() {
   __exec_if_defined "post_upgrade_release"
 }
 
-# deletes the $APP/releases, $APP/lib and $APP/erts* 
+# deletes the $APP/releases, $APP/lib and $APP/erts*
 # directories before the release is extracted
 remote_clean_release_dir() {
   local _release_version=${1:-"$VERSION"}
@@ -596,7 +596,7 @@ remote_clean_release_dir() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd ${_archive_dir} $SILENCE
-    [[ \"$RELEASE_CMD\" = \"mix\" ]] && _app_folder=\"${APP}\" || _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))  
+    [[ \"$RELEASE_CMD\" = \"mix\" ]] && _app_folder=\"${APP}\" || _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))
     [[ -n \"\$_app_folder\" ]]
     if [[ -d \$_app_folder ]]; then
       cd \${_app_folder}
@@ -619,15 +619,15 @@ remote_clean_release_dir() {
             rm -rf \${erts_dir} $SILENCE
           else
             echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
-          fi    
+          fi
         done
       } || {
         echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
-      }      
-    else 
+      }
+    else
       echo \"\${_app_folder} does not exist\" $SILENCE
     fi
-      "  
+      "
 }
 
 # starts the deployed release. if release is already running,
@@ -646,7 +646,7 @@ force_start_release() {
       echo \"starting node\" $SILENCE
       bin/${APP} start $SILENCE
     fi
-  "  
+  "
 }
 
 # installs a release at all production hosts
@@ -661,7 +661,7 @@ remote_extract_release_archive() {
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE" 
+    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
 }
 
 # gets the sha hash of the latest commit of the branch to deploy
@@ -684,7 +684,7 @@ git_checkout_remote() {
 # stashes the build directory on the remote build host.
 # stashing instead of cleaning prevent losing manual changes
 # and prevent damage if BUILD_AT directory is not configured
-# properly. 
+# properly.
 # keeps max 10 stashes because the stashed files may be
 # quite large because that are previous builds
 git_stash_remote() {
@@ -695,7 +695,7 @@ git_stash_remote() {
     cd $DELIVER_TO $SILENCE
     [[ \$(git stash list | wc -l) -gt 0 ]] && _oldest_stash=\$(git stash list | tail -1 | grep -o 'stash@{[0-9]\+}' | grep -o '[0-9]\+') || _oldest_stash=0
     [[ \${_oldest_stash} -gt 50 ]] && git stash drop stash@{\$_oldest_stash} $SILENCE
-    git stash --all $SILENCE  
+    git stash --all $SILENCE
   "
 }
 
@@ -712,7 +712,7 @@ rename_release_add_version() {
     [ -f ~/.profile ] && source ~/.profile
     cd $(dirname $RELEASE_DIR) $SILENCE
     mv ${APP} ${APP}_${_release_version} $SILENCE
-  "  
+  "
 }
 
 # renames the release directory on the remote build host
@@ -726,7 +726,7 @@ rename_release_remove_version() {
     [ -f ~/.profile ] && source ~/.profile
     cd $(dirname $RELEASE_DIR) $SILENCE
     mv ${APP}_${_release_version} ${APP} $SILENCE
-  "  
+  "
 }
 
 # generates the upgrade from the old version to the new version
@@ -760,7 +760,7 @@ copy_appups_from_release_store_to_build_host() {
       __exec "echo \"Copying $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name}\" to $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
       __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\" -p $RELEASE_STORE/appup/${_old_version}-${RELEASE_VERSION}/${_appup_base_name} $BUILD_USER@$BUILD_HOST:${RELEASE_DIR}/lib/${_appup_app_name}*/ebin/${_appup_base_name}"
     done
-  else 
+  else
     status "Using default appup scripts. No custom scripts in /appup/${_old_version}-${RELEASE_VERSION}/"
   fi
 }
@@ -810,7 +810,7 @@ __detect_remote_release_dir() {
         [ -f ~/.profile ] && source ~/.profile
         cd $DELIVER_TO $SILENCE
         [[ -d ./_rel ]] && echo true || echo false
-      "))  
+      "))
       if [ "$_relx_release_dir_exists" = "true" ]; then
         RELEASE_DIR=${DELIVER_TO%%/}/_rel
       else
@@ -823,7 +823,7 @@ __detect_remote_release_dir() {
         [ -f ~/.profile ] && source ~/.profile
         cd $DELIVER_TO $SILENCE
         find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
-      "))  
+      "))
       if [ ${#_release_directories[@]} -eq 1 ]; then
         RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
       else
@@ -836,7 +836,7 @@ __detect_remote_release_dir() {
           done
         fi
         exit 1
-      fi      
+      fi
     fi
   fi
 }
@@ -883,11 +883,11 @@ __detect_release_store_type() {
     AWS_BUCKET_NAME=${_s3location%%*:}
   fi
 
-  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]] && [[ -n \"${AWS_ACCESS_KEY_ID}\" ]] && [[ -n \"${AWS_SECRET_ACCESS_KEY}\" ]] && [[ -n \"${AWS_BUCKET_NAME}\" ]]; then  
+  if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]] && [[ -n \"${AWS_ACCESS_KEY_ID}\" ]] && [[ -n \"${AWS_SECRET_ACCESS_KEY}\" ]] && [[ -n \"${AWS_BUCKET_NAME}\" ]]; then
     RELEASE_STORE_TYPE="s3"
   elif [[ "$RELEASE_STORE" =~ ^[^@]+@[^:]+:.+$ ]]; then
     RELEASE_STORE_TYPE="remote"
-  else 
+  else
     RELEASE_STORE_TYPE="local"
   fi
 }
@@ -919,16 +919,16 @@ __parallel_scp() {
   local _hosts="${3:-"$HOSTS_APP_USER"}"
   if [ "${MODE}" = "compact" ]; then
     local _options=" -q"
-  else 
+  else
     local _options=""
   fi
-  
+
   background_jobs_pids=()
-  background_jobs=()  
+  background_jobs=()
 
   __log "${_hosts} : $_remote_job"
-  
-    
+
+
   for _host in $_hosts
   do
     if [ "$SKIP_COPYING_EXISTING_FILES" = "skip" ]; then
@@ -936,7 +936,7 @@ __parallel_scp() {
       local _remote_md5=$(__remote_md5 $_host "$_destination_dir")
       if [[ -n "$_local_md5" ]] && [[ -n "$_remote_md5" ]] && [[ "$_local_md5" = "$_remote_md5" ]]; then
         __exec "echo \"file \$(basename \$_source_file) already exists on host \$_host (checksum: \$_remote_md5)\""
-        continue       
+        continue
       fi
     fi
     __exec "echo \"copying $_source_file to $_host:$_destination_dir\""
@@ -961,8 +961,8 @@ __local_md5() {
   fi
   if ! [ -z "$LOCAL_MD5_COMMAND" ]; then
     $LOCAL_MD5_COMMAND ${_file_name} | grep -o "[0-9a-fA-F]\{32\}"
-  else 
-    echo ""    
+  else
+    echo ""
   fi
 }
 
@@ -981,31 +981,31 @@ __remote_md5() {
       fi
       if ! [ -z \"\$REMOTE_MD5_COMMAND\" ]; then
         \$REMOTE_MD5_COMMAND ${_remote_file_name} | grep -o \"[0-9a-fA-F]\\{32\\}\"
-      else 
+      else
         echo \"\"
-      fi  
+      fi
     else
         echo \"\"
     fi
-  "  
+  "
   ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_remote_host" "$_remote_job"
 }
 
 begin() {
   case "$COMMAND" in
     (build)
-      local _message="${bldgrn}BUILDING $(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP ON BUILD HOST${txtrst}"      
+      local _message="${bldgrn}BUILDING $(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP ON BUILD HOST${txtrst}"
     ;;
     (deploy)
       local _host_color="${bldylw}"
       [ "$DEPLOY_ENVIRONMENT" = "production" ] && _host_color="${bldred}"
-      local _message="${bldgrn}DEPLOYING ${bldylw}$(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP TO ${_host_color}$(upcase ${DEPLOY_ENVIRONMENT}) HOSTS${txtrst}"      
+      local _message="${bldgrn}DEPLOYING ${bldylw}$(upcase "${COMMAND_INFO}")${bldgrn} OF $(upcase "${APP}") APP TO ${_host_color}$(upcase ${DEPLOY_ENVIRONMENT}) HOSTS${txtrst}"
     ;;
     (*)
       local _message="${bldgrn}$(upcase "edeliver ${APP} with $COMMAND command")${txtrst}"
     ;;
   esac
-  echo -e "\n$_message\n"  
+  echo -e "\n$_message\n"
   __log "$_message"
 }
 
@@ -1018,7 +1018,7 @@ finish() {
       local _message="${bldgrn}$(upcase "${COMMAND_INFO} BUILD OF $APP WAS SUCCESSFUL!")${txtrst}"
       ;;
     (deploy)
-      local _message="${bldgrn}DEPLOYED $(upcase "${COMMAND_INFO} TO ${DEPLOY_ENVIRONMENT}!")${txtrst}"      
+      local _message="${bldgrn}DEPLOYED $(upcase "${COMMAND_INFO} TO ${DEPLOY_ENVIRONMENT}!")${txtrst}"
     ;;
     (*)
       local _message="${bldgrn}$(upcase "$COMMAND DONE!")${txtrst}"
