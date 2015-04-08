@@ -130,6 +130,9 @@ erlang_clean_compile() {
       echo \"using rebar to compile files\" $SILENCE
       $REBAR_CMD clean skip_deps=true $SILENCE
       $REBAR_CMD compile $SILENCE
+
+    elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
+      echo \"Compiling sources is done by mix release task\" $SILENCE
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\" $SILENCE
       APP=\"$APP\" $MIX_CMD do clean, deps.compile $SILENCE
