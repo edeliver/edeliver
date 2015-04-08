@@ -729,6 +729,24 @@ rename_release_remove_version() {
   "
 }
 
+# removes the old release archive when building
+# upgrades with `mix release` (exrm)
+remove_built_release_archive() {
+  __detect_remote_release_dir
+  local _release_version=${1}
+  local _release_file="${APP}-${_release_version}.tar.gz"
+  local _release_dir="releases/${_release_version}"
+  status "Removing built release ${_release_version} from remote release directory"
+  __remote "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd \"$(dirname $RELEASE_DIR)/${APP}\" $SILENCE
+    [[ -f \"$_release_file\" ]] && rm \"$_release_file\" $SILENCE
+    [[ -n \"$_release_dir\" ]] && [[ -d \"$_release_dir\" ]] && rm -rf \"$_release_dir\"
+  "
+}
+
+
 # generates the upgrade from the old version to the new version
 rebar_generate_appup() {
   __detect_remote_release_dir
