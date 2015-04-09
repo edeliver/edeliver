@@ -50,13 +50,26 @@ run() {
   erlang_get_and_update_deps
   erlang_clean_compile
 
+  if [[ -n "$WITH" ]] && [[ "$RELEASE_CMD" != "rebar" ]]; then
+    # when generating upgrades with `mix release` (exrm) the old
+    # release must be uploaded before generating the release.
+    # `erlang_generate_release` generates the upgrade then automatically
+    RELEASE_DIR="${DELIVER_TO}/rel/${APP}"
+    upload_release_archive "$(dirname $RELEASE_DIR)" "${APP}_${WITH}.release.tar.gz" "$WITH"
+    remote_extract_release_archive "$WITH" "$(dirname $RELEASE_DIR)"
+    __detect_remote_release_dir
+    __detect_remote_release_version
+    OLD_RELEASE_VERSION=${RELEASE_VERSION}
+  fi
+
+
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     relx_generate_relup
   else
     erlang_generate_release
   fi
 
-  if [[ -n "$WITH" ]]; then
+  if [[ -n "$WITH" ]] && [[ "$RELEASE_CMD" = "rebar" ]]; then
     __detect_remote_release_dir
     # backup new release
     rename_release_add_version "new"
@@ -66,9 +79,9 @@ run() {
     upload_release_archive "$(dirname $RELEASE_DIR)" "${APP}_${WITH}.release.tar.gz" "$WITH"
     remote_extract_release_archive "$WITH" "$(dirname $RELEASE_DIR)"
     # rename old release
-    [[ "$RELEASE_CMD" = "rebar" ]] && rename_release_add_version "old" "$WITH"
+    rename_release_add_version "old" "$WITH"
     # restore new release
-    [[ "$RELEASE_CMD" = "rebar" ]] && rename_release_remove_version $NEW_RELEASE_VERSION
+    rename_release_remove_version $NEW_RELEASE_VERSION
   fi
 
   # generate default appups
