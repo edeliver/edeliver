@@ -537,9 +537,8 @@ upload_release_archive() {
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
-    local _deploy_hosts="${3:-"$HOSTS_APP_USER"}"
+    local _deploy_hosts="${HOSTS_APP_USER}"
     local _dest_file_name="${_destination_directory}/${APP}_${_release_version}.tar.gz"
-
 
     local _remote_job="
       set -e
