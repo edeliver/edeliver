@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("RELEASE_FILE")
+
+run() {
+  get_relup_content_from_upgrade "$RELEASE_FILE"
+}

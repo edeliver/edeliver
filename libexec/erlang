@@ -287,6 +287,31 @@ copy_release_to_local_temp_dir() {
   LOCAL_RELEASE_TMP_DIR="$_local_tmp_dir"
 }
 
+get_relup_content_from_upgrade() {
+  __detect_release_store_type
+  local _release_file="$1"
+  local _release_version=$(__release_version_from_archive_name "$_release_file" "upgrade")
+  if [ "$RELEASE_STORE_TYPE" = "local" ]; then
+    tar -Oxzf ${RELEASE_STORE}/releases/${_release_file} releases/${_release_version}/relup
+  elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
+    local _release_store_path=${RELEASE_STORE#*:}
+    local _release_store_host=${RELEASE_STORE%:*}
+    local _remote_job="
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      cd $_release_store_path
+      tar -Oxzf \"$_release_file\" releases/${_release_version}/relup
+      exit
+    "
+    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+  elif [ "$RELEASE_STORE_TYPE" = "s3" ]; then
+    local _local_tmp_dir=$(mktemp -d "${LOCAL_RELEASE_STORE}/.tmp/${_release_file}.XXXXXX")
+    download_file_from_s3_release_store "$_release_file" "${_local_tmp_dir}/${_release_file}"
+    tar -Oxzf "${_local_tmp_dir}/${_release_file}" releases/${_release_version}/relup
+    [[ -n "$_local_tmp_dir" ]] && [[ -d "$_local_tmp_dir" ]] && rm -rf "$_local_tmp_dir"
+  fi
+}
+
 # copies a local file to the local or remote release store
 upload_file_to_release_store() {
   __detect_release_store_type
