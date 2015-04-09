@@ -463,17 +463,20 @@ list_releases_in_store() {
   local _release_files=( $(__get_releases_in_store "$_release_type") )
   local _app_column_width=${#APP}
   [[ $_app_column_width -lt 11 ]] && _app_column_width="11"
-  printf "\n %${_app_column_width}s | Version |    Type | File\n-" "Application"
+  printf "\n %${_app_column_width}s | Version | Revision |    Type | File\n-" "Application"
   for i in $(seq 1 $_app_column_width); do printf "-"; done
   printf '-' {1.."$_app_column_width"}
-  printf "+---------+---------+---------------------\n"
+  printf "+---------+----------+---------+---------------------\n"
   local _release_file
   for _release_file in "${_release_files[@]}"; do
-    local _release_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
+    local _full_release_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
+    local _release_revision=${_full_release_version##*-}
+    _release_version=${_full_release_version%%-*}
+    [[ "$_release_revision" = "$_release_version" ]] && _release_revision=""
     local _removed_app_name=${_release_file/${APP}_/}
     local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
-    local _current_release_type=${_removed_archive_extension/$_release_version./}
-    printf " %${_app_column_width}s | %7s | %7s | %s\n" "$APP" "$_release_version"  "$_current_release_type" "$_release_file"
+    local _current_release_type=${_removed_archive_extension/$_full_release_version./}
+    printf " %${_app_column_width}s | %7s | %8s | %7s | %s\n" "$APP" "$_release_version" "$_release_revision" "$_current_release_type" "$_release_file"
   done
 }
 
