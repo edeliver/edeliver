@@ -94,6 +94,7 @@ __load_app_config() {
   then
     source "$APP_CONFIG"
     if [[ -n "$HOST" ]]; then
+        [[ "$HOST" = *"@"* ]] && BUILD_USER=${HOST%%@*} && STAGING_USER=${HOST%%@*} && PRODUCTION_USER=${HOST%%@*} && HOST=${HOST##*@}
         SERVER="$HOST" && STAGING_HOSTS="$HOST" && PRODUCTION_HOSTS="$HOST" && BUILD_HOST="$HOST"
     fi
   fi
