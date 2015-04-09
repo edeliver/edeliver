@@ -579,11 +579,13 @@ upload_release_archive() {
 upgrade_release() {
   __exec_if_defined "pre_upgrade_release"
   status "Upgrading release to $VERSION"
+  [[ "$RELEASE_CMD" = "mix" ]] && local _upgrade_command="bin/${APP} upgrade ${VERSION} $SILENCE" \
+                               || local _upgrade_command="bin/${APP} upgrade ${APP}_${VERSION} $SILENCE"
   __remote "
     set -e
     [ -f ~/.profile ] && source ~/.profile
     cd ${DELIVER_TO}/${APP} $SILENCE
-    bin/${APP} upgrade ${APP}_${VERSION} $SILENCE
+    $_upgrade_command
   "
   __exec_if_defined "post_upgrade_release"
 }

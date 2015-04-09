@@ -7,6 +7,16 @@ run() {
   authorize_hosts
   authorize_remote_hosts
   select_release_from_store "upgrade"
-  upload_release_archive "${DELIVER_TO}/${APP}/releases"
+  if [[ "$RELEASE_CMD" = "mix" ]]; then
+    upload_release_archive "${DELIVER_TO}/${APP}/releases/${VERSION}"
+    __remote "
+      set -e
+      [ -f ~/.profile ] && source ~/.profile
+      cd ${DELIVER_TO}/${APP}/releases/${VERSION} $SILENCE
+      mv \"${APP}_${VERSION}.tar.gz\" \"${APP}.tar.gz\"
+    "
+  else
+    upload_release_archive "${DELIVER_TO}/${APP}/releases"
+  fi
   upgrade_release
 }
