@@ -93,6 +93,9 @@ __load_app_config() {
   if [ -f "$APP_CONFIG" ]
   then
     source "$APP_CONFIG"
+    if [[ -n "$HOST" ]]; then
+        SERVER="$HOST" && STAGING_HOSTS="$HOST" && PRODUCTION_HOSTS="$HOST" && BUILD_HOST="$HOST"
+    fi
   fi
 }
 

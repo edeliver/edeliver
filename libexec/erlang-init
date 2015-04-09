@@ -40,6 +40,7 @@ __help() {
   -F, --force           Do not ask, just do, overwrite, delete or destroy everything
       --clean-deploy    Delete the release, lib and erts-* directories before deploying the release
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
+      --host=xyz        Run command only on that host, even if there are configured different hosts
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).
@@ -313,6 +314,8 @@ do
         BRANCH=${arg##--branch=}
       elif [[ "${arg}" =~ ^--version= ]]; then
         VERSION=${arg##--version=}
+      elif [[ "${arg}" =~ ^--host= ]]; then
+        HOST=${arg##--host=}
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi
