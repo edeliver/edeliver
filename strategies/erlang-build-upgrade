@@ -16,7 +16,8 @@ set_build_hosts
 run() {
   authorize_hosts
   if [[ -n "$WITH" ]]; then
-    validate_release_is_in_store "release" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
+    [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="*" || local _release_type="release"
+    validate_release_is_in_store "$_release_type" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
     if [[ $? -ne 0 ]]; then
       hint_message "You can build appups also with the --from=<git-tag-or-revision> option\nif the release is not in your release store"; exit 2
     fi
@@ -55,7 +56,9 @@ run() {
     # release must be uploaded before generating the release.
     # `erlang_generate_release` generates the upgrade then automatically
     RELEASE_DIR="${DELIVER_TO}/rel/${APP}"
-    upload_release_archive "$(dirname $RELEASE_DIR)" "${APP}_${WITH}.release.tar.gz" "$WITH"
+    local _release_destination_path="$(dirname $RELEASE_DIR)"
+    [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]] && _release_destination_path="${_release_destination_path%%/}/${APP}"
+    upload_release_archive "$_release_destination_path" "$RELEASE_FILE" "$WITH"
     remote_extract_release_archive "$WITH" "$(dirname $RELEASE_DIR)"
     __detect_remote_release_dir
     __detect_remote_release_version

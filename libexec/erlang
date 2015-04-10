@@ -513,7 +513,7 @@ validate_release_is_in_store() {
   local _release_files=( $(__get_releases_in_store "$_release_type") )
   for _release_file in "${_release_files[@]}"; do
     local _current_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
-    [[ "$_current_version" = "$_release_version" ]] && return 0
+    [[ "$_current_version" = "$_release_version" ]] && RELEASE_FILE="$_release_file" && return 0
   done
   error_message "\n${_release_type} version ${_release_version} not found in release store\n"
   return 1
