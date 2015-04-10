@@ -614,10 +614,11 @@ upload_release_archive() {
     "
     for _host in $_deploy_hosts; do
       _remote_job="$_remote_job
-        mkdir -p \"${_destination_directory}\"
         if [[ \"$_host\" = \"$_release_store_host\" ]]; then
+          mkdir -p \"${_destination_directory}\"
           cp $_release_file $_dest_file_name &
         else
+          ssh \"$_host\" \"mkdir -p \\\"${_destination_directory}\\\" \"
           cat $_release_file | ssh \"$_host\" \"cat > $_dest_file_name\" &
         fi
         background_jobs_pids+=(\"\$!\")
