@@ -7,12 +7,11 @@ REQUIRED_CONFIGS+=("NODE_ENVIRONMENT")
 
 require_node_config
 
-
 run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   authorize_remote_hosts
-  execute_node_command $NODE_ACTION
+  __exec_if_defined execute_custom_node_command $NODE_ACTION || execute_node_command $NODE_ACTION
 }
 
 # executes a node command asynchronously on all
