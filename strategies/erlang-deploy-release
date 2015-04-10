@@ -10,8 +10,13 @@ set_deploy_hosts
 run() {
   authorize_hosts
   authorize_remote_hosts
-  select_release_from_store "release"
-  upload_release_archive
+  [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="*" || local _release_type="release"
+  select_release_from_store "$_release_type"
+  if  [[ "$RELEASE_CMD" = "mix" ]] && [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then
+    upload_release_archive "${DELIVER_TO%%/}/${APP}"
+  else
+    upload_release_archive
+  fi
   [[ "$CLEAN_DEPLOY" = "true" ]] && remote_clean_release_dir
   remote_extract_release_archive
   [[ "$START_DEPLOY" = "true" ]] && force_start_release
