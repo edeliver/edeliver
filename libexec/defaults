@@ -8,7 +8,7 @@ ARGS="$@"
 
 ORIGIN_DIR="$(pwd)"
 
-APP_CONFIG="$ORIGIN_DIR/.deliver/config"
+APP_CONFIG=${APP_CONFIG:-"$ORIGIN_DIR/.deliver/config"}
 
 GIT_REMOTE="deliver"
 
