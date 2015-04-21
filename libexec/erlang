@@ -443,12 +443,16 @@ select_release_from_store() {
         for _release_file in "${_release_files[@]}"; do
           [[ "$_release_file" = "${APP}_${VERSION}."*".tar.gz" ]] && _release_file=${_release_file##${APP}_${VERSION}.} && _release_file=${_release_file%%.tar.gz} && _releases_types_with_version+=($_release_file)
         done
-        hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
-        for _release_type in "${_releases_types_with_version[@]}"; do
-          hint_message " $_release_type"
-        done
-        hint_message "Enter Release Type:"
-        read _release_type
+        if [ ${#_releases_types_with_version[@]} -eq 1 ]; then
+          _release_type=${_releases_types_with_version[0]}
+        else
+          hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
+          for _release_type in "${_releases_types_with_version[@]}"; do
+            hint_message " $_release_type"
+          done
+          hint_message "Enter Release Type:"
+          read _release_type
+        fi
         RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
       fi
     else
