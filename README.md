@@ -1,7 +1,7 @@
-# **edeliver**  
-### Build and Deployment System for Erlang Release Packages
+# **edeliver**
+### Deployment for Elixir and Erlang
 
-**edeliver** is based on [deliver](https://github.com/gerhard/deliver) and provides a **bash script to build and deploy erlang releases and live upgrades**.
+**edeliver** is based on [deliver](https://github.com/gerhard/deliver) and provides a **bash script to build and deploy Elixir and Erlang applications and perform hot-code upgrades**.
 
 The **[erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html)** are **built** on a **remote host** that have a similar configuration to the deployment target systems and can then be **deployed to several production systems**.
 
@@ -11,31 +11,31 @@ Examples:
 
 **Build** an erlang release **and deploy** it on your **production hosts**:
 
-    ./edeliver build release --branch=feature 
-    ./edeliver deploy release to production 
+    ./edeliver build release --branch=feature
+    ./edeliver deploy release to production
     ./edeliver start production
 
 
 Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it on your production hosts:
-    
-    # optional: generate default appup upgrade files and edit them 
-    
-    ./edeliver build appups --from=v1.0 --to=v2.0  
-    editor ./deliver/appups/v1.0.1-v1.0.2/*.appup  
-    
+
+    # optional: generate default appup upgrade files and edit them
+
+    ./edeliver build appups --from=v1.0 --to=v2.0
+    editor ./deliver/appups/v1.0.1-v1.0.2/*.appup
+
     # build upgrade from tag v1.0 to v2.0
-    
-    ./edeliver build upgrade --from=v1.0 --to=v2.0 
+
+    ./edeliver build upgrade --from=v1.0 --to=v2.0
     ./edeliver deploy upgrade to production
-    
-    # or if you have the old release in your release store, 
+
+    # or if you have the old release in your release store,
     # you can build the upgrade with that old release instead of the old git revision/tag
-    
+
     ./edeliver build upgrade --with=v1.0 --to=v2.0
     ./edeliver deploy upgrade to production
 
 The upgrade will be **available immediately, without restarting** your application. If the generated [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) for the hot code upgrade are not sufficient, you can generate and modify these files before by using the `build appups` command.
-    
+
 
 ### Installation
 
@@ -46,43 +46,43 @@ It can be added as **[rebar](https://github.com/basho/rebar) depencency** for si
     {deps, [
       % ...
       {edeliver, "1.0",
-        {git, "git://github.com/bharendt/edeliver.git", {branch, master}}}
+        {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
 of if using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
 
     defp deps do
-        [{ :edeliver, github: "bharendt/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
+        [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
     end
 
 
 
-And link the `edeliver` binary to the root of your project directory: 
+And link the `edeliver` binary to the root of your project directory:
 
     ./rebar get-deps # when using rebar, or ...
     mix do deps.get, deps.compile # … when using mix
     ln -s ./deps/edeliver/bin/edeliver .
-    
+
 ### Configuration
-    
+
 Create a `.deliver` directory in your project folder and add the `config` file:
 
     #!/usr/bin/env bash
-    
+
     APP="your-erlang-app" # name of your release
-    
+
     BUILD_HOST="build-system.acme.org" # host where to build the release
     BUILD_USER="build" # local user at build host
     BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
-    
+
     STAGING_HOSTS="test1.acme.org test2.acme.org" # staging / test hosts separated by space
     STAGING_USER="test" # local user at staging hosts
-    TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO 
-    
+    TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO
+
     PRODUCTION_HOSTS="deploy1.acme.org deploy2.acme.org" # deploy / production hosts separated by space
-    PRODUCTION_USER="production" # local user at deploy hosts    
+    PRODUCTION_USER="production" # local user at deploy hosts
     DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
-    
+
 
 It uses ssh and scp to build and deploy the releases. Is is **recommended** that you use ssh and scp with **keys + passphrase** only. You can use `ssh-add` if your don't want to enter your passphrase every time.
 
@@ -106,18 +106,18 @@ If compiling and generating the release build was successful, the release is **c
 
     ./edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
 
-Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn. 
+Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn.
 
 #### Generate and Edit Upgrade Files (appup)
 
-    ./edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+    ./edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
-Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) that perform the hot code loading when an upgrade is installed. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can (and should) then **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**. 
+Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) that perform the hot code loading when an upgrade is installed. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can (and should) then **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**.
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
-    ./edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store> 
+    ./edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
                             [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. To perform the live upgrade, you can **provide custom [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html)** that will be included in the release upgrade build if they exists in the release store at `appup/OldVersion-NewVersion/*.appup`. They will **overwrite the generated default appup files** See the `build appup` command for how to generated the default appup files and copy it to your release store.
@@ -155,8 +155,8 @@ If there are several releases in the release store, you will be asked which rele
 
 #### Deploy an Upgrade Package for Live Updates at Running Nodes
 
-Deploys an upgrade at the production hosts and **upgrades the running nodes** to the new version. 
-Requires that the `build upgrade` command was executed before and that there is already an initial release deployed to the production hosts and that the node is running. 
+Deploys an upgrade at the production hosts and **upgrades the running nodes** to the new version.
+Requires that the `build upgrade` command was executed before and that there is already an initial release deployed to the production hosts and that the node is running.
 
 Release archives in your release store that were created by the `build release` command **cannot be used to deploy an upgrade**.
 
@@ -184,12 +184,12 @@ It also requires that the [install_upgrade.escript](https://github.com/basho/reb
       |  + releases/*.tar.gz               <- the built releases / upgrade packages
       |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
       |  + config                          <- deliver configuration
-      + src/                               
+      + src/
       |  + *.erl
       |  + your-app.app.src
       + priv/
       + deps/
-      |  + edeliver/      
+      |  + edeliver/
       + rel/
          + your-app/                       <- generated by `./rebar create-node nodeid=your-app`
              + files/
@@ -198,7 +198,7 @@ It also requires that the [install_upgrade.escript](https://github.com/basho/reb
              |   + install-upgrade.escript <- helper for the upgrade task of your-app binary
              |   + sys.config              <- app configuration for the release build
              |   + vm.args                 <- erlang vm args for the node
-             + reltool.config              <- should have the install_upgrade.escript in overlay section                 
+             + reltool.config              <- should have the install_upgrade.escript in overlay section
 
 
 
