@@ -914,7 +914,12 @@ __detect_remote_release_dir() {
         set -e
         [ -f ~/.profile ] && source ~/.profile
         cd $DELIVER_TO $SILENCE
-        find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
+        OS_TYPE=\$(uname)
+        if [[ \"\$OS_TYPE\" = \"Darwin\" ]]; then
+          find ./ -name RELEASES | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/RELEASES\$
+        else
+          find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
+        fi
       "))
       if [ ${#_release_directories[@]} -eq 1 ]; then
         RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
