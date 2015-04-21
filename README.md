@@ -86,6 +86,8 @@ Create a `.deliver` directory in your project folder and add the `config` file:
 
 It uses ssh and scp to build and deploy the releases. Is is **recommended** that you use ssh and scp with **keys + passphrase** only. You can use `ssh-add` if your don't want to enter your passphrase every time.
 
+Maybe it is required to __configure git on your build host__ (git user name / email) or to clone the repository initially at the `BUILD_AT` path. And of course you need to __install [erlang](http://www.erlang.org/) and [elixir](http://elixir-lang.org/)__ on the `BUILD_HOST`. If you use mix to build the releases, you should __install [hex](https://hex.pm)__ on the build hosts before the first build (otherwise mix asks interactively to install it). Run the build command with __`--verbose`__ if it fails the first time.
+
 There are **four kinds of commands**: **build commands** which compile the sources and build the erlang release **on the remote build system**, **deploy commands** which deliver the built releases to the **remote production systems**, **node commands** that **control** the nodes (e.g. starting/stopping) and **local commands**.
 
 ### Build Commands
