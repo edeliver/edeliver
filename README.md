@@ -9,19 +9,14 @@ This is necessary because the **[release](http://www.erlang.org/doc/design_princ
 
 Examples:
 
-**Build** an erlang release **and deploy** it on your **production hosts**:
+**Build** an erlang/elixir release **and deploy** it on your **production hosts**:
 
     ./edeliver build release --branch=feature
     ./edeliver deploy release to production
     ./edeliver start production
 
 
-Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it on your production hosts:
-
-    # optional: generate default appup upgrade files and edit them
-
-    ./edeliver build appups --from=v1.0 --to=v2.0
-    editor ./deliver/appups/v1.0.1-v1.0.2/*.appup
+Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
     # build upgrade from tag v1.0 to v2.0
 
@@ -34,14 +29,22 @@ Build an live **upgrade** from v1.0 to v2.0 for an erlang release and deploy it 
     ./edeliver build upgrade --with=v1.0 --to=v2.0
     ./edeliver deploy upgrade to production
 
-The upgrade will be **available immediately, without restarting** your application. If the generated [application upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) for the hot code upgrade are not sufficient, you can generate and modify these files before by using the `build appups` command.
+The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
 
 
 ### Installation
 
-Because it is based on [deliver](https://github.com/gerhard/deliver) is uses only shell scripts and has **no further dependencies** except [rebar](https://github.com/basho/rebar) which should be present in your in the root of you project directory. By default [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies and to compile the sources and if a `./relx.config` file exists, [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades. This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
+Because it is based on [deliver](https://github.com/gerhard/deliver), is uses only shell scripts and has **no further dependencies** except the erlang / elixir build system.
+It can be used with one of these build systems:
 
-It can be added as **[rebar](https://github.com/basho/rebar) depencency** for simple integration into erlang projects. Just add it to your `rebar.config`:
+  
+  * [rebar](https://github.com/basho/rebar) for pure erlang releases
+  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [exrm](https://github.com/bitwalker/exrm) for elixir/erlang releases
+  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
+  
+By default [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies and to compile the sources and if a `./relx.config` file exists, [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades. This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
+
+It can be added as [rebar](https://github.com/basho/rebar) depencency for simple integration into erlang projects. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 
     {deps, [
       % ...
@@ -49,7 +52,7 @@ It can be added as **[rebar](https://github.com/basho/rebar) depencency** for si
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
-of if using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
+or if using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
 
     defp deps do
         [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
@@ -92,7 +95,7 @@ There are **four kinds of commands**: **build commands** which compile the sourc
 
 ### Build Commands
 
-The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. R16B) of the remote build system is included into the release built and delivered to all production system. It is not required to install the otp runtime on the production systems.
+The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. OTP 17.5) of the remote build system is included into the release built and delivered to all production system. It is not required to install the otp runtime on the production systems.
 For build commands the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
@@ -169,9 +172,9 @@ Requires that the `build upgrade` command was executed before and that there is 
 
 Release archives in your release store that were created by the `build release` command **cannot be used to deploy an upgrade**.
 
-This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands.
+This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands. Releases generated with [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) always contain the `upgrade` command.
 
-It also requires that the [install_upgrade.escript](https://github.com/basho/rebar/blob/master/priv/templates/simplenode.install_upgrade.escript) that was generated by rebar is included in your release. So make sure, that the folling line is in your `reltool.config`:
+If using rebar, make sure that the [install_upgrade.escript](https://github.com/basho/rebar/blob/master/priv/templates/simplenode.install_upgrade.escript) file which was generated by rebar is included in your release. So ensure, that the following line is in your `reltool.config`:
 
     {overlay, [ ...
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
@@ -193,14 +196,16 @@ It also requires that the [install_upgrade.escript](https://github.com/basho/reb
       |  + releases/*.tar.gz               <- the built releases / upgrade packages
       |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
       |  + config                          <- deliver configuration
-      + src/
+      + src/                               <- erlang source files
       |  + *.erl
       |  + your-app.app.src
+      + lib/                               <- elixir source files
+      |  + *.ex
       + priv/
       + deps/
       |  + edeliver/
       + rel/
-         + your-app/                       <- generated by `./rebar create-node nodeid=your-app`
+         + your-app/                       
              + files/
              |   + your-app                <- binary to start|stop|upgrade your app
              |   + nodetool                <- helper for your-app binary
