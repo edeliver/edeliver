@@ -1,4 +1,7 @@
 # **edeliver**
+
+![edeliver logo](http://boldpoker.net/images/edeliver_500.png)
+
 ### Deployment for Elixir and Erlang
 
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and provides a **bash script to build and deploy Elixir and Erlang applications and perform hot-code upgrades**.
