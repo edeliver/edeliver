@@ -40,12 +40,18 @@ The deployed upgrade will be **available immediately, without restarting** your 
 Because it is based on [deliver](https://github.com/gerhard/deliver), is uses only shell scripts and has **no further dependencies** except the erlang / elixir build system.
 It can be used with one of these build systems:
 
-  
+
   * [rebar](https://github.com/basho/rebar) for pure erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [exrm](https://github.com/bitwalker/exrm) for elixir/erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
-  
-By default [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies and to compile the sources and if a `./relx.config` file exists, [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades. This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
+
+Edeliver tries to autodetect which system to use to compile the sources and build the release:
+
+  * If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [exrm](https://github.com/bitwalker/exrm) is used to generate the releases / upgrades.
+  * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
+  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
+
+This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
 It can be added as [rebar](https://github.com/basho/rebar) depencency for simple integration into erlang projects. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 
@@ -121,7 +127,7 @@ Builds an initial release that can be deployed to the production hosts. If you w
     ./edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
-Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) with instructions how to load the new code when an upgrade package is built. If your application __isn't used as dependency / library__ for other applications, you might __just__ want to __edit the final relup file__ as described later. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**. 
+Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) with instructions how to load the new code when an upgrade package is built. If your application __isn't used as dependency / library__ for other applications, you might __just__ want to __edit the final relup file__ as described later. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**.
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
@@ -208,7 +214,7 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
       + deps/
       |  + edeliver/
       + rel/
-         + your-app/                       
+         + your-app/
              + files/
              |   + your-app                <- binary to start|stop|upgrade your app
              |   + nodetool                <- helper for your-app binary

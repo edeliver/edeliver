@@ -84,7 +84,13 @@ fi
 # command to generate the release on the remote build host
 # rebar | relx
 if [ -z "$RELEASE_CMD" ]; then
-  [[ -f "./relx.config" ]] && RELEASE_CMD=${RELEASE_CMD:=relx} || RELEASE_CMD=${RELEASE_CMD:=rebar}
+  if [[ -f "./relx.config" ]]; then
+    RELEASE_CMD=${RELEASE_CMD:=relx}
+  elif [[ -f "./mix.exs" ]]; then
+    RELEASE_CMD=${RELEASE_CMD:=mix}
+  else
+    RELEASE_CMD=${RELEASE_CMD:=rebar}
+  fi
 fi
 
 
