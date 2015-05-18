@@ -53,7 +53,15 @@ Edeliver tries to autodetect which system to use to compile the sources and buil
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
-It can be added as [rebar](https://github.com/basho/rebar) depencency for simple integration into erlang projects. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
+If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
+
+    defp deps do
+        [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
+    end
+
+And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
+
+When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 
     {deps, [
       % ...
@@ -61,18 +69,10 @@ It can be added as [rebar](https://github.com/basho/rebar) depencency for simple
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
-or if using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
-
-    defp deps do
-        [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
-    end
-
-
 
 And link the `edeliver` binary to the root of your project directory:
 
     ./rebar get-deps # when using rebar, or ...
-    mix do deps.get, deps.compile # … when using mix
     ln -s ./deps/edeliver/bin/edeliver .
 
 ### Configuration
