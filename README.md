@@ -53,10 +53,10 @@ Edeliver tries to autodetect which system to use to compile the sources and buil
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
-__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it to you `mix.exs` config:
+__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package]({ :edeliver, "~> 1.0.0"},) to you `mix.exs` config:
 
     defp deps do
-        [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
+        [{:edeliver, "~> 1.0.0"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
