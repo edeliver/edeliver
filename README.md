@@ -14,23 +14,23 @@ Examples:
 
 **Build** an erlang/elixir release **and deploy** it on your **production hosts**:
 
-    ./edeliver build release --branch=feature
-    ./edeliver deploy release to production
-    ./edeliver start production
+    mix edeliver build release --branch=feature
+    mix edeliver deploy release to production
+    mix edeliver start production
 
 
 Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
     # build upgrade from tag v1.0 to v2.0
 
-    ./edeliver build upgrade --from=v1.0 --to=v2.0
-    ./edeliver deploy upgrade to production
+    mix edeliver build upgrade --from=v1.0 --to=v2.0
+    mix edeliver deploy upgrade to production
 
     # or if you have the old release in your release store,
     # you can build the upgrade with that old release instead of the old git revision/tag
 
-    ./edeliver build upgrade --with=v1.0 --to=v2.0
-    ./edeliver deploy upgrade to production
+    mix edeliver build upgrade --with=v1.0 --to=v2.0
+    mix edeliver deploy upgrade to production
 
 The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
 
@@ -53,7 +53,7 @@ Edeliver tries to autodetect which system to use to compile the sources and buil
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
-If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you `mix.exs` config:
+__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it to you `mix.exs` config:
 
     defp deps do
         [{ :edeliver, github: "boldpoker/edeliver", compile: "mkdir -p ebin && cp src/edeliver.app.src ebin/edeliver.app" } ]
@@ -61,7 +61,7 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add it to you
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
 
-When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
+__When using rebar__, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 
     {deps, [
       % ...
@@ -74,6 +74,8 @@ And link the `edeliver` binary to the root of your project directory:
 
     ./rebar get-deps # when using rebar, or ...
     ln -s ./deps/edeliver/bin/edeliver .
+    
+Then use the linked binary `./edeliver` instead of the `mix edeliver` tasks from the examples.
 
 ### Configuration
 
@@ -118,20 +120,20 @@ If compiling and generating the release build was successful, the release is **c
 
 #### Build Initial Release
 
-    ./edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
+    mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn.
 
 #### Generate and Edit Upgrade Files (appup)
 
-    ./edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
+    mix edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) with instructions how to load the new code when an upgrade package is built. If your application __isn't used as dependency / library__ for other applications, you might __just__ want to __edit the final relup file__ as described later. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**.
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
-    ./edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
+    mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
                             [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped** (and build is faster). For the live upgrade process, you can **provide custom application upgrade files [(appup)](http://www.erlang.org/doc/man/appup.html)** as described in the previous section, or __modify the generated final upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html))__ as described in the next section (more convenient).
@@ -139,7 +141,7 @@ Builds a release upgrade package that can be deployed to production hosts with r
 
 #### Edit the final upgrade instructions (relup)
 
-    ./edeliver edit relup [--version=<upgrade-version>]
+    mix edeliver edit relup [--version=<upgrade-version>]
 
 From the appup instructions of all included and updated applications, a __[relup](http://www.erlang.org/doc/man/relup.html)__ file is generated during the `build upgrade` command and included in the upgrade package. It contains the final upgrade instructions for the new release version. If there are __dependencies between applications__, it might be necessary to __modify this file__, e.g. changing the order of the applications or modules that are reloaded. Also if you don't want to reuse the appups for other releases, __it is much more convenient__ to modify this file instead of the appups which must be generated in a special step before.
 
@@ -151,7 +153,7 @@ The reason for that is, that when the upgrade is build with rebar, rebar tries t
 
 ### Deploy Commands
 
-    ./edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+    mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
 
 Deploy commands **deliver the builds** (that were created with a build command before) **to** your staging or **prodution hosts** and can perform the **live code upgrade**. The releases or upgrades to deliver are then available in your local directory `.deliver/releases`. To deploy releases the following **configuration** variables must be set:
 
