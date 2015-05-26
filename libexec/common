@@ -137,8 +137,8 @@ rvmrc_trust() {
 
     status "Trusting rvmrc in $DELIVER_TO"
     __remote "
-      set -e
       source ~/.profile
+      set -e
       rvm rvmrc trust $DELIVER_TO $SILENCE
     "
 
@@ -151,8 +151,8 @@ authorize_remote_hosts() {
   then
     status "Authorizing remote hosts"
     __remote "
-      set -e
       source ~/.profile
+      set -e
       for _remote_host in $AUTHORIZED_REMOTE_HOSTS
       do
         if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
@@ -169,8 +169,8 @@ bundle_install() {
 
   status "Installing gems with bundler"
   __remote "
-    set -e
     source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
     then
@@ -188,8 +188,8 @@ npm_install() {
 
   status "Installing modules with npm"
   __remote "
-    set -e
     source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
   "
@@ -206,8 +206,8 @@ foreman_export() {
   test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
 
   __remote "
-    set -e
     source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
   "

@@ -63,8 +63,8 @@ run() {
     if [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then
       status "Removing old releases which were included in upgrade package"
       __remote "
-        set -e
         [ -f ~/.profile ] && source ~/.profile
+        set -e
         cd \"$(dirname $RELEASE_DIR)/${APP}/releases\" $SILENCE
         for release_dir in \$(ls -1); do
           [[ \"\$release_dir\" != \"$WITH\"  ]] && [[ -n \"\$release_dir\" ]] && [[ -d \"\$release_dir\" ]] && echo \"removing \$release_dir\" $SILENCE && rm -rf \"\$release_dir\" || :

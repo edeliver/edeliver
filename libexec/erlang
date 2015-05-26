@@ -97,8 +97,8 @@ erlang_get_and_update_deps() {
 
   status "Fetching / Updating dependencies"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to fetch and update deps\" $SILENCE
@@ -123,8 +123,8 @@ erlang_clean_compile() {
 
   status "Compiling sources"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to compile files\" $SILENCE
@@ -151,8 +151,8 @@ erlang_generate_release() {
 
   status "Generating release"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\" $SILENCE
@@ -181,8 +181,8 @@ relx_generate_relup() {
   __detect_remote_release_version
   status "Generating relup to version ${RELEASE_VERSION}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     $RELX_CMD relup $SILENCE
   "
@@ -198,8 +198,8 @@ erlang_archive_release() {
   status "Building archive of release ${RELEASE_VERSION}"
   # create tar
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
@@ -231,8 +231,8 @@ copy_release_to_release_store() {
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd $(dirname ${_release_file}) $SILENCE
       AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
@@ -245,8 +245,8 @@ copy_release_to_release_store() {
     local _build_hosts="${2:-"$HOSTS_APP_USER"}"
     local _dest_file_name="${_release_store_path%%/}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
     local _remote_job="
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       [ -f \"$_release_file\" ]
       if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then
         cp $_release_file $_dest_file_name
@@ -297,8 +297,8 @@ get_relup_content_from_upgrade() {
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
     local _remote_job="
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd $_release_store_path
       tar -Oxzf \"$_release_file\" releases/${_release_version}/relup
       exit
@@ -563,8 +563,8 @@ __get_releases_in_store() {
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
     local _remote_job="
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd $_release_store_path
       ls -1 ${APP}_*.${_release_type}.tar.gz
       exit
@@ -591,15 +591,15 @@ upload_release_archive() {
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       mkdir -p ${_destination_directory} $SILENCE
       cd ${_destination_directory} $SILENCE
       AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     __remote "
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       mkdir -p ${_destination_directory} "
     __parallel_scp "${RELEASE_STORE}/releases/${_release_file}" "${_destination_directory}/${APP}_${_release_version}.tar.gz"
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
@@ -609,8 +609,8 @@ upload_release_archive() {
     local _dest_file_name="${_destination_directory}/${APP}_${_release_version}.tar.gz"
 
     local _remote_job="
-      set -e
       [ -f ~/.profile ] && source ~/.profile
+      set -e
       cd $_release_store_path
       [ -f \"$_release_file\" ]
       background_jobs_pids=()
@@ -651,8 +651,8 @@ upgrade_release() {
   [[ "$RELEASE_CMD" = "mix" ]] && local _upgrade_command="bin/${APP} upgrade ${VERSION} $SILENCE" \
                                || local _upgrade_command="bin/${APP} upgrade ${APP}_${VERSION} $SILENCE"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd ${DELIVER_TO}/${APP} $SILENCE
     $_upgrade_command
   "
@@ -667,8 +667,8 @@ remote_clean_release_dir() {
   local _archive="${APP}_${_release_version}.tar.gz"
   status "Cleaning release directory"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd ${_archive_dir} $SILENCE
     [[ \"$RELEASE_CMD\" = \"mix\" ]] && _app_folder=\"${APP}\" || _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))
     [[ -n \"\$_app_folder\" ]]
@@ -709,8 +709,8 @@ remote_clean_release_dir() {
 force_start_release() {
   status "Starting deployed release"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd ${DELIVER_TO}/${APP} $SILENCE
     ping_result=\$(bin/${APP} ping || :)
     if [[ \"\$ping_result\" = \"pong\" ]]; then
@@ -732,8 +732,8 @@ remote_extract_release_archive() {
   # when building releses with mix, the tar does not contain the app name as subdirectory
   [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd ${_archive_dir} $SILENCE
     tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
 }
@@ -748,8 +748,8 @@ git_checkout_remote() {
   local _revision=$1
   status "Checking out $_revision"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     git checkout $_revision $SILENCE
   "
@@ -764,8 +764,8 @@ git_checkout_remote() {
 git_stash_remote() {
   status "Stashing build directory on remote build host"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     [[ \$(git stash list | wc -l) -gt 0 ]] && _oldest_stash=\$(git stash list | tail -1 | grep -o 'stash@{[0-9]\+}' | grep -o '[0-9]\+') || _oldest_stash=0
     [[ \${_oldest_stash} -gt 50 ]] && git stash drop stash@{\$_oldest_stash} $SILENCE
@@ -782,8 +782,8 @@ rename_release_add_version() {
   local _release_version=${2:-"$RELEASE_VERSION"}
   status "Moving ${_release_description} release to ${APP}_${_release_version}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $(dirname $RELEASE_DIR) $SILENCE
     mv ${APP} ${APP}_${_release_version} $SILENCE
   "
@@ -796,8 +796,8 @@ rename_release_remove_version() {
   local _release_version=${1:-"$RELEASE_VERSION"}
   status "Removing version ${_release_version} from remote release directory"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $(dirname $RELEASE_DIR) $SILENCE
     mv ${APP}_${_release_version} ${APP} $SILENCE
   "
@@ -812,8 +812,8 @@ remove_built_release_archive() {
   local _release_dir="releases/${_release_version}"
   status "Removing built release ${_release_version} from remote release directory"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd \"$(dirname $RELEASE_DIR)/${APP}\" $SILENCE
     [[ -f \"$_release_file\" ]] && rm \"$_release_file\" $SILENCE
     [[ -n \"$_release_dir\" ]] && [[ -d \"$_release_dir\" ]] && rm -rf \"$_release_dir\"
@@ -829,8 +829,8 @@ rebar_generate_appup() {
   local _old_version=$1
   status "Generating default appup scripts for release ${RELEASE_VERSION}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
   "
@@ -865,8 +865,8 @@ rebar_generate_upgrade() {
   local _old_version=$1
   status "Generating upgrade to version ${RELEASE_VERSION}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     $REBAR_CMD generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
   "
@@ -880,8 +880,8 @@ rebar_generate_appup() {
   local _old_version=$1
   status "Generating appups for version ${RELEASE_VERSION}"
   __remote "
-    set -e
     [ -f ~/.profile ] && source ~/.profile
+    set -e
     cd $DELIVER_TO $SILENCE
     $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
   "
@@ -898,8 +898,8 @@ __detect_remote_release_dir() {
   else
     if [ "$RELEASE_CMD" = "relx" ]; then
       local _relx_release_dir_exists=($(__remote "
-        set -e
         [ -f ~/.profile ] && source ~/.profile
+        set -e
         cd $DELIVER_TO $SILENCE
         [[ -d ./_rel ]] && echo true || echo false
       "))
@@ -911,8 +911,8 @@ __detect_remote_release_dir() {
       fi
     else # built with rebar
       local _release_directories=($(__remote "
-        set -e
         [ -f ~/.profile ] && source ~/.profile
+        set -e
         cd $DELIVER_TO $SILENCE
         OS_TYPE=\$(uname)
         if [[ \"\$OS_TYPE\" = \"Darwin\" ]]; then
