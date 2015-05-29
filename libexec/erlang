@@ -165,7 +165,7 @@ erlang_generate_release() {
       $RELX_CMD release $SILENCE
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\" $SILENCE
-      MIX_ENV=prod $MIX_CMD release $SILENCE
+      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" $MIX_CMD release $SILENCE
     fi
 
   "
