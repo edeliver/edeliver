@@ -21,7 +21,7 @@ __help() {
 
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version [staging|production] [Options]
-  edeliver migrate [staging|production] [up|down]
+  edeliver migrate [staging|production] [up|down] [--version=<migration-version>]
   edeliver [show] migrations [on] [staging|production]
 
   ${txtbld}Local Commands:${txtrst}
