@@ -74,7 +74,7 @@ And link the `edeliver` binary to the root of your project directory:
 
     ./rebar get-deps # when using rebar, or ...
     ln -s ./deps/edeliver/bin/edeliver .
-    
+
 Then use the linked binary `./edeliver` instead of the `mix edeliver` tasks from the examples.
 
 ### Configuration
@@ -101,6 +101,8 @@ Create a `.deliver` directory in your project folder and add the `config` file:
 It uses ssh and scp to build and deploy the releases. Is is **recommended** that you use ssh and scp with **keys + passphrase** only. You can use `ssh-add` if your don't want to enter your passphrase every time.
 
 Maybe it is required to __configure git on your build host__ (git user name / email) or to clone the repository initially at the `BUILD_AT` path. And of course you need to __install [erlang](http://www.erlang.org/) and [elixir](http://elixir-lang.org/)__ on the `BUILD_HOST`. If you use mix to build the releases, you should __install [hex](https://hex.pm)__ on the build hosts before the first build (otherwise mix asks interactively to install it). Run the build command with __`--verbose`__ if it fails the first time.
+
+To use __different configurations on different hosts__ for your erlang/elixir release, you can configure edeliver to link the `vm.args` and / or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) to build the releases.
 
 There are **four kinds of commands**: **build commands** which compile the sources and build the erlang release **on the remote build system**, **deploy commands** which deliver the built releases to the **remote production systems**, **node commands** that **control** the nodes (e.g. starting/stopping) and **local commands**.
 
