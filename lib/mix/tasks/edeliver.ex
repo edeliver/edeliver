@@ -23,6 +23,8 @@ defmodule Mix.Tasks.Edeliver do
   ## Node Commands:
 
     * mix edeliver start|stop|restart|ping|version [staging|production] [Options]
+    * mix edeliver migrate [staging|production] [up|down]
+    * mix edeliver [show] migrations [on] [staging|production]
 
   ## Local Commands:
 
