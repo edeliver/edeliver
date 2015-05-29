@@ -26,6 +26,9 @@ RELX_CMD="./relx"
 
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
+  # validate that there is only one build host
+  local _build_hosts=$(echo "$BUILD_HOST" | wc -w)
+  [[ $_build_hosts  -gt 1 ]] && error "There are several build hosts configured:\n\n\t$BUILD_HOST\n\nPlease configure only one build host in \$BUILD_HOST.\n"
   # use build host and user for remote operations
   export HOSTS=$BUILD_HOST
   export APP_USER=$BUILD_USER
