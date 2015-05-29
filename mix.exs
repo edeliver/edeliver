@@ -3,7 +3,7 @@ defmodule Edeliver.Mixfile do
 
   def project do
     [
-      app: "edeliver",
+      app: :edeliver,
       version: "1.0.0",
       description:  "Build and Deploy Elixir Applications and perform Hot-Code Upgrades",
       package: [
