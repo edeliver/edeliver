@@ -17,6 +17,13 @@ run() {
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].'"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Showing migrations is only supported when using mix as release command."
+  elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
+    local __up_or_down="up"
+    for args in $ARGS; do [[ "$arg" = "down" ]] && local __up_or_down="down"; done
+    [[ -n "$VERSION" ]] && local __to_version=", \"$VERSION\"" || local __to_version=""
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[migrate, \"$APP\", ${__up_or_down}${__to_version}]].'"
+  elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
+    error "Executing migrations is only supported when using mix as release command."
   fi
   __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
 }

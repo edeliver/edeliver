@@ -33,8 +33,7 @@ defmodule Edeliver do
     end)
   end
 
-  def migrate(application_name, application_version, direction, migration_version \\ :all) do
-    direction = String.to_atom direction
+  def migrate(application_name, application_version, direction, migration_version \\ :all) when is_atom(direction) do
     options = if migration_version == :all, do: [all: true], else: [to: to_string(migration_version)]
     Ecto.Migrator.run(ecto_repository!, migrations_dir(application_name, application_version), direction, options)
   end
