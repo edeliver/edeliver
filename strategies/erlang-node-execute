@@ -13,6 +13,10 @@ run() {
   authorize_remote_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\""
+  elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].'"
+  elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
+    error "Showing migrations is only supported when using mix as release command."
   fi
   __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
 }
