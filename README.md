@@ -32,6 +32,10 @@ Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and depl
     mix edeliver build upgrade --with=v1.0 --to=v2.0
     mix edeliver deploy upgrade to production
 
+    # run ecto migrations manually:
+    mix edeliver migrate production
+    # or automatically during upgrade when upgrade is built with --run-migrations
+
 The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
 
 
