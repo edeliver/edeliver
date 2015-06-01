@@ -31,7 +31,6 @@ defmodule Edeliver do
     pending_migrations |> Enum.each(fn {version, name} ->
       warning "pending: #{name} (#{version})"
     end)
-    if length(pending_migrations) > 0, do: throw "error"
   end
 
   def migrate(application_name, application_version, direction, migration_version \\ :all) do
