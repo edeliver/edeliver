@@ -61,6 +61,16 @@ __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
 
+For __additional edeliver commands__ `version`, `migrate` and `show migrations` __add edeliver as application for your relase__ in the `mix.exs` file:
+
+	  def application, do: [
+	    applications: [
+	      # ...
+	      :edeliver,
+	    ],
+	  ]
+
+
 __When using rebar__, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 
     {deps, [
