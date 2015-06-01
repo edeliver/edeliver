@@ -31,7 +31,7 @@ defmodule Edeliver do
     pending_migrations |> Enum.each(fn {version, name} ->
       warning "pending: #{name} (#{version})"
     end)
-    if length(pending_migrations) > 0, do: System.halt(1)
+    if length(pending_migrations) > 0, do: throw "error"
   end
 
   def migrate(application_name, application_version, direction, migration_version \\ :all) do
@@ -87,7 +87,7 @@ defmodule Edeliver do
   defp warning(message), do: IO.puts "==> #{IO.ANSI.yellow}#{message}#{IO.ANSI.reset}"
   defp error!(message) do
      IO.puts "==> #{IO.ANSI.red}#{message}#{IO.ANSI.reset}"
-     System.halt(1)
+     throw "error"
   end
 
 
