@@ -11,7 +11,10 @@ run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   authorize_remote_hosts
-  __exec_if_defined execute_custom_node_command $NODE_ACTION || execute_node_command $NODE_ACTION
+  if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\""
+  fi
+  __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
 }
 
 # executes a node command asynchronously on all
