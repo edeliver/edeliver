@@ -18,4 +18,7 @@ defmodule ReleaseManager.Plugin.LinkSysConfig do
   def after_release(_), do: nil
 
   def after_cleanup(_), do: nil
+
+  def after_package(_), do: nil
+
 end
