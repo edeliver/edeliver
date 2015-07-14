@@ -32,6 +32,10 @@ Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and depl
     mix edeliver build upgrade --with=v1.0 --to=v2.0
     mix edeliver deploy upgrade to production
 
+    # run ecto migrations manually:
+    mix edeliver migrate production
+    # or automatically during upgrade when upgrade is built with --run-migrations
+
 The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
 
 
@@ -60,6 +64,16 @@ __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
+
+For __additional edeliver commands__ `version`, `migrate` and `show migrations` __add edeliver as application for your relase__ in the `mix.exs` file:
+
+	  def application, do: [
+	    applications: [
+	      # ...
+	      :edeliver,
+	    ],
+	  ]
+
 
 __When using rebar__, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory:
 

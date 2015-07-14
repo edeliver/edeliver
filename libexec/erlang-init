@@ -21,6 +21,8 @@ __help() {
 
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version [staging|production] [Options]
+  edeliver migrate [staging|production] [up|down] [--version=<migration-version>]
+  edeliver [show] migrations [on] [staging|production]
 
   ${txtbld}Local Commands:${txtrst}
   edeliver check release|config [--version=<release-version>]
@@ -104,9 +106,10 @@ if (( $# )); then
         __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
       fi
     ;;
-    (start|stop|restart|ping|version)
+    (start|stop|restart|ping|version|migrate|migrations)
       COMMAND="${arg}"
       if (( $# )); then
+        [[ "$1" == "on" ]] && shift
         arg="$1" && shift
         case "${arg}" in
           (*)
@@ -170,6 +173,24 @@ if (( $# )); then
               RELEASE_FILE="$1" && shift
             else
               __help; error_message "No upgrade tar.gz passed as argument.\n"; exit 2
+            fi
+          ;;
+          (migrations)
+            COMMAND="${arg}"
+            if (( $# )); then
+              [[ "$1" == "on" ]] && shift
+              arg="$1" && shift
+              case "${arg}" in
+                (*)
+                  if [[ "${arg}" =~ ^-- ]]; then
+                    NODE_ENVIRONMENT="staging"
+                  else
+                    NODE_ENVIRONMENT="$arg"
+                  fi
+                ;;
+              esac
+            else # no environment found, use staging as default
+              NODE_ENVIRONMENT="staging"
             fi
           ;;
           (*)
@@ -358,7 +379,7 @@ case "${COMMAND}" in
   (deploy)
     STRATEGY="erlang-deploy-${COMMAND_INFO}"
   ;;
-  (start|stop|restart|ping|version)
+  (start|stop|restart|ping|version|migrate|migrations)
     STRATEGY="erlang-node-execute"
     NODE_ACTION="${COMMAND}"
   ;;
