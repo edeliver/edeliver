@@ -226,7 +226,9 @@ copy_release_to_release_store() {
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
+    __detect_exrm_version
     local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
+    [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "17" ]] && _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
@@ -965,6 +967,29 @@ __detect_remote_release_version() {
     fi
   fi
 }
+
+__detect_exrm_version() {
+  if [[ -z "$EXRM_VERSION_MAJOR" || -z "$EXRM_VERSION_MINOR" ]]; then
+    status "Detecting exrm version"
+    read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR __patch__ < <(__remote "
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      cd $BUILD_AT $SILENCE
+      MIX_ENV=prod mix deps | grep exrm | grep locked | cut -d' ' -f5 | tr '.' ' '
+    ")
+    if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ ]]; then
+      error "\nFailed to detect exrm version.
+
+Please set EXRM_VERSION_MAJOR and EXRM_VERSION_MINOR
+in the console or the config file.
+
+Detected '$EXRM_VERSION_MAJOR' as major and '$EXRM_VERSION_MINOR' as minor version.
+
+      "
+    fi
+  fi
+}
+
 
 # detects the type of the release store. sets RELEASE_STORE_TYPE either
 # to "local", "remote" or "s3" and also the following environment variables
