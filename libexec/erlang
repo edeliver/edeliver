@@ -113,6 +113,7 @@ erlang_get_and_update_deps() {
       else
         echo \"rebar for mix was built already\" $SILENCE
       fi
+      $MIX_CMD local.hex --force $SILENCE
       $MIX_CMD deps.get $SILENCE
     fi
   "
