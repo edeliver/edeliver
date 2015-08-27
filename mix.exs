@@ -23,7 +23,7 @@ defmodule Edeliver.Mixfile do
   end
 
   defp deps, do: [
-    {:exrm},
+    {:exrm, "~> 0.18"},
   ]
 
 end
