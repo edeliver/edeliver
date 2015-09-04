@@ -26,6 +26,7 @@ ${txtbld}Options:${txtrst}
   -s, --strategy        Enforces a particular strategy.
   -h, --help            Displays this help. (works with no other options)
   -v, --version         Displays the running version (works with no other options)
+  -e, --env             Mix used to generate the build
 
 ${txtbld}Miscellaneous:${txtrst}
   You can overwrite any config at runtime (deliver check):
@@ -59,6 +60,9 @@ do
     ;;
     (-V|--verbose)
       MODE="verbose"
+    ;;
+    (-e|--env)
+      TARGET_MIX_ENV="prod"
     ;;
     (-P|--plain)
       # this was already captured in libexec/output

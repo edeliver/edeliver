@@ -353,6 +353,8 @@ do
         VERSION=${arg##--version=}
       elif [[ "${arg}" =~ ^--host= ]]; then
         HOST=${arg##--host=}
+      elif [[ "${arg}" =~ ^--env= ]]; then
+        TARGET_MIX_ENV=${arg##--env=}
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi

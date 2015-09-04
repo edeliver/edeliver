@@ -178,7 +178,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction
+      MIX_ENV=$TARGET_MIX_ENV LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction
     fi
 
   "
@@ -995,8 +995,8 @@ __detect_exrm_version() {
     read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
       [ -f ~/.profile ] && source ~/.profile
       cd $BUILD_AT $SILENCE
-      exrm_version=\$(MIX_ENV=prod APP=\"$APP\" $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
-      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=prod APP=\"$APP\" $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      exrm_version=\$(MIX_ENV=$TARGET_MIX_ENV APP=\"$APP\" $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=$TARGET_MIX_ENV APP=\"$APP\" $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
       [[ -z \"\$exrm_version\" ]] && exrm_version=\$(cat deps/exrm/mix.exs | grep -m1 version | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
       echo \"\$exrm_version\" | tr '.' ' '
     ")
