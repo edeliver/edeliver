@@ -20,9 +20,9 @@ else
   REBAR_OPTIONS="-C $REBAR_CONFIG"
 fi
 
-REBAR_CMD="./rebar $REBAR_OPTIONS"
-MIX_CMD="mix"
-RELX_CMD="./relx"
+REBAR_CMD=${REBAR_CMD:="./rebar $REBAR_OPTIONS"}
+MIX_CMD=${MIX_CMD:="mix"}
+RELX_CMD=${RELX_CMD:="./relx"}
 
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
