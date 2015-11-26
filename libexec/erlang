@@ -970,21 +970,23 @@ __detect_remote_release_version() {
 }
 
 __detect_exrm_version() {
-  if [[ -z "$EXRM_VERSION_MAJOR" || -z "$EXRM_VERSION_MINOR" ]]; then
+  if [[ -z "$EXRM_VERSION_MAJOR" || -z "$EXRM_VERSION_MINOR" || -z "$EXRM_VERSION_PATCH" ]]; then
     status "Detecting exrm version"
     read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
       cd $BUILD_AT $SILENCE
-      MIX_ENV=prod $MIX_CMD deps | grep exrm | grep locked | cut -d' ' -f5 | tr '.' ' '
+      MIX_ENV=prod $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | tr '.' ' '
     ")
-    if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ ]]; then
+    if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ || "$EXRM_VERSION_PATCH" =~ ^[0-9]+$ ]]; then
       error "\nFailed to detect exrm version.
 
-Please set EXRM_VERSION_MAJOR and EXRM_VERSION_MINOR
+Please set EXRM_VERSION_MAJOR, EXRM_VERSION_MINOR and EXRM_VERSION_PATCH
 in the console or the config file.
 
-Detected '$EXRM_VERSION_MAJOR' as major and '$EXRM_VERSION_MINOR' as minor version.
+Detected '$EXRM_VERSION_MAJOR' as major,
+         '$EXRM_VERSION_MINOR' as minor
+     and '$EXRM_VERSION_PATCH' as patch version.
 
       "
     fi
