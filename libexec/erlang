@@ -981,9 +981,11 @@ __detect_exrm_version() {
     status "Detecting exrm version"
     read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
       [ -f ~/.profile ] && source ~/.profile
-      set -e
       cd $BUILD_AT $SILENCE
-      MIX_ENV=prod $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | tr '.' ' '
+      exrm_version=\$(MIX_ENV=prod $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=prod $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(cat deps/exrm/mix.exs | grep -m1 version | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      echo \"\$exrm_version\" | tr '.' ' '
     ")
     if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ || "$EXRM_VERSION_PATCH" =~ ^[0-9]+$ ]]; then
       error "\nFailed to detect exrm version.
