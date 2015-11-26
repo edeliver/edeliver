@@ -972,11 +972,11 @@ __detect_remote_release_version() {
 __detect_exrm_version() {
   if [[ -z "$EXRM_VERSION_MAJOR" || -z "$EXRM_VERSION_MINOR" ]]; then
     status "Detecting exrm version"
-    read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR __patch__ < <(__remote "
+    read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
       cd $BUILD_AT $SILENCE
-      MIX_ENV=prod mix deps | grep exrm | grep locked | cut -d' ' -f5 | tr '.' ' '
+      MIX_ENV=prod $MIX_CMD deps | grep exrm | grep locked | cut -d' ' -f5 | tr '.' ' '
     ")
     if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ ]]; then
       error "\nFailed to detect exrm version.
