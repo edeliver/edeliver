@@ -787,7 +787,11 @@ git_stash_remote() {
     set -e
     cd $DELIVER_TO $SILENCE
     [[ \$(git stash list | wc -l) -gt 0 ]] && _oldest_stash=\$(git stash list | tail -1 | grep -o 'stash@{[0-9]\+}' | grep -o '[0-9]\+') || _oldest_stash=0
-    [[ \${_oldest_stash} -gt 50 ]] && git stash drop stash@{\$_oldest_stash} $SILENCE
+    if [[ \${_oldest_stash} -gt 4 ]]; then
+      git stash drop stash@{\$_oldest_stash} $SILENCE
+      git repack -ad $SILENCE
+      git prune $SILENCE
+    fi
     git stash --all $SILENCE
   "
 }
