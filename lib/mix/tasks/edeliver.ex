@@ -52,6 +52,6 @@ defmodule Mix.Tasks.Edeliver do
   @spec run(OptionParser.argv) :: :ok
   def run(args) do
     edeliver = Path.join [Mix.Project.config[:deps_path], "edeliver", "bin", "edeliver"]
-    Mix.shell.cmd  Enum.join([edeliver | args], " ")
+    if (res = Mix.shell.cmd(Enum.join([edeliver | args], " "))) > 0, do: System.halt(res)
   end
 end
