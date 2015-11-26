@@ -10,7 +10,7 @@ set_deploy_hosts
 run() {
   authorize_hosts
   authorize_remote_hosts
-  [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="*" || local _release_type="release"
+  [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="release_or_upgrade_with_release" || local _release_type="release"
   select_release_from_store "$_release_type"
   if  [[ "$RELEASE_CMD" = "mix" ]] && [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then
     upload_release_archive "${DELIVER_TO%%/}/${APP}"

@@ -439,11 +439,12 @@ download_file_from_remote_release_store() {
 
 # reselects the release or update to deploy to productions hosts
 # from the release store. Sets the RELEASE_FILE and VERSION variables
-# takes the release type as parameter (release|upgrade|*)
+# takes the release type as parameter (release|upgrade|release_or_upgrade_with_release|*)
 select_release_from_store() {
   local _release_type="$1"
   local _action=${2:-deploy}
   if [ -n "$VERSION" ]; then
+    [[ "$_release_type" = "release_or_upgrade_with_release" ]] && _release_type="*" && local _autoselect_release_if_relase_and_upgrade_exists="true"
     if [[ "$_release_type" = "*" ]]; then
       local _release_files=( $(__get_releases_in_store "$_release_type" | grep "$VERSION" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
       if [ ${#_release_files[@]} -eq 1 ]; then
@@ -459,12 +460,17 @@ select_release_from_store() {
         if [ ${#_releases_types_with_version[@]} -eq 1 ]; then
           _release_type=${_releases_types_with_version[0]}
         else
-          hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
-          for _release_type in "${_releases_types_with_version[@]}"; do
-            hint_message " $_release_type"
-          done
-          hint_message "Enter Release Type:"
-          read _release_type
+          if [[ "$_autoselect_release_if_relase_and_upgrade_exists" = "true" ]]; then
+            _release_type="release"
+            RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
+          else
+            hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
+            for _release_type in "${_releases_types_with_version[@]}"; do
+              hint_message " $_release_type"
+            done
+            hint_message "Enter Release Type:"
+            read _release_type
+          fi
         fi
         RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
       fi
