@@ -99,22 +99,22 @@ erlang_get_and_update_deps() {
   __exec_if_defined "pre_erlang_get_and_update_deps"
 
   status "Fetching / Updating dependencies"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
+    cd $DELIVER_TO
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
-      echo \"using rebar to fetch and update deps\" $SILENCE
-      $REBAR_CMD update-deps get-deps $SILENCE
+      echo \"using rebar to fetch and update deps\"
+      $REBAR_CMD update-deps get-deps
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
-      echo \"using mix to fetch and update deps\" $SILENCE
+      echo \"using mix to fetch and update deps\"
       if [ ! -f ~/.mix/rebar ]; then
-        $MIX_CMD local.rebar $SILENCE
+        $MIX_CMD local.rebar
       else
-        echo \"rebar for mix was built already\" $SILENCE
+        echo \"rebar for mix was built already\"
       fi
-      $MIX_CMD local.hex --force $SILENCE
-      $MIX_CMD deps.get $SILENCE
+      $MIX_CMD local.hex --force
+      $MIX_CMD deps.get
     fi
   "
   __exec_if_defined "pos_erlang_get_and_update_deps"
@@ -127,24 +127,24 @@ erlang_clean_compile() {
   [[ "$SKIP_MIX_CLEAN" = "true" ]] \
     && status "Compiling sources (skipping cleaning)" \
     || status "Compiling sources"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
+    cd $DELIVER_TO
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
-      echo \"using rebar to compile files\" $SILENCE
-      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true $SILENCE || :
-      $REBAR_CMD compile $SILENCE
+      echo \"using rebar to compile files\"
+      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
+      $REBAR_CMD compile
 
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && APP=\"$APP\" $MIX_CMD do clean $SILENCE
-      echo \"Compiling sources is done by mix release task\" $SILENCE
+      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && APP=\"$APP\" $MIX_CMD do clean
+      echo \"Compiling sources is done by mix release task\"
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
-      echo \"using mix to compile files\" $SILENCE
+      echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" $MIX_CMD do deps.compile, compile $SILENCE
+        APP=\"$APP\" $MIX_CMD do deps.compile, compile
       else
-        APP=\"$APP\" $MIX_CMD do clean, deps.compile, compile $SILENCE
+        APP=\"$APP\" $MIX_CMD do clean, deps.compile, compile
       fi
     fi
   "
@@ -167,19 +167,19 @@ erlang_generate_release() {
   fi
 
   status "Generating release"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
+    cd $DELIVER_TO
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
-      echo \"using rebar to generate release\" $SILENCE
-      $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate $SILENCE
+      echo \"using rebar to generate release\"
+      $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
-      echo \"using relx to generate release\" $SILENCE
-      $RELX_CMD release $SILENCE
+      echo \"using relx to generate release\"
+      $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      echo \"using mix to generate release\" $SILENCE
-      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" $MIX_CMD release $_force_no_interaction $SILENCE
+      echo \"using mix to generate release\"
+      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" $MIX_CMD release $_force_no_interaction
     fi
 
   "
@@ -197,11 +197,11 @@ relx_generate_relup() {
   RELEASE_VERSION="" # redetect new version
   __detect_remote_release_version
   status "Generating relup to version ${RELEASE_VERSION}"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
-    $RELX_CMD relup $SILENCE
+    cd $DELIVER_TO
+    $RELX_CMD relup
   "
 
   __exec_if_defined "post_relx_generate_relup"
@@ -214,15 +214,15 @@ erlang_archive_release() {
   [[ "$RELEASE_CMD" = "mix" ]] && return 0 # mix archives release automatically
   status "Building archive of release ${RELEASE_VERSION}"
   # create tar
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
+    cd $DELIVER_TO
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
-      tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP} $SILENCE
+      tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
-      echo \"using relx to archive release\" $SILENCE
-      $RELX_CMD tar $SILENCE
+      echo \"using relx to archive release\"
+      $RELX_CMD tar
     fi
   "
 }
@@ -772,11 +772,11 @@ get_latest_commit() {
 git_checkout_remote() {
   local _revision=$1
   status "Checking out $_revision"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
-    git checkout $_revision $SILENCE
+    cd $DELIVER_TO
+    git checkout $_revision
   "
 }
 
@@ -790,12 +790,12 @@ git_clean_remote() {
   else
     GIT_CLEAN_PATHS=${GIT_CLEAN_PATHS:="."}
     status "Cleaning generated files from last build"
-    __remote "
+    __sync_remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
-      cd $DELIVER_TO $SILENCE
-      echo \"cleaning files in: $GIT_CLEAN_PATHS\" $SILENCE
-      git clean -fdx $GIT_CLEAN_PATHS $SILENCE
+      cd $DELIVER_TO
+      echo \"cleaning files in: $GIT_CLEAN_PATHS\"
+      git clean -fdx $GIT_CLEAN_PATHS
     "
   fi
 }
@@ -808,11 +808,11 @@ rename_release_add_version() {
   __detect_remote_release_version
   local _release_version=${2:-"$RELEASE_VERSION"}
   status "Moving ${_release_description} release to ${APP}_${_release_version}"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $(dirname $RELEASE_DIR) $SILENCE
-    mv ${APP} ${APP}_${_release_version} $SILENCE
+    cd $(dirname $RELEASE_DIR)
+    mv ${APP} ${APP}_${_release_version}
   "
 }
 
@@ -822,11 +822,11 @@ rename_release_remove_version() {
   __detect_remote_release_dir
   local _release_version=${1:-"$RELEASE_VERSION"}
   status "Removing version ${_release_version} from remote release directory"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $(dirname $RELEASE_DIR) $SILENCE
-    mv ${APP}_${_release_version} ${APP} $SILENCE
+    cd $(dirname $RELEASE_DIR)
+    mv ${APP}_${_release_version} ${APP}
   "
 }
 
@@ -838,11 +838,11 @@ remove_built_release_archive() {
   local _release_file="${APP}-${_release_version}.tar.gz"
   local _release_dir="releases/${_release_version}"
   status "Removing built release ${_release_version} from remote release directory"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd \"$(dirname $RELEASE_DIR)/${APP}\" $SILENCE
-    [[ -f \"$_release_file\" ]] && rm \"$_release_file\" $SILENCE
+    cd \"$(dirname $RELEASE_DIR)/${APP}\"
+    [[ -f \"$_release_file\" ]] && rm \"$_release_file\"
     [[ -n \"$_release_dir\" ]] && [[ -d \"$_release_dir\" ]] && rm -rf \"$_release_dir\"
   "
 }
@@ -855,11 +855,11 @@ rebar_generate_appup() {
   __detect_remote_release_version
   local _old_version=$1
   status "Generating default appup scripts for release ${RELEASE_VERSION}"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
-    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
+    cd $DELIVER_TO
+    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version}
   "
 }
 
@@ -891,11 +891,11 @@ rebar_generate_upgrade() {
   __detect_remote_release_version
   local _old_version=$1
   status "Generating upgrade to version ${RELEASE_VERSION}"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
-    $REBAR_CMD generate-upgrade previous_release=${APP}_${_old_version} $SILENCE
+    cd $DELIVER_TO
+    $REBAR_CMD generate-upgrade previous_release=${APP}_${_old_version}
   "
 }
 
@@ -906,11 +906,11 @@ rebar_generate_appup() {
   __detect_remote_release_version
   local _old_version=$1
   status "Generating appups for version ${RELEASE_VERSION}"
-  __remote "
+  __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd $DELIVER_TO $SILENCE
-    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version} $SILENCE
+    cd $DELIVER_TO
+    $REBAR_CMD generate-appups previous_release=${APP}_${_old_version}
   "
 }
 

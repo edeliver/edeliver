@@ -274,10 +274,6 @@ __parallelize() {
 #
 __remote() {
   local _remote_job="$1"
-
-  #__parallelize "ssh -o ConnectTimeout=$SSH_TIMEOUT \"\$_host\" \"$_remote_job\""
-
-  local _remote_job="$1"
   local _hosts="${2:-"$HOSTS_APP_USER"}"
   background_jobs_pids=()
   background_jobs=()
@@ -294,6 +290,40 @@ __remote() {
 
   __monitor_background_jobs
 }
+
+
+# execute on single remote host
+# not in background
+__sync_remote() {
+  local _remote_job="$1"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
+  __log "${_hosts} : $_remote_job"
+  [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
+  if [[ "$VERBOSE" = "true" ]]; then
+    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nFAILED $?:\n${_remote_job}\n"
+  else
+    local _output _status
+    _output=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+    _status=$?
+    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nFAILED $_status:\n${_remote_job}\n"
+  fi
+}
+
+__sync_local() {
+  local _local_job="$1"
+  local _hosts="${2:-"$HOSTS_APP_USER"}"
+  __log "local : $__local_job"
+  [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
+  if [[ "$VERBOSE" = "true" ]]; then
+    $_local_job || error "\nFAILED $?:\n${_local_job}\n"
+  else
+    local _output _status
+    _output=$($_local_job 2>&1)
+    _status=$?
+    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nFAILED $_status:\n${_local_job}\n"
+  fi
+}
+
 
 # Logs all events (including formatting styles) so that people can tail,
 # inspect and use for general debugging.

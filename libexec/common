@@ -75,29 +75,17 @@ git_push() {
 
   status "Pushing new commits with git to: $_hosts"
 
-  background_jobs_pids=()
-  background_jobs=()
-
-  for _host in $_hosts
-  do
-    local _background_job="git push --tags $GIT_PUSH $_host $REFSPEC $SILENCE"
-    __log "JOB: $_background_job"
-    ( eval "$_background_job" ) &
-    background_jobs_pids+=("$!")
-    background_jobs+=("$_background_job")
-  done
-
-  __monitor_background_jobs
+  __sync_local "git push --tags $GIT_PUSH $_host $REFSPEC"
 
   __exec_if_defined "post_git_push"
 }
 
 git_reset_remote() {
   status "Resetting remote hosts to $REVISION"
-  __remote "
+  __sync_remote "
     set -e
-    cd $DELIVER_TO $SILENCE
-    git reset --hard $REVISION $SILENCE
+    cd $DELIVER_TO
+    git reset --hard $REVISION
   "
 }
 
@@ -105,11 +93,11 @@ git_submodules() {
   __exec_if_defined "pre_git_submodules"
 
   status "Updating git submodules"
-  __remote "
+  __sync_remote "
     set -e
-    cd $DELIVER_TO $SILENCE
-    git submodule init $SILENCE
-    git submodule sync $SILENCE
+    cd $DELIVER_TO
+    git submodule init
+    git submodule sync
     if [ -e .gitmodules ]
     then
       if [ ! -e ~/.ssh/known_hosts ]
@@ -118,12 +106,12 @@ git_submodules() {
       fi
       cat .gitmodules | awk -F '://|@|:|/' '
       /url =/ {
-        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts $SILENCE\"
+        command=\"test \$(ssh-keygen -F \" \$2 \" | grep -c found) = 0 && ssh-keyscan \" \$2 \" >> ~/.ssh/known_hosts\"
         system(command)
         close(command)
       }'
-      git submodule foreach 'git reset --hard $SILENCE' $SILENCE
-      git submodule update $SILENCE
+      git submodule foreach 'git reset --hard'
+      git submodule update
     fi
   "
 
