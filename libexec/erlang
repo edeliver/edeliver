@@ -246,7 +246,7 @@ copy_release_to_release_store() {
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
-  status "Copying release to $RELEASE_STORE_TYPE release store"
+  status "Copying release ${RELEASE_VERSION} to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
