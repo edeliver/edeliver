@@ -122,7 +122,7 @@ There are **four kinds of commands**: **build commands** which compile the sourc
 
 ### Build Commands
 
-The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. OTP 17.5) of the remote build system is included into the release built and delivered to all production system. It is not required to install the otp runtime on the production systems.
+The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. OTP 17.5) of the remote build system and the elixir runtime is included into the release built and delivered to all production system. It is not required to install the otp runtime nor elixir on the production systems.
 For build commands the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
@@ -130,9 +130,11 @@ For build commands the following **configuration** variables must be set:
 - `BUILD_USER`: the local user at build host
 - `BUILD_AT`: the directory on build host where to build the release. must exist.
 
-The built release it then **copied to your local directory** `.deliver/releases` and can then be **delivered to your production servers** by using one of the **deploy commands**.
+The built release is then **copied to your local directory** `.deliver/releases` and can then be **delivered to your production servers** by using one of the **deploy commands**.
 
 If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the __local__ `.deliver` __directory__ but you can configure any destination with the `RELEASE_STORE=` environment variables, also __remote ssh destinations__ (in your server network) like `RELEASE_STORE=user@releases.acme.org:/releases/` or **amazon s3** locations like `s3://AWS_ACCESS_KEY_ID@AWS_SECRET_ACCESS_KEY:bucket`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
+
+To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_PATHS` variable in your config file e.g. to something like `="_build rel priv/generated"` which defaults to `.`. That value means, that everything from the last build is reset (beam files, release files, deps, generated assets etc.) before the next build is started to ensure that no conflicts with old (e.g. removed or renamed) files might arise. You can also use the command line option `--skip-git-clean` to skip this step completely and in addition with the `--skip-mix-clean` option for full __incremental builds__.
 
 #### Build Initial Release
 

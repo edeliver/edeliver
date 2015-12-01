@@ -45,9 +45,12 @@ defmodule Mix.Tasks.Edeliver do
     * `-D`, `--debug` Runs in shell debug mode, displays everything.
     * `-S`, `--skip-existing` Skip copying release archives if they exist already on the deploy hosts.
     * `-F`, `--force` Do not ask, just do, overwrite, delete or destroy everything
-    *       `--clean-deploy` Delete the release, lib and erts-* directories before deploying the release
-    *       `--start-deploy` Starts the deployed release. If release is running, it is restarted!
-    *       `--host=[u@]vwx.yz` Run command only on that host, even if different hosts are configured
+    * `--clean-deploy` Delete the release, lib and erts-* directories before deploying the release
+    * `--start-deploy` Starts the deployed release. If release is running, it is restarted!
+    * `--host=[u@]vwx.yz` Run command only on that host, even if different hosts are configured
+    * `--skip-git-clean` Don't build from a clean state for faster builds. By default all built files are removed before the next build using `git clean`. This can be adjusted by the $GIT_CLEAN_PATHS env.
+    * `--skip-mix-clean` Skip the 'mix clean step' for faster builds. Makes only sense in addition to the --skip-git-clean
+
   """
   @spec run(OptionParser.argv) :: :ok
   def run(args) do

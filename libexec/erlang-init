@@ -43,6 +43,8 @@ __help() {
   -S, --skip-existing   Skip copying release archives if they exist already on the deploy hosts.
   -F, --force           Do not ask, just do, overwrite, delete or destroy everything
       --clean-deploy    Delete the release, lib and erts-* directories before deploying the release
+      --skip-git-clean  Don't build from a clean state for faster builds. See $GIT_CLEAN_PATHS env
+      --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured
 
@@ -51,6 +53,7 @@ ${txtbld}Miscellaneous:${txtrst}
   You can overwrite any config at runtime:
 
   BUILD_HOST=build-2.acme.com edeliver build release
+  GIT_CLEAN_PATHS='_build rel priv/generated' edeliver build release
 "
 }
 
@@ -307,6 +310,12 @@ do
     ;;
     (--clean-deploy)
       CLEAN_DEPLOY="true"
+    ;;
+    (--skip-git-clean)
+      SKIP_GIT_CLEAN="true"
+    ;;
+    (--skip-mix-clean)
+      SKIP_MIX_CLEAN="true"
     ;;
     (--start-deploy)
       START_DEPLOY="true"

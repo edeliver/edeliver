@@ -13,7 +13,7 @@ run() {
   init_app_remotely
   git_push
   git_reset_remote
-  git_stash_remote
+  git_clean_remote
   authorize_remote_hosts
   erlang_get_and_update_deps
   erlang_clean_compile

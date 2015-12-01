@@ -124,22 +124,28 @@ erlang_get_and_update_deps() {
 # compiles the sources on the remote build host
 erlang_clean_compile() {
   __exec_if_defined "pre_erlang_clean_compile"
-
-  status "Compiling sources"
+  [[ "$SKIP_MIX_CLEAN" = "true" ]] \
+    && status "Compiling sources (skipping cleaning)" \
+    || status "Compiling sources"
   __remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd $DELIVER_TO $SILENCE
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to compile files\" $SILENCE
-      $REBAR_CMD clean skip_deps=true $SILENCE
+      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true $SILENCE || :
       $REBAR_CMD compile $SILENCE
 
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
+      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && APP=\"$APP\" $MIX_CMD do clean $SILENCE
       echo \"Compiling sources is done by mix release task\" $SILENCE
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\" $SILENCE
-      APP=\"$APP\" $MIX_CMD do clean, deps.compile $SILENCE
+      if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
+        APP=\"$APP\" $MIX_CMD do deps.compile, compile $SILENCE
+      else
+        APP=\"$APP\" $MIX_CMD do clean, deps.compile, compile $SILENCE
+      fi
     fi
   "
 
@@ -774,26 +780,24 @@ git_checkout_remote() {
   "
 }
 
-# stashes the build directory on the remote build host.
-# stashing instead of cleaning prevent losing manual changes
-# and prevent damage if BUILD_AT directory is not configured
-# properly.
-# keeps max 10 stashes because the stashed files may be
-# quite large because that are previous builds
-git_stash_remote() {
-  status "Stashing build directory on remote build host"
-  __remote "
-    [ -f ~/.profile ] && source ~/.profile
-    set -e
-    cd $DELIVER_TO $SILENCE
-    [[ \$(git stash list | wc -l) -gt 0 ]] && _oldest_stash=\$(git stash list | tail -1 | grep -o 'stash@{[0-9]\+}' | grep -o '[0-9]\+') || _oldest_stash=0
-    if [[ \${_oldest_stash} -gt 4 ]]; then
-      git stash drop stash@{\$_oldest_stash} $SILENCE
-      git repack -ad $SILENCE
-      git prune $SILENCE
-    fi
-    git stash --all $SILENCE
-  "
+# cleans the build directory on the remote build host.
+# by default all generated files are cleaned but that
+# can be adjusted by the GIT_CLEAN_PATHS env. This
+# function does nothing if SKIP_MIX_CLEAN="true"
+git_clean_remote() {
+  if [[ "$SKIP_MIX_CLEAN" = "true" ]]; then
+    status "Skipped cleaning generated files from last build"
+  else
+    GIT_CLEAN_PATHS=${GIT_CLEAN_PATHS:="."}
+    status "Cleaning generated files from last build"
+    __remote "
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      cd $DELIVER_TO $SILENCE
+      echo \"cleaning files in: $GIT_CLEAN_PATHS\" $SILENCE
+      git clean -fdx $GIT_CLEAN_PATHS $SILENCE
+    "
+  fi
 }
 
 # renames the release directory on the remote build host
