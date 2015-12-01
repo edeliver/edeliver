@@ -8,7 +8,7 @@
 
 The **[erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html)** are **built** on a **remote host** that have a similar configuration to the deployment target systems and can then be **deployed to several production systems**.
 
-This is necessary because the **[release](http://www.erlang.org/doc/design_principles/release_handling.html) contains** the full **[erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html)**, all **[dependencies (erlang applications)](http://www.erlang.org/doc/design_principles/applications.html)**, native port drivers and **your own erlang application(s)** in a **standalone embedded node**.
+This is necessary because the **[release](http://www.erlang.org/doc/design_principles/release_handling.html) contains** the full **[erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html)**, all **[dependencies (erlang or elixir applications)](http://www.erlang.org/doc/design_principles/applications.html)**, **elixir runtime**, native port drivers and **your own erlang/elixir application(s)** in a **standalone embedded node**.
 
 Examples:
 
@@ -60,7 +60,7 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEAS
 __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package]({ :edeliver, "~> 1.0.0"},) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, "~> 1.0.0"}]
+        [{:edeliver, ">= 1.1.0"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
