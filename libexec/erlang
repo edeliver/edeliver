@@ -109,12 +109,12 @@ erlang_get_and_update_deps() {
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to fetch and update deps\"
       if [ ! -f ~/.mix/rebar ]; then
-        APP=\"$APP\" $MIX_CMD local.rebar
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD local.rebar
       else
         echo \"rebar for mix was built already\"
       fi
-      APP=\"$APP\" $MIX_CMD local.hex --force
-      APP=\"$APP\" $MIX_CMD deps.get
+      APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD local.hex --force
+      APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD deps.get
     fi
   "
   __exec_if_defined "pos_erlang_get_and_update_deps"
@@ -137,13 +137,13 @@ erlang_clean_compile() {
       $REBAR_CMD compile
 
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" $MIX_CMD compile || APP=\"$APP\" $MIX_CMD do clean, compile
+      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD compile || APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, compile
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" $MIX_CMD do deps.compile, compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do deps.compile, compile
       else
-        APP=\"$APP\" $MIX_CMD do clean, deps.compile, compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, deps.compile, compile
       fi
     fi
   "
@@ -178,7 +178,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=$TARGET_MIX_ENV LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction
+      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction
     fi
 
   "
@@ -995,8 +995,8 @@ __detect_exrm_version() {
     read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
       [ -f ~/.profile ] && source ~/.profile
       cd $BUILD_AT $SILENCE
-      exrm_version=\$(MIX_ENV=$TARGET_MIX_ENV APP=\"$APP\" $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
-      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=$TARGET_MIX_ENV APP=\"$APP\" $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      exrm_version=\$(MIX_ENV=\"$TARGET_MIX_ENV\" APP=\"$APP\" $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
+      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=\"$TARGET_MIX_ENV\" APP=\"$APP\" $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
       [[ -z \"\$exrm_version\" ]] && exrm_version=\$(cat deps/exrm/mix.exs | grep -m1 version | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
       echo \"\$exrm_version\" | tr '.' ' '
     ")
