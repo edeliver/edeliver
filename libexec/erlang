@@ -137,8 +137,7 @@ erlang_clean_compile() {
       $REBAR_CMD compile
 
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && APP=\"$APP\" $MIX_CMD do clean
-      echo \"Compiling sources is done by mix release task\"
+      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" $MIX_CMD compile || APP=\"$APP\" $MIX_CMD do clean, compile
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
@@ -179,7 +178,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" $MIX_CMD do compile, release $_force_no_interaction
+      MIX_ENV=prod LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" $MIX_CMD release $_force_no_interaction
     fi
 
   "
