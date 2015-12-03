@@ -80,7 +80,7 @@ authorize_deploy_hosts_on_release_store() {
 # ~/.ssh/known_hosts file on the build host
 authorize_release_store_on_build_host() {
   __detect_release_store_type
-  if [[ "$AUTHORIZED_RELEASE_STORE_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
+  if [[ "$AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
     status "Authorizing release store on build host"
     local _release_store_host=${RELEASE_STORE%:*}
     _release_store_host=${_release_store_host#*@}
@@ -93,6 +93,24 @@ authorize_release_store_on_build_host() {
         ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
       fi
     "
+    AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST="true"
+  fi
+}
+
+# authorizes the release store host on localhost
+# which means that it is added to the local
+# ~/.ssh/known_hosts file
+authorize_release_store_host() {
+  __detect_release_store_type
+  if [[ "$AUTHORIZED_RELEASE_STORE_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
+    status "Authorizing release store host"
+    local _release_store_host=${RELEASE_STORE%:*}
+    _release_store_host=${_release_store_host#*@}
+    if [[ $(ssh-keygen -F $_release_store_host | grep -c found) = 0 ]]; then
+      [[ "$VERBOSE" = "true" ]] && echo "Authorizing $_release_store_host on localhost:"
+      [[ "$VERBOSE" = "true" ]] && ssh-keyscan "$_release_store_host" 2>/dev/null
+      ssh-keyscan "$_release_store_host" 2>/dev/null >> ~/.ssh/known_hosts
+    fi
     AUTHORIZED_RELEASE_STORE_HOST="true"
   fi
 }

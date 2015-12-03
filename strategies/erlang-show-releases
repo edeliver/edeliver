@@ -2,5 +2,6 @@
 
 
 run() {
+  authorize_release_store_host
   list_releases_in_store "*"
 }

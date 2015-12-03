@@ -5,6 +5,7 @@ set_deploy_hosts
 
 run() {
   authorize_hosts
+  authorize_release_store_host
   authorize_deploy_hosts_on_release_store
   select_release_from_store "upgrade"
   if [[ "$RELEASE_CMD" = "mix" ]]; then

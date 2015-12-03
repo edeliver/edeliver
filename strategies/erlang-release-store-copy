@@ -10,6 +10,8 @@ OPTIONAL_CONFIGS+=("COMMAND_INFO")
 OPTIONAL_CONFIGS+=("VERSION")
 
 run() {
+  authorize_release_store_host
+
   if [ -z "$RELEASE_FILE" ]; then
     if [ -n "$VERSION" ] && [ -n "$COMMAND_INFO" ] && [ -n "$APP" ]; then
       RELEASE_FILE="${APP}_${VERSION}.${COMMAND_INFO}.tar.gz"
