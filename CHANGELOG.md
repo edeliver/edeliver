@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+1.1.1
+
+- added command line option `--mix-env=<env>`
+- automatic authorization of/on release store host
+- allow to build different apps in one project when `APP` env is used
+- use always explicit compilation for exrm compatibility
+
 __1.1.0__
 
 - allow incremental builds to decrease build time
