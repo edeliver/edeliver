@@ -10,7 +10,6 @@ require_node_config
 run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
-  authorize_remote_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\""
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then

@@ -19,6 +19,10 @@ nothing_to_do() {
   status "Everything up-to-date"
 }
 
+# authorizes the hosts on the local machine
+# to which an ssh connection will be opened
+# by adding them to the ~/.ssh/known_hosts
+# file
 authorize_hosts() {
   if [ -n "$HOSTS" ]
   then
@@ -33,9 +37,63 @@ authorize_hosts() {
     do
       if [[ $(ssh-keygen -F $_host | grep -c found) = 0 ]]
       then
+        [[ "$VERBOSE" = "true" ]] && echo "Authorizing $_host on localhost:"
+        [[ "$VERBOSE" = "true" ]] && ssh-keyscan "$_host" 2>/dev/null
         ssh-keyscan "$_host" 2>/dev/null >> ~/.ssh/known_hosts
       fi
     done
+  fi
+}
+
+# authorizes the deploy hosts on the remote release store
+# host which will use ssh to copy the releases to the
+# deploy hosts. deploy hosts will be added to the
+# ~/.ssh/known_hosts file on the release store host
+authorize_deploy_hosts_on_release_store() {
+  __detect_release_store_type
+  if [[ "$AUTHORIZED_BUILD_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
+    status "Authorizing deploy hosts on release store"
+    local _release_store_host=${RELEASE_STORE%:*}
+    __sync_remote "
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      for _host in $HOSTS_APP_USER
+      do
+        _host=\${_host%:*}
+        _host=\${_host#*@}
+        if [[ \$(ssh-keygen -F \$_host | grep -c found) = 0 ]]
+        then
+          echo \"Authorizing \$_host on $_release_store_host:\" $SILENCE
+          ssh-keyscan \"\$_host\" 2>/dev/null $SILENCE
+          ssh-keyscan \"\$_host\" 2>/dev/null >> ~/.ssh/known_hosts
+        fi
+      done
+    " "$_release_store_host"
+
+    AUTHORIZED_BUILD_HOST="true"
+  fi
+}
+
+# authorizes the release hosts on the build hosts
+# which will use ssh to copy the releases to the
+# release store host. release store hosts will be added to the
+# ~/.ssh/known_hosts file on the build host
+authorize_release_store_on_build_host() {
+  __detect_release_store_type
+  if [[ "$AUTHORIZED_RELEASE_STORE_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
+    status "Authorizing release store on build host"
+    local _release_store_host=${RELEASE_STORE%:*}
+    _release_store_host=${_release_store_host#*@}
+    __sync_remote "
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
+        echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
+        ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
+        ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
+      fi
+    "
+    AUTHORIZED_RELEASE_STORE_HOST="true"
   fi
 }
 
@@ -134,23 +192,6 @@ rvmrc_trust() {
   fi
 }
 
-authorize_remote_hosts() {
-  if [[ ${#AUTHORIZED_REMOTE_HOSTS[@]} != 0 ]]
-  then
-    status "Authorizing remote hosts"
-    __remote "
-      source ~/.profile
-      set -e
-      for _remote_host in $AUTHORIZED_REMOTE_HOSTS
-      do
-        if [[ \$(ssh-keygen -F \$_remote_host | grep -c found) = 0 ]]
-        then
-          ssh-keyscan \$_remote_host >> ~/.ssh/known_hosts $SILENCE
-        fi
-      done
-    "
-  fi
-}
 
 bundle_install() {
   __exec_if_defined "pre_bundle_install"

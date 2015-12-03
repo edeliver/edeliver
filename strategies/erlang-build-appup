@@ -15,7 +15,7 @@ set_build_hosts
 
 run() {
   authorize_hosts
-
+  authorize_release_store_on_build_host
   if [[ -n "$WITH" ]]; then
     validate_release_is_in_store "release" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
     if [[ $? -ne 0 ]]; then

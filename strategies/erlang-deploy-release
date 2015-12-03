@@ -9,7 +9,7 @@ set_deploy_hosts
 
 run() {
   authorize_hosts
-  authorize_remote_hosts
+  authorize_deploy_hosts_on_release_store
   [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="release_or_upgrade_with_release" || local _release_type="release"
   select_release_from_store "$_release_type"
   if  [[ "$RELEASE_CMD" = "mix" ]] && [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then

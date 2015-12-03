@@ -5,7 +5,7 @@ set_deploy_hosts
 
 run() {
   authorize_hosts
-  authorize_remote_hosts
+  authorize_deploy_hosts_on_release_store
   select_release_from_store "upgrade"
   if [[ "$RELEASE_CMD" = "mix" ]]; then
     upload_release_archive "${DELIVER_TO}/${APP}/releases/${VERSION}"
