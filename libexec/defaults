@@ -22,3 +22,5 @@ OPTIONAL_CONFIGS=("APP" "APP_USER" "DELIVER_TO" "REFSPEC" "GIT_PUSH" "REVISION" 
 MODE=${MODE:-"compact"}
 
 log_file="/tmp/deliver-${APP}"
+
+TARGET_MIX_ENV=prod

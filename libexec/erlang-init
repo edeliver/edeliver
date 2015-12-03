@@ -47,6 +47,7 @@ __help() {
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured
+      --mix-env=<env>   Build with custom mix env $MIX_ENV. Default is 'prod'
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).
@@ -353,8 +354,8 @@ do
         VERSION=${arg##--version=}
       elif [[ "${arg}" =~ ^--host= ]]; then
         HOST=${arg##--host=}
-      elif [[ "${arg}" =~ ^--env= ]]; then
-        TARGET_MIX_ENV=${arg##--env=}
+      elif [[ "${arg}" =~ ^--mix-env= ]]; then
+        TARGET_MIX_ENV=${arg##--mix-env=}
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi
