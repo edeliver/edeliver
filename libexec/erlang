@@ -163,6 +163,11 @@ erlang_generate_release() {
     [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "19" \
        || "${EXRM_VERSION_MAJOR}.${EXRM_VERSION_MINOR}.${EXRM_VERSION_PATCH}" = "0.19.9" ]] \
     && local _force_no_interaction=" --no-confirm-missing"
+    # exrm normal verbosity is very silent, so use --verbosity=normal for the release task if edeliver runs
+    # in verbose mode. if --verbosity=verbose is used for the exrm release task, the output is very very verbose,
+    # so we use it only if edeliver runs in silent mode because the very very verbose output is not visible
+    # until the release task fails and then it might be helpful to see the very very verbose output.
+    [[ "$MODE" = "verbose" ]] && local _mix_release_verbosity="normal" || local _mix_release_verbosity="verbose"
   fi
 
   status "Generating release"
@@ -178,7 +183,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction
+      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD release $_force_no_interaction --verbosity=$_mix_release_verbosity
     fi
 
   "
