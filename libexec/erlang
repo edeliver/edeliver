@@ -117,7 +117,7 @@ erlang_get_and_update_deps() {
       APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD deps.get
     fi
   "
-  __exec_if_defined "pos_erlang_get_and_update_deps"
+  __exec_if_defined "post_erlang_get_and_update_deps"
 }
 
 
