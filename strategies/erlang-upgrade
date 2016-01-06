@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("BUILD_HOST")
+REQUIRED_CONFIGS+=("BUILD_USER")
+REQUIRED_CONFIGS+=("BUILD_AT")
+OPTIONAL_CONFIGS+=("TO")
+OPTIONAL_CONFIGS+=("REBAR_CONFIG")
+
+TO="${TO:=$(get_latest_commit)}"
+
+help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver upgrade [Options]
+
+${txtbld}Options:${txtrst}
+  --to=<git-tag> The revision to build the upgrade for. Default is the HEAD
+             of the master branch or the branch passed as ${bldwht}--branch=${txtrst} argument.
+  --branch=<git-branch> The branch to build. ${txtylw}Default is the master branch${txtrst}.
+             ${txtgrn}The branch doesn't need to be pushed to remote${txtrst} before building.
+             The revision passed as ${bldwht}--from=${txtrst} or ${bldwht}--to=${txtrst} argument must be in
+             that branch.
+  --mix-env=<env> Build the upgrade with a custom mix environment.
+             Default is ${bldwht}prod${txtrst}.
+  --restart-crashed ${txtgrn}Restart terminated nodes${txtrst} which crashed
+             during hot code upgrade. They will be restarted ${txtgrn}with the
+             new version${txtrst}.
+
+${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
+  --skip-git-clean Don't build from a clean state for faster builds. Can be
+             adjusted by the ${bldwht}GIT_CLEAN_PATHS${txtrst} environment variable. Should be
+             at least ${bldwht}rel${txtrst} for elixir releases.
+  --skip-mix-clean Skip the 'mix clean step' for faster builds. Can be used
+             in addition to ${bldwht}--skip-git-clean${txtrst} Option for incremental builds.
+
+${bldylw}Info:${txtrst}
+  ${txtgrn}Builds an upgrade${txtrst} on the build host based on the current version
+  running on the staging (default) or production hosts and
+  ${txtylw}deploys the upgrade${txtrst} to all nodes using ${txtgrn}hot code upgrade${txtrst}.
+  It performs these single steps:
+
+    * detect current version on all running nodes
+    * validate all nodes run the same version
+    * build new upgrade to that version (or use existing)
+    * patch relup file if necessary (see ${bldwht}build upgrade${txtrst}) command
+    * deploy (hot code) upgrade while nodes are running
+    * validate that all nodes run the upgraded version
+    * deploy the release to not running nodes
+  "
+}
+
+
+set_build_hosts
+
+run() {
+
+ # steps:
+
+ #  - detect current version on all running nodes
+ #    - no node running
+ #      - __deploy_release_to_not_running_nodes
+ #    - all nodes run the same version
+ #      - check if upgrade is already in release store
+ #        - __deploy_upgrade_to_running_nodes
+ #        - __validate_upgrade_succeeded
+ #        - __deploy_release_to_not_running_nodes
+ #      - upgrade is not in store
+ #        - build upgrade
+ #        - __deploy_upgrade_to_running_nodes
+ #        - __validate_upgrade_succeeded
+ #        - __deploy_release_to_not_running_nodes
+ #    - not all nodes run the same version
+ #      - abort: must first upgrade nodes to the same version manually
+  :
+}
+
+__deploy_release_to_not_running_nodes() {
+  :
+}
+
+__deploy_upgrade_to_running_nodes() {
+  :
+}
+
+__validate_upgrade_succeeded() {
+  :
+}
+
