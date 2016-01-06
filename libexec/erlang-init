@@ -10,6 +10,7 @@ __help() {
   echo -e "${txtbld}Usage:${txtrst}
   edeliver <build-command|deploy-command|node-command|local-command> command-info [Options]
   edeliver --help|--version
+  edeliver help <command>
 
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
@@ -70,6 +71,8 @@ __available_strategies() {
 
   echo ""
 }
+
+[[ "$1" == "help" ]] && PRINT_COMMAND_HELP=true && shift
 
 # parse command
 if (( $# )); then

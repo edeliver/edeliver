@@ -1183,3 +1183,8 @@ finish() {
   __log "$_message"
   __log "===========================================================\n"
 }
+
+help() {
+  [[ -n "$COMMAND_INFO" ]] && local _command="$COMMAND $COMMAND_INFO" || local _command="$COMMAND"
+  error "\nNo custom help provided for command '$_command'. Try --help option.\n"
+}

@@ -6,12 +6,13 @@ defmodule Mix.Tasks.Edeliver do
   @moduledoc """
   Build and deploy Elixir applications and perform hot-code upgrades
 
-  ## Usage:
+  # Usage:
 
     * mix edeliver <build-command|deploy-command|node-command|local-command> command-info [Options]
     * mix edeliver --help|--version
+    * mix edeliver help <command>
 
-  # Build Commands:
+  ## Build Commands:
 
     * mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
     * mix edeliver build appups|upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store> [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
@@ -36,7 +37,7 @@ defmodule Mix.Tasks.Edeliver do
     * mix edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
     * mix edeliver unpack|pack release|upgrade [--version=<release-version>]
 
-  ## Command line options
+  ## Command line Options
     * `--quiet` - do not output verbose messages
     * `--only`  - only fetch dependencies for given environment
     * `-C`, `--compact` Displays every task as it's run, silences all output. (default mode)
