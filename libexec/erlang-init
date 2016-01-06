@@ -286,7 +286,9 @@ if (( $# )); then
     ;;
   esac
 else # no command found
-  __help; error_message "No command found.\n"; exit 2
+  __help
+  [[ "$PRINT_COMMAND_HELP" != "true" ]] && error_message "No command found.\n";
+  exit 2
 fi
 
 while (( $# ))
