@@ -387,7 +387,7 @@ esac
 case "${COMMAND}" in
   (build)
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
-    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
+    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ "$PRINT_COMMAND_HELP" != "true" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
       __help; error_message "build command requires --from= or --with argument.\n"; exit 2
     fi
   ;;
