@@ -31,6 +31,8 @@ ${txtbld}Options:${txtrst}
              that branch.
   --mix-env=<env> Build the upgrade with a custom mix environment.
              Default is ${bldwht}prod${txtrst}.
+  --skip-relup-mod Skip modification of the grenerated relup instructions.
+             No custom relup instructions are added.
 
 ${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
   --skip-git-clean Don't build from a clean state for faster builds. Can be

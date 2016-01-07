@@ -52,6 +52,7 @@ defmodule Mix.Tasks.Edeliver do
     * `--host=[u@]vwx.yz` Run command only on that host, even if different hosts are configured
     * `--skip-git-clean` Don't build from a clean state for faster builds. By default all built files are removed before the next build using `git clean`. This can be adjusted by the $GIT_CLEAN_PATHS env.
     * `--skip-mix-clean` Skip the 'mix clean step' for faster builds. Makes only sense in addition to the --skip-git-clean
+    * `--skip-relup-mod`  Skip modification of relup file. Custom relup instructions are not added
     * `--mix-env=<env>` Build with custom mix env $MIX_ENV. Default is 'prod'
 
   """
