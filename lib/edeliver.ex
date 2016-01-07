@@ -4,7 +4,7 @@ defmodule Edeliver do
   def run_command([command_name, application_name = [_|_] | arguments]) when is_atom(command_name) do
     application_name = to_string(application_name)
     application_name = String.to_atom(to_string(application_name))
-    {^application_name, _description, application_version} = :application.which_applications |> List.keyfind application_name, 0
+    {^application_name, _description, application_version} = :application.which_applications |> List.keyfind(application_name, 0)
     application_version = to_string application_version
     apply __MODULE__, command_name, [application_name, application_version | arguments]
   end
