@@ -12,6 +12,7 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
       _ ->
         info "Modifying relup file"
         relup_file = Utils.rel_dest_path(Path.join([name, "releases", version, "relup"]))
+        exrm_relup_file = Utils.rel_dest_path(Path.join([name, "relup"]))
         relup_modification_module = Edeliver.Relup.DefaultModification
         if File.exists?(relup_file) do
           case :file.consult(relup_file) do
@@ -30,10 +31,12 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
                 up_instructions: up_instructions,
                 down_instructions: down_instructions,
               } = relup_modification_module.modify_relup(instructions, config)
-              [{up_version,
+              relup = [{up_version,
                 [{down_version, up_description, up_instructions}],
                 [{down_version, down_description, down_instructions}]
-               }] |> write_relup(relup_file)
+              }]
+              write_relup(relup, relup_file)
+              if File.exists?(exrm_relup_file), do: write_relup(relup, exrm_relup_file)
             error ->
               debug "Error when loading relup file: #{:io_lib.format('~p~n', [error])}"
               error "Failed to load relup file from #{relup_file}"
