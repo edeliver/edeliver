@@ -11,5 +11,5 @@ defmodule Edeliver.Relup.Instructions do
             down_instructions: [],
             up_version: "",
             down_version: "",
-            changed_modules: ""
+            changed_modules: []
 end
