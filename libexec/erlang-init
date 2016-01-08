@@ -49,6 +49,7 @@ __help() {
       --skip-git-clean  Don't build from a clean state for faster builds. See $GIT_CLEAN_PATHS env
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
       --skip-relup-mod  Skip modification of relup file. Custom relup instructions are not added
+      --relup-mod=<module-name> The name of the module to modify the relup
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured
       --mix-env=<env>   Build with custom mix env $MIX_ENV. Default is 'prod'
@@ -366,7 +367,9 @@ do
       elif [[ "${arg}" =~ ^--host= ]]; then
         HOST=${arg##--host=}
       elif [[ "${arg}" =~ ^--mix-env= ]]; then
-        TARGET_MIX_ENV=${arg##--mix-env=}
+        TARGET_MIX_ENV=${arg##--relup-mod=}
+      elif [[ "${arg}" =~ ^--relup-mod= ]]; then
+        RELUP_MODIFICATION_MODULE=${arg##--relup-mod=}
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi

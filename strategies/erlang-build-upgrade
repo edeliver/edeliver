@@ -33,6 +33,8 @@ ${txtbld}Options:${txtrst}
              Default is ${bldwht}prod${txtrst}.
   --skip-relup-mod Skip modification of the grenerated relup instructions.
              No custom relup instructions are added.
+  --relup-mod=<module-name> The name of the module to modify the relup if there are several modules. The module
+             must implement the Behaviour Edeliver.Relup.Modification.
 
 ${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
   --skip-git-clean Don't build from a clean state for faster builds. Can be

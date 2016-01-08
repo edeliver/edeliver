@@ -27,10 +27,12 @@ defmodule Edeliver.Relup.Modification do
   """
   use Behaviour
 
+  @callback modify_relup(Edeliver.Relup.Instructions.t, ReleaseManager.Config.t) :: Edeliver.Relup.Instructions.t
+
   @doc false
   defmacro __using__(_opts) do
     quote do
-      @behaviour Edeliver.Relup.Instruction
+      @behaviour Edeliver.Relup.Modification
       alias Edeliver.Relup.Instructions
       alias ReleaseManager.Config
     end
