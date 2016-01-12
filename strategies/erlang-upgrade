@@ -30,6 +30,10 @@ ${txtbld}Options:${txtrst}
              No custom relup instructions are added.
   --relup-mod=<module-name> The name of the module to modify the relup if there are several modules. The module
              must implement the Behaviour Edeliver.Relup.Modification.
+  --auto-version=[patch|minor|major|git] Automatically increases the patch,
+             minor or major version of the upgrade or appends the git sha1
+             revision to the current version. If any other term is used
+             that string is used as the version of the new upgrade.
 
 ${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
   --skip-git-clean Don't build from a clean state for faster builds. Can be

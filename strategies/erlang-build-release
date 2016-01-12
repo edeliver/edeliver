@@ -22,6 +22,10 @@ ${txtbld}Options:${txtrst}
              passed as ${bldwht}--branch=${txtrst} argument or in the master (default).
   --mix-env=<env> Build the release with a custom mix environment.
              Default is ${bldwht}prod${txtrst}.
+  --auto-version=[patch|minor|major|git] Automatically increases the patch,
+             minor or major version of the release or appends the git sha1
+             revision to the current version. If any other term is used
+             that string is used as the version of the new release.
 
 ${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
   --skip-git-clean Don't build from a clean state for faster builds. Can be
