@@ -59,10 +59,31 @@ ${bldylw}Info:${txtrst}
 }
 
 
-set_build_hosts
+set_deploy_hosts
+
 
 run() {
-
+  [[ "$MODE" = "verbose" ]] && local _verbose="--verbose"
+  [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production" || export DEPLOY_ENVIRONMENT="staging"
+  # detect revision to install on build host
+  local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH") _version_to_install=$(grep -rone 'version:\s\+"[^-]\+' mix.exs | cut -d'"' -f2)
+  [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
+  status "Upgrading to revision $_revision_to_install from branch $_branch_to_install"
+  local _hosts="${HOSTS_APP_USER}"
+  status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts..."
+  local _running_release_version
+  for _host in $_hosts
+  do
+    __verbose -n "Checking version on host $_host..."
+    local _installed_release_version
+    _installed_release_version=$(__get_installed_version_on_host $_host)
+    __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
+    if [[ -z "$_running_release_version" ]]; then
+      _running_release_version="$_installed_release_version"
+    elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
+      error "Different version $_installed_release_version is running on host $_host.\nExpecting all nodes to run version $_running_release_version.\nPlease upgrade that node first."
+    fi
+  done
  # steps:
 
  #  - detect current version on all running nodes
@@ -95,3 +116,45 @@ __validate_upgrade_succeeded() {
   :
 }
 
+__execute_on_deploy_host() {
+  local _host="$1"
+  local _command="$2"
+
+  ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO/$APP $SILENCE
+    $_command"
+}
+
+__get_installed_version_on_host() {
+ local _deploy_host="$1"
+ __execute_on_deploy_host "$_deploy_host" "
+      BOOT_FILE=\"releases/\$(ls -1 releases | grep -m1 -e '[[:digit:]]')/start_clean\"
+      ERL=\"\$(ls -1 | grep -m1 erts)/bin/erl\"
+      bin/$APP rpc release_handler which_releases '[].' | tr -d \"\n\" | grep -o '\[.*' | \$ERL -boot \$BOOT_FILE -noshell -eval '$(__current_release_erl_script)' -run erlang halt"
+}
+
+__current_release_erl_script() {
+  cat <<END_OF_SCRIPT
+  {ok,Tokens,_} = erl_scan:string(io:get_line("") ++ "."),
+  {ok,Releases} = erl_parse:parse_term(Tokens),
+  SortedReleases = lists:sort(fun({_NameA, _VersionA, _LibNameA, StatusA}, {_NameB, _VersionB, _LibNameB, StatusB}) ->
+    if
+     StatusA == StatusB -> true;
+     StatusA == current -> true;
+     StatusA == permanent -> StatusB /= current;
+     true -> false
+    end
+  end, Releases),
+  case [{Version, Status} || {_Name, Version, _LibName, Status} <- SortedReleases, Status == current orelse Status == permanent] of
+   [{CurrentVersion, current} | _] -> io:format("~s", [CurrentVersion]);
+   [{PermanentVersion, permanent}] -> io:format("~s", [PermanentVersion]);
+   _ -> halt(1)
+  end.
+END_OF_SCRIPT
+}
+
+__verbose() {
+  [[ "$MODE" = "verbose" ]] && echo $@
+}
