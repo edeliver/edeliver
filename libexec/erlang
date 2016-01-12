@@ -127,6 +127,17 @@ erlang_clean_compile() {
   [[ "$SKIP_MIX_CLEAN" = "true" ]] \
     && status "Compiling sources (skipping cleaning)" \
     || status "Compiling sources"
+
+  if [ "$RELEASE_CMD" = "mix" ]; then
+    [[ "$MODE" = "verbose" ]] && local _auto_release_verbose="--verbose"
+    if [[ "$AUTO_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]]; then
+      local _set_auto_version=" release.version increase $AUTO_RELEASE_VERSION $_auto_release_verbose,"
+    elif [[ "$AUTO_RELEASE_VERSION" == "git" ]]; then
+      local _set_auto_version=" release.version append-git-revision $_auto_release_verbose,"
+    elif [[ -n "$AUTO_RELEASE_VERSION" ]]; then
+      local _set_auto_version=" release.version set \"$AUTO_RELEASE_VERSION\" $_auto_release_verbose,"
+    fi
+  fi
   __sync_remote "
     [ -f ~/.profile ] && source ~/.profile
     set -e
@@ -137,13 +148,13 @@ erlang_clean_compile() {
       $REBAR_CMD compile
 
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD compile || APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, compile
+      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do${_set_auto_version} compile || APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean,${_set_auto_version} compile
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do deps.compile, compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do deps.compile,${_set_auto_version} compile
       else
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, deps.compile, compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, deps.compile,${_set_auto_version} compile
       fi
     fi
   "
