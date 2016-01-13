@@ -66,14 +66,14 @@ run() {
   [[ "$MODE" = "verbose" ]] && local _verbose="--verbose"
   [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production" || export DEPLOY_ENVIRONMENT="staging"
   # detect revision to install on build host
-  local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH") _version_to_install=$(grep -rone 'version:\s\+"[^-]\+' mix.exs | cut -d'"' -f2)
+  local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH")
   [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
   status "Upgrading to revision $_revision_to_install from branch $_branch_to_install"
   local _hosts="${HOSTS_APP_USER}" _host
   status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts..."
   local _running_release_version
   local _offline_deploy_hosts=() _online_upgrade_hosts=()
-  # detect which deploy hosts are up and the version running on that hosts
+  # detect which deploy hosts are up and the version running on that hosts <-------------------------------------------
   for _host in $_hosts
   do
     __verbose -n "Checking version on host $_host..."
@@ -93,14 +93,50 @@ run() {
       fi
     fi
   done
-  # deploy upgrade to online hosts running the same version
-  for _host in ${_online_upgrade_hosts}; do
-    __verbose "Deploying upgrade to host $_host"
-  done
+  # build upgrade  <---------------------------------------------------------------------------------------------------
+  local _built_upgrade=false _upgrade_version_to_install
+  if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts}" -gt 0 ]]; then
+    # check whehter installed version is the latest version
+    local _revision_from_version=$(__revision_from_version "$_running_release_version")
+    local _version_without_revision=$(__version_without_revision "$_running_release_version")
+    if [[ -n "$_revision_from_version" && "$_revision_from_version" = "$_revision_to_install"  ]]; then
+      error "Revision $_revision_to_install from branch $_branch_to_install is already deployed as version $_running_release_version."
+    elif [[ "$AUTO_RELEASE_VERSION" = "git" && -n "$_version_without_revision" ]]; then
+      # check whether release with revision to install already exists in release store
+      _upgrade_version_to_install="${_version_without_revision}-${_revision_to_install}"
+      status "Checking whether version $_upgrade_version_to_install to install is in release store"
+      __is_upgrade_version_in_release_store "$_upgrade_version_to_install" \
+        && _built_upgrade=true \
+        && __verbose "${txtgrn}Using upgrade version $_upgrade_version_to_install from release store${txtrst}" \
+        || __verbose "Version $_upgrade_version_to_install not found in release store"
+    fi
+    # if version does not contain revision we can detect the new version only by building the upgrade, so we will check again later
+    if [[ "$_built_upgrade" != true ]]; then
+      status "Checking whether installed version $_installed_release_version is in release store"
+      __is_original_version_in_release_store "$_installed_release_version" \
+        && WITH="$_installed_release_version" \
+        && __verbose "${txtgrn}Using version $_installed_release_version from release store for building the upgrade${txtrst}" \
+        || __verbose "Version $_installed_release_version not found in release store"
+      [[ -z "$WITH" ]] && FROM="$_version_without_revision"
+    fi
 
-  # deploy clean release to offline hosts and start it
+
+    # check again after building whether the built release version is already installed
+
+    # deploy upgrade to online hosts running the same version
+    for _host in ${_online_upgrade_hosts}; do
+      __verbose "Deploying upgrade to host $_host"
+    done
+  fi
+
+  # deploy clean release to offline hosts and start it <---------------------------------------------------------------
   for _host in ${_offline_deploy_hosts}; do
     __verbose "Deploying release to offline host $_host"
+    if [[ "$_built_upgrade" != "true" ]]; then
+      # no upgrade was build because no nodes are running
+      # so we need to build a release
+      :
+    fi
   done
  # steps:
 
@@ -197,6 +233,55 @@ __current_release_erl_script() {
   end.
 END_OF_SCRIPT
 }
+
+# prints the revision from the release version
+# if it contains the revision like that: "1.2.3-abcdef0".
+# if the version does not contain the revision an
+# empty string is printed
+__revision_from_version() {
+  local _version="$1"
+  local _revision=${_version##*-}
+  [[ "$_revision" =~ ^[a-fA-F0-9]+$ ]] && echo "$_revision" || echo ""
+}
+
+# prints the version without the revision part if there is any
+__version_without_revision() {
+  local _version="$1"
+  echo "${_version%%-*}"
+}
+
+# checks whether the version passed as first argument
+# is in the release store and is an upgrade. this release
+# can be deployed later as upgrade
+__is_upgrade_version_in_release_store() {
+  __is_version_is_release_store "$1" "upgrade"
+}
+
+# checks whether the version passed as first argument
+# is in the release store and is an upgrade or an release
+# this release or upgrade can be used to build an upgrade
+# the the current versoin
+__is_original_version_in_release_store() {
+  __is_version_is_release_store "$1" "*"
+}
+
+# checks whether the release with the version passed as first
+# arguement and the type of the second arguement exists in the
+# release store. returns 0 if it exists and 1 if it doesn't.
+# the release type passed as second argument can be either
+# "release", "upgrade" or "*" for both types.
+__is_version_is_release_store() {
+  local _release_version="$1"
+  local _release_type="$2"
+  local _release_files=$(__get_releases_in_store "$_release_type") _release_file
+  for _release_file in $_release_files; do
+    if [[ "$_release_file" = ${APP}_${_release_version}.${_release_type}.tar.gz ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 
 # prints verbose output if verbose mode is enabled
 __verbose() {
