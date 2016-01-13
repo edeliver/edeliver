@@ -96,9 +96,12 @@ run() {
       fi
     fi
   done
+  [[ "${#_online_upgrade_hosts[@]}" -gt 0 && "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online and ${#_offline_deploy_hosts[@]} releases to offline hosts"
+  [[ "${#_online_upgrade_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online hosts"
+  [[ "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying ${#_offline_deploy_hosts[@]} releases to offline hosts"
   # build upgrade  <---------------------------------------------------------------------------------------------------
   local _built_upgrade=false _upgrade_version_to_install
-  if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts}" -gt 0 ]]; then
+  if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts[@]}" -gt 0 ]]; then
     # check whehter installed version is the latest version
     local _revision_from_version=$(__revision_from_version "$_running_release_version")
     local _version_without_revision=$(__version_without_revision "$_running_release_version")
@@ -143,7 +146,7 @@ run() {
   fi
 
   # deploy clean release to offline hosts and start it <---------------------------------------------------------------
-  if [[  "${#_offline_deploy_hosts}" -gt 0 ]]; then
+  if [[  "${#_offline_deploy_hosts[@]}" -gt 0 ]]; then
     if [[ "$_built_upgrade" != "true" ]]; then
       # no upgrade was build because no nodes are running
       # so we need to build a release
