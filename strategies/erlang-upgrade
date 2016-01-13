@@ -84,11 +84,11 @@ run() {
     _installed_release_version=$(__get_installed_version_on_host $_host)
     if [[ "$?" -ne 0 ]]; then
       __is_node_offline $_host \
-        && __verbose -e "\rNode on deploy host $_host is down." && _offline_deploy_hosts+=("$_host") \
+        && __verbose -e "\rNode on deploy host $_host is down." && _offline_deploy_hosts+=("${_host##*@}") \
         || error "\nDetection of version failed on $_host"
     else # version detection succeeded
       __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
-      _online_upgrade_hosts+=("$_host")
+      _online_upgrade_hosts+=("${_host##*@}")
       if [[ -z "$_running_release_version" ]]; then
         _running_release_version="$_installed_release_version"
       elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
@@ -122,6 +122,7 @@ run() {
         && __verbose "${txtgrn}Using version $_installed_release_version from release store for building the upgrade${txtrst}" \
         || __verbose "Version $_installed_release_version not found in release store"
       [[ -z "$WITH" ]] && FROM="$_version_without_revision"
+      # actual build process <-----------------------------------------------------------------------------------------
       status "Building the upgrade from version $_installed_release_version"
       set_build_hosts
       update_hosts_app_user
@@ -130,12 +131,15 @@ run() {
       run
       set_deploy_hosts
       update_hosts_app_user
-
+      _upgrade_version_to_install="$RELEASE_VERSION"
     fi # building upgrade finished
     # deploy upgrade to online hosts running the same version <--------------------------------------------------------
-    for _host in ${_online_upgrade_hosts}; do
-      __verbose "Deploying upgrade to host $_host"
-    done
+    status "Upgrading $DEPLOY_ENVIRONMENT hosts to version $_upgrade_version_to_install"
+    HOSTS="${_online_upgrade_hosts[@]}"
+    update_hosts_app_user
+    VERSION="$_upgrade_version_to_install"
+    source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-upgrade
+    run
   fi
 
   # deploy clean release to offline hosts and start it <---------------------------------------------------------------
