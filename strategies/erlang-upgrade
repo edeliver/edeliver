@@ -143,14 +143,20 @@ run() {
   fi
 
   # deploy clean release to offline hosts and start it <---------------------------------------------------------------
-  for _host in ${_offline_deploy_hosts}; do
-    __verbose "Deploying release to offline host $_host"
+  if [[  "${#_offline_deploy_hosts}" -gt 0 ]]; then
     if [[ "$_built_upgrade" != "true" ]]; then
       # no upgrade was build because no nodes are running
       # so we need to build a release
-      :
+      status "Building the release"
+      set_build_hosts
+      update_hosts_app_user
+      # use build upgrade strategy to build the upgrade
+      source $(dirname ${BASH_SOURCE[0]})/erlang-build-release
+      run
+      set_deploy_hosts
+      update_hosts_app_user
     fi
-  done
+  fi
  # steps:
 
  #  - detect current version on all running nodes
