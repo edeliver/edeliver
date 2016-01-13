@@ -103,6 +103,30 @@ run() {
   erlang_get_and_update_deps
   erlang_clean_compile
 
+  # check already now whether the built release will
+  # have a different release version as the original release
+  if [[ "$RELEASE_CMD" = "mix" ]]; then
+    status "Checking version of new release"
+    if [[ "$AUTO_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]]; then
+      local _version_command="release.version increase $AUTO_RELEASE_VERSION --verbose | grep -oe ' to .*' | cut -b 5-"
+    elif [[ "$AUTO_RELEASE_VERSION" == "git" ]]; then
+      local _version_command="release.version append-git-revision --verbose | grep -oe ' to .*' | cut -b 5-"
+    elif [[ -n "$AUTO_RELEASE_VERSION" ]]; then
+      local _version_command="release.version set \"$AUTO_RELEASE_VERSION\" --verbose | grep -oe ' to .*' | cut -b 5-"
+    else
+      local _version_command="release.version show"
+    fi
+    local _version_that_will_be_built=$(__remote "
+      [ -f ~/.profile ] && source ~/.profile
+      cd $BUILD_AT $SILENCE
+      MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD $_version_command
+    ")
+    [[ -n "$WITH" ]] && local _old_version="$WITH" || local _old_version="$OLD_RELEASE_VERSION"
+    [[ "$_version_that_will_be_built" = "$_old_version" ]] \
+      && __show_upgrade_version_does_not_differ_error_message \
+      && exit 1
+  fi
+
   if [[ -n "$WITH" ]] && [[ "$RELEASE_CMD" != "rebar" ]]; then
     # when generating upgrades with `mix release` (exrm) the old
     # release must be uploaded before generating the release.
