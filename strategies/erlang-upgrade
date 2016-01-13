@@ -147,6 +147,7 @@ run() {
 
   # deploy clean release to offline hosts and start it <---------------------------------------------------------------
   if [[  "${#_offline_deploy_hosts[@]}" -gt 0 ]]; then
+    local _release_version_to_install="$_upgrade_version_to_install"
     if [[ "$_built_upgrade" != "true" ]]; then
       # no upgrade was build because no nodes are running
       # so we need to build a release
@@ -158,7 +159,14 @@ run() {
       run
       set_deploy_hosts
       update_hosts_app_user
+      _release_version_to_install="$RELEASE_VERSION"
     fi
+    status "Deploying version $_release_version_to_install to $DEPLOY_ENVIRONMENT hosts"
+    HOSTS="${_offline_deploy_hosts[@]}"
+    update_hosts_app_user
+    VERSION="$_release_version_to_install"
+    source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-release
+    run
   fi
  # steps:
 
