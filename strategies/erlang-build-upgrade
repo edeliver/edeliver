@@ -164,6 +164,7 @@ run() {
   else
     rebar_generate_upgrade $OLD_RELEASE_VERSION
   fi
+
   copy_release_to_release_store "upgrade"
 }
 

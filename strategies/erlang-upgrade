@@ -113,7 +113,8 @@ run() {
         && __verbose "${txtgrn}Using upgrade version $_upgrade_version_to_install from release store${txtrst}" \
         || __verbose "Version $_upgrade_version_to_install not found in release store"
     fi
-    # if version does not contain revision we can detect the new version only by building the upgrade, so we will check again later
+    # if version does not contain revision we can detect the new version only by building the upgrade
+    # this is checked automatically in the erlang-build-upgrade strategy later
     if [[ "$_built_upgrade" != true ]]; then
       status "Checking whether installed version $_installed_release_version is in release store"
       __is_original_version_in_release_store "$_installed_release_version" \
@@ -121,7 +122,7 @@ run() {
         && __verbose "${txtgrn}Using version $_installed_release_version from release store for building the upgrade${txtrst}" \
         || __verbose "Version $_installed_release_version not found in release store"
       [[ -z "$WITH" ]] && FROM="$_version_without_revision"
-      status "Building the upgrade"
+      status "Building the upgrade from version $_installed_release_version"
       set_build_hosts
       update_hosts_app_user
       # use build upgrade strategy to build the upgrade
@@ -129,14 +130,7 @@ run() {
       run
       set_deploy_hosts
       update_hosts_app_user
-      # check again after building whether the built release version is already installed
-      [[ "$NEW_RELEASE_VERSION" = "$_running_release_version" ]] \
-          && error_message "The build upgrade has the same version as the installed version." \
-          && error_message "Build version: $NEW_RELEASE_VERSION, installed version: $_running_release_version" \
-          && error_message "Consider using the --auto-version=[git|patch|minor|major] option" \
-          && error_message "to automatically increase the version or append the git revision." \
-          && error_message "It is recommended to enable the git-auto-revision permanently" \
-          && error         "for upgrades by setting AUTO_RELEASE_VERSION=git in the config."
+
     fi # building upgrade finished
     # deploy upgrade to online hosts running the same version <--------------------------------------------------------
     for _host in ${_online_upgrade_hosts}; do

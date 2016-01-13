@@ -1011,17 +1011,30 @@ __detect_remote_release_version() {
     if [ ${#_releases[@]} -eq 1 ]; then
       RELEASE_VERSION=`basename ${_releases[0]}`
     else
-      error_message "Failed to detect generated release version at\n$APP_USER@$HOSTS:$RELEASE_DIR/releases/\n"
-      error_message "Please set RELEASE_VERSION=x"
+      error_message "Failed to detect generated release version at:\n$APP_USER@$HOSTS:$RELEASE_DIR/releases/\n"
       if [ ${#_releases[@]} -gt 1 ]; then
         hint_message "Detected several releases:"
         for _release in "${_releases[@]}"; do
           hint_message " $(basename $_release)"
         done
+        error_message "Please rerun with RELEASE_VERSION=x environment variable set."
+      elif [[ ${#_releases[@]} -eq 0 && -n "$OLD_RELEASE_VERSION" && "$RELEASE_CMD" = "mix" ]]; then
+        __show_upgrade_version_does_not_differ_error_message
+      elif [[ ${#_releases[@]} -eq 0 ]]; then
+        hint_message "No built release found."
       fi
       exit 1
     fi
   fi
+}
+
+__show_upgrade_version_does_not_differ_error_message() {
+    error_message "The build upgrade has the same version as the installed version."
+    error_message "That release cannot be deployed as an upgrade. Alter the release version"
+    error_message "or consider using the --auto-version=[git|patch|minor|major] option"
+    error_message "to automatically increase the version or append the git revision."
+    error_message "It is recommended to enable the git-auto-revision permanently"
+    error_message "for automatic upgrades by setting AUTO_RELEASE_VERSION=git in the config."
 }
 
 __detect_exrm_version() {
