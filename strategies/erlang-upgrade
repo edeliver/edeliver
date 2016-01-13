@@ -70,13 +70,13 @@ run() {
   [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
   status "Upgrading to revision $_revision_to_install from branch $_branch_to_install"
   local _hosts="${HOSTS_APP_USER}" _host
-  status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts..."
+  status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts"
   local _running_release_version
   local _offline_deploy_hosts=() _online_upgrade_hosts=()
   # detect which deploy hosts are up and the version running on that hosts <-------------------------------------------
   for _host in $_hosts
   do
-    __verbose -n "Checking version on host $_host..."
+    __verbose -n "Checking version on host $_host"
     local _installed_release_version
     _installed_release_version=$(__get_installed_version_on_host $_host)
     if [[ "$?" -ne 0 ]]; then
@@ -118,6 +118,14 @@ run() {
         && __verbose "${txtgrn}Using version $_installed_release_version from release store for building the upgrade${txtrst}" \
         || __verbose "Version $_installed_release_version not found in release store"
       [[ -z "$WITH" ]] && FROM="$_version_without_revision"
+      status "Building the upgrade"
+      set_build_hosts
+      update_hosts_app_user
+      # use build upgrade strategy to build the upgrade
+      source $(dirname ${BASH_SOURCE[0]})/erlang-build-upgrade
+      run
+      set_deploy_hosts
+      update_hosts_app_user
     fi
 
 

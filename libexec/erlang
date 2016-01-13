@@ -48,6 +48,17 @@ set_deploy_hosts() {
   fi
 }
 
+update_hosts_app_user() {
+  HOSTS_APP_USER=""
+  for _host in $HOSTS
+  do
+    HOSTS_APP_USER="$HOSTS_APP_USER,$APP_USER@$_host"
+  done
+  HOSTS="$(__remote_friendly $HOSTS)"
+  HOSTS_APP_USER="$(__remote_friendly $HOSTS_APP_USER)"
+}
+
+
 # sets all required config variables and defaults for deploy strategies
 require_deploy_config() {
   DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
