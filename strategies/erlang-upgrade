@@ -298,5 +298,5 @@ __is_version_is_release_store() {
 
 # prints verbose output if verbose mode is enabled
 __verbose() {
-  [[ "$MODE" = "verbose" ]] && echo $@
+  [[ "$MODE" = "verbose" ]] && echo $@ || :
 }
