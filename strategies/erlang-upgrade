@@ -69,20 +69,38 @@ run() {
   local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH") _version_to_install=$(grep -rone 'version:\s\+"[^-]\+' mix.exs | cut -d'"' -f2)
   [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
   status "Upgrading to revision $_revision_to_install from branch $_branch_to_install"
-  local _hosts="${HOSTS_APP_USER}"
+  local _hosts="${HOSTS_APP_USER}" _host
   status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts..."
   local _running_release_version
+  local _offline_deploy_hosts=() _online_upgrade_hosts=()
+  # detect which deploy hosts are up and the version running on that hosts
   for _host in $_hosts
   do
     __verbose -n "Checking version on host $_host..."
     local _installed_release_version
     _installed_release_version=$(__get_installed_version_on_host $_host)
-    __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
-    if [[ -z "$_running_release_version" ]]; then
-      _running_release_version="$_installed_release_version"
-    elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
-      error "Different version $_installed_release_version is running on host $_host.\nExpecting all nodes to run version $_running_release_version.\nPlease upgrade that node first."
+    if [[ "$?" -ne 0 ]]; then
+      __is_node_offline $_host \
+        && __verbose -e "\rNode on deploy host $_host is down." && _offline_deploy_hosts+=("$_host") \
+        || error "\nDetection of version failed on $_host"
+    else # version detection succeeded
+      __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
+      _online_upgrade_hosts+=("$_host")
+      if [[ -z "$_running_release_version" ]]; then
+        _running_release_version="$_installed_release_version"
+      elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
+        error "Different version $_installed_release_version is running on host $_host.\nExpecting all nodes to run version $_running_release_version.\nPlease upgrade that node first."
+      fi
     fi
+  done
+  # deploy upgrade to online hosts running the same version
+  for _host in ${_online_upgrade_hosts}; do
+    __verbose "Deploying upgrade to host $_host"
+  done
+
+  # deploy clean release to offline hosts and start it
+  for _host in ${_offline_deploy_hosts}; do
+    __verbose "Deploying release to offline host $_host"
   done
  # steps:
 
@@ -116,6 +134,9 @@ __validate_upgrade_succeeded() {
   :
 }
 
+# executes a command given as second argument on the
+# deploy host given as first argument by first sourcing
+# the ~/.profile and changing into the application directory
 __execute_on_deploy_host() {
   local _host="$1"
   local _command="$2"
@@ -127,14 +148,36 @@ __execute_on_deploy_host() {
     $_command"
 }
 
+# prints commands to set the erl command as ERL env on the
+# deploy host. must be executed as: \$ERL -boot \$BOOT_FILE -noshell -eval
+__get_erl_command_on_deploy_host() {
+  cat <<END_OF_SCRIPT
+      BOOT_FILE=\$(ls -1 releases/*/start_clean.boot | grep -e '[[:digit:]]' | tail -1)
+      BOOT_FILE=\${BOOT_FILE%.*}
+      ERL=\$(pwd)/\$(ls -1 | grep erts | tail -1)/bin/erl
+END_OF_SCRIPT
+}
+
+# checks whether the node on the deploy host passed as first
+# argument responds to pings or not. returns 0 if node is online
+# and returns 1 if node is offline.
+__is_node_offline() {
+  local _deploy_host="$1"
+  [[ "pong" != "$(__execute_on_deploy_host "$_deploy_host" "bin/$APP ping" | tail -1)" ]]
+}
+
+# prints the currently running release version
+# on the deploy host passed as first argument.
 __get_installed_version_on_host() {
  local _deploy_host="$1"
  __execute_on_deploy_host "$_deploy_host" "
-      BOOT_FILE=\"releases/\$(ls -1 releases | grep -m1 -e '[[:digit:]]')/start_clean\"
-      ERL=\"\$(ls -1 | grep -m1 erts)/bin/erl\"
-      bin/$APP rpc release_handler which_releases '[].' | tr -d \"\n\" | grep -o '\[.*' | \$ERL -boot \$BOOT_FILE -noshell -eval '$(__current_release_erl_script)' -run erlang halt"
+      $(__get_erl_command_on_deploy_host)
+      2>&1 bin/$APP rpc release_handler which_releases '[].' | tr -d \"\n\" | grep -o '\[.*' | 2>&1 \$ERL -boot \$BOOT_FILE -noshell -eval '$(__current_release_erl_script)' -run erlang halt"
 }
 
+# prints an erlang script which detects the current
+# release from the list of installed releases returned
+# by the release_handler.which_releases function.
 __current_release_erl_script() {
   cat <<END_OF_SCRIPT
   {ok,Tokens,_} = erl_scan:string(io:get_line("") ++ "."),
@@ -155,6 +198,7 @@ __current_release_erl_script() {
 END_OF_SCRIPT
 }
 
+# prints verbose output if verbose mode is enabled
 __verbose() {
   [[ "$MODE" = "verbose" ]] && echo $@
 }
