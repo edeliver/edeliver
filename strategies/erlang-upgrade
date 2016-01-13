@@ -26,10 +26,13 @@ ${txtbld}Options:${txtrst}
   --restart-crashed ${txtgrn}Restart terminated nodes${txtrst} which crashed
              during hot code upgrade. They will be restarted ${txtgrn}with the
              new version${txtrst}.
+  --start-deploy ${txtgrn}Start the new version${txtrst} of the release ${txtgrn}that was deployed
+             to${txtrst} hosts with ${txtgrn}offline nodes${txtrst}
   --skip-relup-mod Skip modification of the grenerated relup instructions.
              No custom relup instructions are added.
-  --relup-mod=<module-name> The name of the module to modify the relup if there are several modules. The module
-             must implement the Behaviour Edeliver.Relup.Modification.
+  --relup-mod=<module-name> The name of the module to modify the relup
+             if there are several modules. The module must implement
+             the Behaviour Edeliver.Relup.Modification.
   --auto-version=[patch|minor|major|git] Automatically increases the patch,
              minor or major version of the upgrade or appends the git sha1
              revision to the current version. If any other term is used
