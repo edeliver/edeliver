@@ -23,9 +23,6 @@ ${txtbld}Options:${txtrst}
              that branch.
   --mix-env=<env> Build the upgrade with a custom mix environment.
              Default is ${bldwht}prod${txtrst}.
-  --restart-crashed ${txtgrn}Restart terminated nodes${txtrst} which crashed
-             during hot code upgrade. They will be restarted ${txtgrn}with the
-             new version${txtrst}.
   --start-deploy ${txtgrn}Start the new version${txtrst} of the release ${txtgrn}that was deployed
              to${txtrst} hosts with ${txtgrn}offline nodes${txtrst}
   --skip-relup-mod Skip modification of the grenerated relup instructions.

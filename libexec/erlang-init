@@ -44,7 +44,6 @@ __help() {
   -D, --debug           Runs in shell debug mode, displays everything.
   -S, --skip-existing   Skip copying release archives if they exist already on the deploy hosts.
   -F, --force           Do not ask, just do, overwrite, delete or destroy everything
-  -R, --restart-crashed Restart nodes which crashed during upgrade with the new version.
       --clean-deploy    Delete the release, lib and erts-* directories before deploying the release
       --skip-git-clean  Don't build from a clean state for faster builds. See $GIT_CLEAN_PATHS env
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
