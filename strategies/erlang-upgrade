@@ -95,7 +95,10 @@ run() {
       if [[ -z "$_running_release_version" ]]; then
         _running_release_version="$_installed_release_version"
       elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
-        error "Different version $_installed_release_version is running on host $_host.\nExpecting all nodes to run version $_running_release_version.\nPlease upgrade that node first."
+        error_message "Different version $_installed_release_version is running on host $_host."
+        error_message "Expecting all nodes to run version $_running_release_version."
+        error_message "Please upgrade nodes running older versions first or upgrade"
+        error         "only selected nodes by using the --host=[u@]vwx.yz option"
       fi
     fi
   done
