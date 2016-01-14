@@ -36,10 +36,10 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
                 up_instructions: up_instructions,
                 down_instructions: down_instructions,
               } = relup_modification_module.modify_relup(instructions, config)
-              relup = [{up_version,
+              relup = {up_version,
                 [{down_version, up_description, up_instructions}],
                 [{down_version, down_description, down_instructions}]
-              }]
+              }
               write_relup(relup, relup_file)
               if File.exists?(exrm_relup_file), do: write_relup(relup, exrm_relup_file)
             error ->
