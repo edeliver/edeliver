@@ -75,7 +75,7 @@ run() {
   local _hosts="${HOSTS_APP_USER}" _host
   status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts"
   local _running_release_version
-  local _offline_deploy_hosts=() _online_upgrade_hosts=()
+  local _offline_deploy_hosts=() _online_upgrade_hosts=() _online_upgrade_hosts_with_user=()
   # detect which deploy hosts are up and the version running on that hosts <-------------------------------------------
   for _host in $_hosts
   do
@@ -89,6 +89,7 @@ run() {
     else # version detection succeeded
       __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
       _online_upgrade_hosts+=("${_host##*@}")
+      _online_upgrade_hosts_with_user+=("$_host")
       if [[ -z "$_running_release_version" ]]; then
         _running_release_version="$_installed_release_version"
       elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
@@ -171,37 +172,28 @@ run() {
     source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-release
     run
   fi
- # steps:
 
- #  - detect current version on all running nodes
- #    - no node running
- #      - __deploy_release_to_not_running_nodes
- #    - all nodes run the same version
- #      - check if upgrade is already in release store
- #        - __deploy_upgrade_to_running_nodes
- #        - __validate_upgrade_succeeded
- #        - __deploy_release_to_not_running_nodes
- #      - upgrade is not in store
- #        - build upgrade
- #        - __deploy_upgrade_to_running_nodes
- #        - __validate_upgrade_succeeded
- #        - __deploy_release_to_not_running_nodes
- #    - not all nodes run the same version
- #      - abort: must first upgrade nodes to the same version manually
-  :
+  # validate that online hosts run the new version and are still alive <-----------------------------------------------
+  set_deploy_hosts
+  local _validate_upgrade_error_message
+  for _host in $_online_upgrade_hosts_with_user
+  do
+    __verbose -n "Checking upgraded version on host $_host"
+    _installed_release_version=$(__get_installed_version_on_host $_host)
+    if [[ "$?" -ne 0 ]]; then
+      __is_node_offline $_host \
+        && __verbose -e "\rNode on deploy host $_host is down." && _validate_upgrade_error_message="${_validate_upgrade_error_message}\nNode on $_host is down after upgrade." \
+        || _validate_upgrade_error_message="${_validate_upgrade_error_message}\nDetection of upgraded version failed on $_host."
+    else # version detection succeeded
+      __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
+      if [[ "$_installed_release_version" != "$_upgrade_version_to_install" ]]; then
+        _validate_upgrade_error_message="${_validate_upgrade_error_message}\nNode on $_host was not upgraded. Still running version $_installed_release_version."
+      fi
+    fi
+  done
+  [[ -n "$_validate_upgrade_error_message" ]] && error "$_validate_upgrade_error_message\n" || :
 }
 
-__deploy_release_to_not_running_nodes() {
-  :
-}
-
-__deploy_upgrade_to_running_nodes() {
-  :
-}
-
-__validate_upgrade_succeeded() {
-  :
-}
 
 # executes a command given as second argument on the
 # deploy host given as first argument by first sourcing
