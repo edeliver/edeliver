@@ -11,7 +11,9 @@ run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\""
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
+  elif [[ "$NODE_ACTION" = ping ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
+    NODE_ACTION="ping | tail -1"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].'"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
