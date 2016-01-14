@@ -217,15 +217,6 @@ __execute_on_deploy_host() {
     $_command"
 }
 
-# prints commands to set the erl command as ERL env on the
-# deploy host. must be executed as: \$ERL -boot \$BOOT_FILE -noshell -eval
-__get_erl_command_on_deploy_host() {
-  cat <<END_OF_SCRIPT
-      BOOT_FILE=\$(ls -1 releases/*/start_clean.boot | grep -e '[[:digit:]]' | tail -1)
-      BOOT_FILE=\${BOOT_FILE%.*}
-      ERL=\$(pwd)/\$(ls -1 | grep erts | tail -1)/bin/erl
-END_OF_SCRIPT
-}
 
 # checks whether the node on the deploy host passed as first
 # argument responds to pings or not. returns 0 if node is online
@@ -239,9 +230,7 @@ __is_node_offline() {
 # on the deploy host passed as first argument.
 __get_installed_version_on_host() {
  local _deploy_host="$1"
- __execute_on_deploy_host "$_deploy_host" "
-      $(__get_erl_command_on_deploy_host)
-      2>&1 bin/$APP rpc release_handler which_releases '[].' | tr -d \"\n\" | grep -o '\[.*' | 2>&1 \$ERL -boot \$BOOT_FILE -noshell -eval '$(__current_release_erl_script)' -run erlang halt"
+ __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
 }
 
 # prints an erlang script which detects the current
