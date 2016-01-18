@@ -27,6 +27,9 @@ defmodule Edeliver.Relup.Modification do
   """
   use Behaviour
 
+  @doc """
+    Modifies the relup instructions and returns the modified instruction
+  """
   @callback modify_relup(Edeliver.Relup.Instructions.t, ReleaseManager.Config.t) :: Edeliver.Relup.Instructions.t
 
   @doc false
@@ -35,6 +38,20 @@ defmodule Edeliver.Relup.Modification do
       @behaviour Edeliver.Relup.Modification
       alias Edeliver.Relup.Instructions
       alias ReleaseManager.Config
+
+      Module.register_attribute __MODULE__, :name, accumulate: false, persist: true
+      Module.register_attribute __MODULE__, :moduledoc, accumulate: false, persist: true
+      Module.register_attribute __MODULE__, :shortdoc, accumulate: false, persist: true
+
+      @doc """
+        Returns true if this relup modification is usable for the project or not.
+        E.g. the `Edeliver.Relup.PhoenixModifcation` returns true only if the
+        project is a phoenix project
+      """
+      @spec usable?(ReleaseManager.Config.t) :: boolean
+      def usable?(_config = %Config{}), do: true
+
+      defoverridable [priority: 0, usable?: 1]
     end
   end
 

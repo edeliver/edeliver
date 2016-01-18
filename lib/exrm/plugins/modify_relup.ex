@@ -12,7 +12,7 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
         info "Modifying relup file..."
         relup_file = Utils.rel_dest_path(Path.join([name, "releases", version, "relup"]))
         exrm_relup_file = Utils.rel_dest_path(Path.join([name, "relup"]))
-        relup_modification_module = case get_relup_modification_module do
+        relup_modification_module = case get_relup_modification_module(config) do
           [] -> Edeliver.Relup.DefaultModification
           [module] -> module
           modules = [_|_] ->
@@ -69,7 +69,7 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
     end
   end
 
-  defp get_relup_modification_module() do
+  defp get_relup_modification_module(config = %Config{}) do
     case System.get_env "RELUP_MODIFICATION_MODULE" do
       module = <<_,_::binary>> ->
         module = String.to_atom(module)
@@ -88,7 +88,8 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
           is_list(behaviours) &&
           Edeliver.Relup.Modification in behaviours &&
           module != Edeliver.Relup.DefaultModification &&
-          Code.ensure_loaded?(module)
+          Code.ensure_loaded?(module) &&
+          module.usable?(config)
         end)
         |> Enum.uniq
         |> Enum.map(fn {module, _} -> module end)
