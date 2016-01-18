@@ -13,7 +13,6 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
         relup_file = Utils.rel_dest_path(Path.join([name, "releases", version, "relup"]))
         exrm_relup_file = Utils.rel_dest_path(Path.join([name, "relup"]))
         relup_modification_module = case get_relup_modification_module(config) do
-          [] -> Edeliver.Relup.DefaultModification
           [module] -> module
           modules = [_|_] ->
             Mix.raise "Found multiple modules implementing behaviour Edeliver.Relup.DefaultModification:\n#{inspect modules}\nPlease use the --relup-mod=<module-name> option."
@@ -84,18 +83,31 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
           {:ok, {mod, chunks}} = :beam_lib.chunks('#{path}', [:attributes])
           {mod, get_in(chunks, [:attributes, :behaviour])}
         end)
-        |> Stream.filter(fn {module, behaviours} ->
+        |> Stream.filter_map(fn {module, behaviours} ->
           is_list(behaviours) &&
           Edeliver.Relup.Modification in behaviours &&
-          module != Edeliver.Relup.DefaultModification &&
           Code.ensure_loaded?(module) &&
           module.usable?(config)
+        end, fn {module, _} ->
+          {module, module.priority}
         end)
         |> Enum.uniq()
-        |> Enum.sort(fn({module_a, _}, {module_b, _}) ->
-          if module_a == module_b, do: true, else: not String.starts_with?(Atom.to_string(module_a), "Elixir.Edeliver.Relup.")
+        |> Enum.sort(fn {module_a, priority_a}, {module_b, priority_b} ->
+          cond do
+            module_a == module_b -> true
+            String.starts_with?(Atom.to_string(module_a), "Elixir.Edeliver.Relup.") -> false # prefer custom modules
+            priority_a < priority_b -> false
+            true -> true
+          end
         end)
-        |> Enum.map(fn {module, _} -> module end)
+        |> Enum.reduce({[], nil}, fn {module, priority}, {modules, highest_priority} ->
+          unless highest_priority, do: highest_priority = priority
+          if priority == highest_priority, do: modules = [module|modules]
+          {modules, highest_priority}
+        end)
+        |> Tuple.to_list
+        |> List.first
+        |> Enum.reverse
     end
   end
 

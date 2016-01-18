@@ -18,4 +18,6 @@ defmodule Edeliver.Relup.PhoenixModification do
     List.keymember?(deps, :phoenix, 0) && List.keymember?(deps, :phoenix_html, 0)
   end
 
+  def priority, do: priority_default + 1
+
 end

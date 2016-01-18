@@ -8,4 +8,7 @@ defmodule Edeliver.Relup.DefaultModification do
   def modify_relup(instructions = %Instructions{}, config = %Config{}) do
     instructions |> Edeliver.Relup.Instructions.SoftPurge.modify_relup(config)
   end
+
+  def priority, do: priority_default
+
 end
