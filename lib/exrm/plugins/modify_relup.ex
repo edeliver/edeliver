@@ -91,7 +91,10 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
           Code.ensure_loaded?(module) &&
           module.usable?(config)
         end)
-        |> Enum.uniq
+        |> Enum.uniq()
+        |> Enum.sort(fn({module_a, _}, {module_b, _}) ->
+          if module_a == module_b, do: true, else: not String.starts_with?(Atom.to_string(module_a), "Elixir.Edeliver.Relup.")
+        end)
         |> Enum.map(fn {module, _} -> module end)
     end
   end
