@@ -57,6 +57,23 @@ defmodule Edeliver.Relup.Instruction do
         insert_before_instruction(existing_instructions, new_instructions, :point_of_no_return)
       end
 
+      @doc """
+        Appends an instruction or a list of instructions to the list of other instructions.
+      """
+      @spec append(%Instructions{}|instructions, new_instructions::instruction|instructions) :: updated_instructions::%Instructions{}|instructions
+      def append(instructions = %Instructions{}, new_instructions) do
+        %{instructions|
+          up_instructions:   append(instructions.up_instructions,  new_instructions),
+          down_instructions: append(instructions.down_instructions, new_instructions)
+        }
+      end
+      def append(existing_instructions, new_instruction) when is_list(existing_instructions) and not is_list(new_instruction) do
+        append(existing_instructions, [new_instruction])
+      end
+      def append(existing_instructions, new_instructions) when is_list(existing_instructions) do
+        existing_instructions ++ new_instructions
+      end
+
 
       @doc """
         Inserts an instruction or a list of instructions before the given instruction.
