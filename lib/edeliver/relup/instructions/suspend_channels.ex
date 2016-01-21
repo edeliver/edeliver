@@ -4,4 +4,5 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
   def modify_relup(instructions = %Instructions{}, _config = %Config{}) do
     instructions
   end
+
 end

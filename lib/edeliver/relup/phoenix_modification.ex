@@ -7,15 +7,17 @@ defmodule Edeliver.Relup.PhoenixModification do
 
   def modify_relup(instructions = %Instructions{}, config = %Config{}) do
     instructions
-    # prepare the upgrade
-    |> Edeliver.Relup.Instructions.SoftPurge.modify_relup(config)
+    # check whether upgrade is possible
     |> Edeliver.Relup.Instructions.CheckProcessesRunningOldCode.modify_relup(config)
+    |> Edeliver.Relup.Instructions.CheckRanchAcceptors.modify_relup(config)
+    # prepare the upgrade
     |> Edeliver.Relup.Instructions.SuspendRanchAcceptors.modify_relup(config)
     |> Edeliver.Relup.Instructions.SuspendChannels.modify_relup(config)
     |> Edeliver.Relup.Instructions.FinishRunningRequests.modify_relup(config)
     |> Edeliver.Relup.Instructions.SuspendDatabasePool.modify_relup(config)
     |> Edeliver.Relup.Instructions.FinishDatabaseQueries.modify_relup(config)
     # run the upgrade
+    |> Edeliver.Relup.Instructions.SoftPurge.modify_relup(config)
     |> Edeliver.Relup.Instructions.SuspendAppProcesses.modify_relup(config)
     |> Edeliver.Relup.Instructions.ReloadModules.modify_relup(config)
     |> Edeliver.Relup.Instructions.CodeChangeOnAppProcesses.modify_relup(config)

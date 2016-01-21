@@ -146,8 +146,55 @@ defmodule Edeliver.Relup.RunnableInstruction do
       end
 
 
+      @doc """
+        Assumes that the pattern matches or throws an error with the given
+        error message. The error message is logged as error to the logfile
+        using the `Logger` and displayed as error output by the
+        `$APP/bin/$APP upgrade $RELEASE task using the
+        `$APP/ebin/install_upgrade.escript` script. If the pattern matches
+        the variables from the matching are assigned.
+      """
+      defmacro assume({:=, _, [left, right]} = assertion, error_message) do
+        code = Macro.escape(assertion)
 
+        left = Macro.expand(left, __CALLER__)
+        vars = collect_vars_from_pattern(left)
 
+        quote do
+          right = unquote(right)
+          expr  = unquote(code)
+          unquote(vars) =
+            case right do
+              unquote(left) ->
+                unquote(vars)
+              _ ->
+                error unquote(error_message)
+                # error is shown as erlang term in the upgrade script
+                # `$APP/ebin/install_upgrade.escript`. so use an erlang
+                # string as error message
+                throw {:error, String.to_char_list(unquote(error_message))}
+            end
+          right
+        end
+      end
+
+      @privdoc "Used by the assume macro for pattern assignment"
+      defp collect_vars_from_pattern(expr) do
+        {_, vars} =
+          Macro.prewalk(expr, [], fn
+            {:::, _, [left, _]}, acc ->
+              {[left], acc}
+            {skip, _, [_]}, acc when skip in [:^, :@] ->
+              {:ok, acc}
+            {:_, _, context}, acc when is_atom(context) ->
+              {:ok, acc}
+            {name, _, context}, acc when is_atom(name) and is_atom(context) ->
+              {:ok, [{name, [generated: true], context}|acc]}
+            node, acc ->
+              {node, acc}
+          end)
+        Enum.uniq(vars)
+      end
 
       @privdoc """
         Logs the message of the given type on the node which executes

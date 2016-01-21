@@ -58,6 +58,68 @@ defmodule Edeliver.Relup.Instruction do
       end
 
       @doc """
+        Inserts an instruction or a list of instructions right after the point of no return.
+        This means that it is the first instruction which should not fail, because the release
+        handler will restart the release if any instruction fails after the point
+        of no return.
+      """
+      @spec insert_after_point_of_no_return(%Instructions{}|instructions, new_instructions::instruction|instructions) :: updated_instructions::%Instructions{}|instructions
+      def insert_after_point_of_no_return(instructions = %Instructions{}, new_instructions) do
+        %{instructions|
+          up_instructions:   insert_after_point_of_no_return(instructions.up_instructions,   new_instructions),
+          down_instructions: insert_after_point_of_no_return(instructions.down_instructions, new_instructions)
+        }
+      end
+      def insert_after_point_of_no_return(existing_instructions, new_instructions) do
+        insert_after_instruction(existing_instructions, new_instructions, :point_of_no_return)
+      end
+
+      @doc """
+        Appends an instruction or a list of instructions to the instruction after the
+        "point of no return" but before any instruction which:
+          - loads or unloads new code, which means before any
+              `load_module`, `load`, `add_module`, `delete_module`,
+              `remove`, `purge` instruction and
+          - before any instruction which updates, starts or stops
+            any running processes, which means before any
+              `code_change`, `update`, `start`, `stop` instruction and
+          - before any instruction which (re-)starts or stops
+            any application or the emulator, which means before any
+              `add_application`, `remove_application`, `restart_application`,
+              `restart_emulator` and `restart_new_emulator` instruction.
+      """
+      @spec append_after_point_of_no_return(%Instructions{}|instructions, new_instructions::instruction|instructions) :: updated_instructions::%Instructions{}|instructions
+      def append_after_point_of_no_return(instructions = %Instructions{}, new_instructions) do
+        %{instructions|
+          up_instructions:   append_after_point_of_no_return(instructions.up_instructions,  new_instructions),
+          down_instructions: append_after_point_of_no_return(instructions.down_instructions, new_instructions)
+        }
+      end
+      def append_after_point_of_no_return(existing_instructions, new_instruction) when is_list(existing_instructions) and not is_list(new_instruction) do
+        append_after_point_of_no_return(existing_instructions, [new_instruction])
+      end
+      def append_after_point_of_no_return(existing_instructions, new_instructions) when is_list(existing_instructions) do
+        append_after_point_of_no_return(existing_instructions, new_instructions, false, [])
+      end
+
+      defp append_after_point_of_no_return(_existing_instructions = [:point_of_no_return|rest], new_instructions, _after_point_of_no_return = false, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, true, [:point_of_no_return|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [instruction|rest], new_instructions, after_point_of_no_return = false, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(existing_instructions = [instruction|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        if modifies_code?(instruction) or modifies_processes?(instruction) or modifies_applications?(instruction) do
+          Enum.reverse(instructions_before_instruction) ++ new_instructions ++ existing_instructions
+        else
+          append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [instruction|instructions_before_instruction])
+        end
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [], new_instructions, _after_point_of_no_return, instructions_before_instruction) do
+        Enum.reverse(instructions_before_instruction) ++ new_instructions
+      end
+
+      @doc """
         Appends an instruction or a list of instructions to the list of other instructions.
       """
       @spec append(%Instructions{}|instructions, new_instructions::instruction|instructions) :: updated_instructions::%Instructions{}|instructions
@@ -129,6 +191,61 @@ defmodule Edeliver.Relup.Instruction do
       defp insert_after_instruction(_existing_instructions = [], new_instructions, _after_instruction, instructions_before_instruction) do
         Enum.reverse(instructions_before_instruction) ++ new_instructions
       end
+
+
+      @doc """
+        Returns true if the given instruction is an instruction which modifies code by
+        loading, unloading or purging it. It returns `true` for the `load_module`, `add_module`
+        `delete_module`, `load`, `remove` and `purge` relup instructions.
+      """
+      @spec modifies_code?(instruction) :: boolean
+      def modifies_code?({:load_module, _module}), do: true
+      def modifies_code?({:load_module, _module, _dep_mods}), do: true
+      def modifies_code?({:load_module, _module, _pre_purge, _post_purge, _dep_mods}), do: true
+      def modifies_code?({:add_module,  _module}), do: true
+      def modifies_code?({:add_module,  _module, _dep_mods}), do: true
+      def modifies_code?({:load,       {_module, _pre_purge, _post_purge}}), do: true
+      def modifies_code?({:purge, [_module]}), do: true
+      def modifies_code?({:remove, {_module, _pre_purge, _post_purge}}), do: true
+      def modifies_code?({:delete_module, _module}), do: true
+      def modifies_code?({:delete_module, _module, _dep_mods}), do: true
+      def modifies_code?(_), do: false
+
+      @doc """
+        Returns true if the given instruction is an instruction which modifies any process
+        by either by sending the  `code_change` sys event or by starting or stopping any
+        process. It returns `true` for the `code_change`, `start`, `stop` and `update`
+        relup instructions.
+      """
+      @spec modifies_processes?(instruction) :: boolean
+      def modifies_processes?({:update, _mod}), do: true
+      def modifies_processes?({:update, _mod, :supervisor}), do: true
+      def modifies_processes?({:update, _mod, _change_or_dep_mods}), do: true
+      def modifies_processes?({:update, _mod, _change, _dep_mods}), do: true
+      def modifies_processes?({:update, _mod, _change, _pre_purge, _post_purge, _dep_mods}), do: true
+      def modifies_processes?({:update, _mod, Timeout, _change, _pre_purge, _post_purge, _dep_mods}), do: true
+      def modifies_processes?({:update, _mod, ModType, Timeout, _change, _pre_purge, _post_purge, _dep_mods}), do: true
+      def modifies_processes?({:code_change, [{_mod, _extra}]}), do: true
+      def modifies_processes?({:code_change, _mode, [{_mod, _extra}]}), do: true
+      def modifies_processes?({:start, [_mod]}), do: true
+      def modifies_processes?({:stop, [_mod]}), do: true
+      def modifies_processes?(_), do: false
+
+      @doc """
+        Returns true if the given instruction is an instruction which modifies an application
+        bei either (re-)starting or stopping it or by restarting the emulator. It returns
+        `true` for the `add_application`, `remove_application`, `restart_new_emulator`
+        and the `restart_emulator`, relup instructions.
+      """
+      @spec modifies_applications?(instruction) :: boolean
+      def modifies_applications?({:add_application, _application}), do: true
+      def modifies_applications?({:add_application, _application, _type}), do: true
+      def modifies_applications?({:remove_application, _application}), do: true
+      def modifies_applications?({:restart_application, _application}), do: true
+      def modifies_applications?(:restart_new_emulator), do: true
+      def modifies_applications?(:restart_emulator), do: true
+      def modifies_applications?(_), do: false
+
 
       @doc """
         Ensures that the given module is loaded before the given instruction (if it needs to be loaded).
