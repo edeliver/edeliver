@@ -96,7 +96,84 @@ defmodule Edeliver.Relup.RunnableInstruction do
       def call_this(arguments \\ []) do
         {:apply, {__MODULE__, :run, [arguments]}}
       end
-    end
-  end
+
+      @doc """
+        Logs an error using the `Logger` on the running node which is upgraded.
+        In addition the same error message is logged on the node which executes
+        the upgrade and is displayed as output of the
+        `$APP/bin/$APP upgarde $RELEASE` command.
+      """
+      @spec error(message::String.t) :: no_return
+      def error(message) do
+        Logger.error message
+        log_in_upgrade_script(:error, message)
+      end
+
+      @doc """
+        Logs a warning using the `Logger` on the running node which is upgraded.
+        In addition the same warning message is logged on the node which executes
+        the upgrade and is displayed as output of the
+        `$APP/bin/$APP upgarde $RELEASE` command.
+      """
+      @spec warn(message::String.t) :: no_return
+      def warn(message) do
+        Logger.warn message
+        log_in_upgrade_script(:warning, message)
+      end
+
+      @doc """
+        Logs an info message using the `Logger` on the running node which is upgraded.
+        In addition the same info message is logged on the node which executes
+        the upgrade and is displayed as output of the
+        `$APP/bin/$APP upgarde $RELEASE` command.
+      """
+      @spec info(message::String.t) :: no_return
+      def info(message) do
+        Logger.info message
+        log_in_upgrade_script(:info, message)
+      end
+
+       @doc """
+        Logs a debug message using the `Logger` on the running node which is upgraded.
+        In addition the same debug message is logged on the node which executes
+        the upgrade and is displayed as output of the
+        `$APP/bin/$APP upgarde $RELEASE` command.
+      """
+      @spec debug(message::String.t) :: no_return
+      def debug(message) do
+        Logger.debug message
+        log_in_upgrade_script(:debug, message)
+      end
+
+
+
+
+
+      @privdoc """
+        Logs the message of the given type on the node which executes
+        the upgrade and displays it as output of the
+        `$APP/bin/$APP upgarde $RELEASE` command. The message is prefixed
+        with a string drived from the message type.
+      """
+      @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
+      defp log_in_upgrade_script(type, message) do
+        message = String.to_char_list(message)
+        prefix = case type do
+          :error   -> '--> X '
+          :warning -> '--> ! '
+          :info    -> '--> '
+          _        -> '---> ' # debug
+        end
+        :erlang.nodes |> Enum.filter(fn node ->
+          Regex.match?(~r/upgrader_\d+/, Atom.to_string(node))
+        end) |> Enum.each(fn node ->
+          :rpc.cast(node, :io, :format, [:user, '~s~s~n', [prefix, message]])
+        end)
+      end
+
+    end # quote
+
+  end # defmacro __using__
+
 
 end
