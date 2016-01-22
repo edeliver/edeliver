@@ -87,6 +87,11 @@ defmodule Edeliver.Relup.Instruction do
             any application or the emulator, which means before any
               `add_application`, `remove_application`, `restart_application`,
               `restart_emulator` and `restart_new_emulator` instruction.
+
+        It does not consider load-instructions for `Edeliver.Relup.RunnableInstruction`s
+        as code loading instructions for the release. They are inserted by the
+        `RunnableInstruction` itself to ensure that the code of the runnable instruction
+        is loaded before the instruction is executed. See `ensure_module_loaded_before_instruction/2`.
       """
       @spec append_after_point_of_no_return(%Instructions{}|instructions, new_instructions::instruction|instructions) :: updated_instructions::%Instructions{}|instructions
       def append_after_point_of_no_return(instructions = %Instructions{}, new_instructions) do
@@ -108,6 +113,28 @@ defmodule Edeliver.Relup.Instruction do
       defp append_after_point_of_no_return(_existing_instructions = [instruction|rest], new_instructions, after_point_of_no_return = false, instructions_before_instruction) do
         append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [instruction|instructions_before_instruction])
       end
+      # skip instructions which loads code and are inserted before a runnable instruction. see `Edeliver.Relup.RunnableInstruction`
+      # and `Edeliver.Relup.Instruction.ensure_module_loaded_before_instruction/2`. That load instructions are inserted by the
+      # `RunnableInstruction` itself and are not considered to be a 'real' code loading instruction for the running application.
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:load_module, module}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:load_module, module, _dep_mods}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:load_module, module, _pre_purge, _post_purge, _dep_mods}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:add_module, module}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:add_module, module, _dep_mods}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:load, {module, _pre_purge, _post_purge}}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
+        append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
+      end
+      # check whether the instruction is an instruction modifying code, processes or applications
       defp append_after_point_of_no_return(existing_instructions = [instruction|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
         if modifies_code?(instruction) or modifies_processes?(instruction) or modifies_applications?(instruction) do
           Enum.reverse(instructions_before_instruction) ++ new_instructions ++ existing_instructions
