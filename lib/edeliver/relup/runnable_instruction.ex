@@ -196,14 +196,14 @@ defmodule Edeliver.Relup.RunnableInstruction do
         Enum.uniq(vars)
       end
 
-      @privdoc """
+      @doc """
         Logs the message of the given type on the node which executes
         the upgrade and displays it as output of the
-        `$APP/bin/$APP upgarde $RELEASE` command. The message is prefixed
-        with a string drived from the message type.
+        `$APP/bin/$APP upgrade $RELEASE` command. The message is prefixed
+        with a string derived from the message type.
       """
       @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
-      defp log_in_upgrade_script(type, message) do
+      def log_in_upgrade_script(type, message) do
         message = String.to_char_list(message)
         prefix = case type do
           :error   -> '--> X '
@@ -211,10 +211,21 @@ defmodule Edeliver.Relup.RunnableInstruction do
           :info    -> '--> '
           _        -> '---> ' # debug
         end
+        format_in_upgrade_script('~s~s~n', [prefix, message])
+      end
+
+
+      @doc """
+        Formats and prints the message on the node running the
+        upgrade script which was started by the
+        `$APP/bin/$APP upgrade $RELEASE` command.
+      """
+      @spec format_in_upgrade_script(format::char_list, arguments::[term]) :: no_return
+      def format_in_upgrade_script(format, arguments) do
         :erlang.nodes |> Enum.filter(fn node ->
           Regex.match?(~r/upgrader_\d+/, Atom.to_string(node))
         end) |> Enum.each(fn node ->
-          :rpc.cast(node, :io, :format, [:user, '~s~s~n', [prefix, message]])
+          :rpc.cast(node, :io, :format, [:user, format, arguments])
         end)
       end
 

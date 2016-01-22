@@ -30,7 +30,7 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
   alias Edeliver.Relup.Instructions.CheckRanchAcceptors
 
   @doc """
-    Appends the instruction to the instruction after the
+    Appends this instruction to the instructions after the
     "point of no return" but before any instruction which
     loads or unloads new code, (re-)starts or stops
     any running processes, or (re-)starts or stops any
