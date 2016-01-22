@@ -44,10 +44,10 @@ defmodule Edeliver.Relup.Instructions.Sleep do
 
 
   defp wait(_remaining_seconds = 0, seconds) do
-    format_in_upgrade_script '\rWaited ~b seconds.                  ~n', [seconds]
+    format_in_upgrade_script '\r---> Waited ~b seconds.                  ~n', [seconds]
   end
   defp wait(remaining_seconds, seconds) do
-    format_in_upgrade_script '\rWaiting ~b seconds...               ', [remaining_seconds]
+    format_in_upgrade_script '\r---> Waiting ~b seconds...               ', [remaining_seconds]
     receive do
     after 1000 ->  wait(remaining_seconds - 1, seconds)
     end

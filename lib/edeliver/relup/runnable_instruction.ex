@@ -82,8 +82,10 @@ defmodule Edeliver.Relup.RunnableInstruction do
                      |> ensure_module_loaded_before_instruction(call_this_instruction)
       end
 
+      @spec arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}) :: term
       def arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}), do: []
 
+      @spec insert_where::insert_fun
       def insert_where, do: &append/2
 
       defoverridable [modify_relup: 2, insert_where: 0, arguments: 2]
@@ -206,10 +208,10 @@ defmodule Edeliver.Relup.RunnableInstruction do
       def log_in_upgrade_script(type, message) do
         message = String.to_char_list(message)
         prefix = case type do
-          :error   -> '--> X '
-          :warning -> '--> ! '
-          :info    -> '--> '
-          _        -> '---> ' # debug
+          :error   -> '---> X '
+          :warning -> '---> ! '
+          :info    -> '---> '
+          _        -> '----> ' # debug
         end
         format_in_upgrade_script('~s~s~n', [prefix, message])
       end
