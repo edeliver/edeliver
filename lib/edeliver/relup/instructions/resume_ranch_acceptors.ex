@@ -15,6 +15,16 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
   use Edeliver.Relup.RunnableInstruction
   alias Edeliver.Relup.Instructions.CheckRanchAcceptors
 
+  def modify_relup(instructions = %Instructions{}, config = %Config{}) do
+    # ensure that the used module `Edeliver.Relup.Instructions.CheckRanchAcceptors` is unloaded
+    # not before this `RunnableInstruction` which runs usually as one of the last instructions
+    new_instructions = %{down_instructions: down_instructions} = super(instructions, config)
+    [call_this_instruction] = down_instructions -- instructions.down_instructions
+    %{new_instructions|
+      down_instructions: ensure_module_unloaded_after_instruction(down_instructions, call_this_instruction, Edeliver.Relup.Instructions.CheckRanchAcceptors)
+    }
+  end
+
   @doc """
     Returns name of the application. This name is taken as argument
     for the `run/1` function and is required to access the acceptor processes
