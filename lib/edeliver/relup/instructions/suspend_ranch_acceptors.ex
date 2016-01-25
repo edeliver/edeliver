@@ -48,6 +48,16 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
   end
 
   @doc """
+    This module requires the `Edeliver.Relup.Instructions.CheckRanchAcceptors` module
+    which must be loaded before this instruction for upgrades and unload after this
+    instruction for downgrades.
+  """
+  @spec dependencies() :: [Edeliver.Relup.Instructions.CheckRanchAcceptors]
+  def dependencies do
+    [Edeliver.Relup.Instructions.CheckRanchAcceptors]
+  end
+
+  @doc """
     Suspends all ranch acceptors to avoid handling new requests / connections
     during the upgrade. Because suspending of ranch acceptors is not possible
     they are terminated. In addition the ranch acceptor supervisor is suspended

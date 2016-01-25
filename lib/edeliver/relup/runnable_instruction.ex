@@ -66,6 +66,13 @@ defmodule Edeliver.Relup.RunnableInstruction do
   """
   @callback arguments(instructions::%Edeliver.Relup.Instructions{}, config::%ReleaseManager.Config{}) :: [term]
 
+  @doc """
+    Returns a list of module names which implement the behaviour `Edeliver.Relup.RunnableInstruction` and
+    are used / referenced by this runnable instruction. These modules must be loaded before this instruction
+    is executed for upgrades and unload after this instruction for downgrades. Default is an empty list.
+  """
+  @callback dependencies() :: [instruction_module::atom]
+
   @doc false
   defmacro __using__(_opts) do
     quote do
@@ -80,6 +87,8 @@ defmodule Edeliver.Relup.RunnableInstruction do
         insert_where_fun = insert_where
         instructions |> insert_where_fun.(call_this_instruction)
                      |> ensure_module_loaded_before_instruction(call_this_instruction)
+                     |> ensure_dependencies_loaded_before_instruction_for_upgrade(call_this_instruction)
+                     |> ensure_dependencies_unloaded_after_instruction_for_downgrade(call_this_instruction)
       end
 
       @spec arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}) :: term
@@ -88,7 +97,11 @@ defmodule Edeliver.Relup.RunnableInstruction do
       @spec insert_where::insert_fun
       def insert_where, do: &append/2
 
-      defoverridable [modify_relup: 2, insert_where: 0, arguments: 2]
+      @spec dependencies() :: [instruction_module::atom]
+      def dependencies, do: []
+
+
+      defoverridable [modify_relup: 2, insert_where: 0, arguments: 2, dependencies: 0]
 
       @doc """
         Calls the `run/1` function of this module from the
@@ -230,6 +243,31 @@ defmodule Edeliver.Relup.RunnableInstruction do
           :rpc.cast(node, :io, :format, [:user, format, arguments])
         end)
       end
+
+      @doc """
+        Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
+        and returned by the `dependencies/0` callback are loaded before this instruction is executed
+        during the upgrade.
+      """
+      @spec ensure_dependencies_loaded_before_instruction_for_upgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+      def ensure_dependencies_loaded_before_instruction_for_upgrade(instructions = %Instructions{}, call_this_instruction, dependencies \\ dependencies()) do
+        dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{up_instructions: up_instructions}) ->
+          %{instructions_acc| up_instructions: ensure_module_loaded_before_first_runnable_instructions(up_instructions, call_this_instruction, dependency)}
+        end)
+      end
+
+      @doc """
+        Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
+        and returned by the `dependencies/0` callback are unloaded after this instruction is executed
+        during the downgrade.
+      """
+      @spec ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+      def ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions = %Instructions{}, call_this_instruction, dependencies \\ dependencies()) do
+        dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{down_instructions: down_instructions}) ->
+          %{instructions_acc| down_instructions: ensure_module_unloaded_after_last_runnable_instruction(down_instructions, call_this_instruction, dependency)}
+        end)
+      end
+
 
     end # quote
 

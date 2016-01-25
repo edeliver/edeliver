@@ -348,22 +348,25 @@ defmodule Edeliver.Relup.Instruction do
         `ensure_module_loaded_before_instruction/3` function if the `RunnableInstruction` can be used several times
         in a `Relup.Modification`.
       """
-      @spec ensure_module_loaded_before_first_runnable_instructions(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::%Instructions{}|instructions
-      def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction) do
+      @spec ensure_module_loaded_before_first_runnable_instructions(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::%Instructions{}|instructions
+      def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction, module) do
         %{instructions|
-          up_instructions:   ensure_module_loaded_before_first_runnable_instructions(instructions.up_instructions, runnable_instruction),
-          down_instructions: ensure_module_unloaded_after_last_runnable_instruction(instructions.down_instructions, runnable_instruction)
+          up_instructions:   ensure_module_loaded_before_first_runnable_instructions(instructions.up_instructions, runnable_instruction, module),
+          down_instructions: ensure_module_unloaded_after_last_runnable_instruction(instructions.down_instructions, runnable_instruction, module)
         }
       end
-      def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction) when is_list(up_instructions) do
-        ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, [])
+      def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
+        ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, module, [])
       end
-      def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction), do: ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction)
+      @spec ensure_module_loaded_before_first_runnable_instructions(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::%Instructions{}|instructions
+      def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
+        ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction, module)
+      end
 
-      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [runnable_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, _found_instruction = false, checked_instructions) do
-        ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, _found_instruction = true, [runnable_instruction|checked_instructions])
+      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [runnable_instruction|rest], runnable_instruction, _found_instruction = false, module, checked_instructions) do
+        ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, _found_instruction = true, module, [runnable_instruction|checked_instructions])
       end
-      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, found_instruction, checked_instructions) do
+      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {instruction_module, :run, _arguments}}, found_instruction, module, checked_instructions) do
         found_load_instruction = case cur_instruction do
           {:load_module, ^module} -> true
           {:load_module, ^module, _dep_mods} -> true
@@ -375,15 +378,15 @@ defmodule Edeliver.Relup.Instruction do
         end
         cond do
           found_load_instruction and found_instruction ->
-            first_runnable_instruction = first_runnable_instruction(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction], module)
+            first_runnable_instruction = first_runnable_instruction(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction], instruction_module)
             insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, first_runnable_instruction)
           found_load_instruction and not found_instruction ->
             Enum.reverse(checked_instructions) ++ instructions # load instruction is already before given runnable instruction
           true ->
-            ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, found_instruction, [cur_instruction|checked_instructions])
+            ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, found_instruction, module, [cur_instruction|checked_instructions])
         end
       end
-      defp ensure_module_loaded_before_first_runnable_instructions(_instructions = [], _runnable_instruction, _found_instruction, checked_instructions) do
+      defp ensure_module_loaded_before_first_runnable_instructions(_instructions = [], _runnable_instruction, _found_instruction, module, checked_instructions) do
         Enum.reverse(checked_instructions)
       end
 
@@ -454,22 +457,24 @@ defmodule Edeliver.Relup.Instruction do
         Use this function instead of the `ensure_module_unloaded_after_instruction/3` function if the `RunnableInstruction`
         can be used several times  in a `Relup.Modification`.
       """
-      @spec ensure_module_unloaded_after_last_runnable_instruction(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::%Instructions{}|instructions
-      def ensure_module_unloaded_after_last_runnable_instruction(instructions = %Instructions{}, runnable_instruction = {:apply, {module, :run, _arguments}}) do
+      @spec ensure_module_unloaded_after_last_runnable_instruction(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::%Instructions{}|instructions
+      def ensure_module_unloaded_after_last_runnable_instruction(instructions = %Instructions{}, runnable_instruction, module) do
         %{instructions|
-          up_instructions:   ensure_module_unloaded_after_last_runnable_instruction(instructions.up_instructions, runnable_instruction),
-          down_instructions: ensure_module_loaded_before_first_runnable_instructions(instructions.down_instructions, runnable_instruction)
+          up_instructions:   ensure_module_unloaded_after_last_runnable_instruction(instructions.up_instructions, runnable_instruction, module),
+          down_instructions: ensure_module_loaded_before_first_runnable_instructions(instructions.down_instructions, runnable_instruction, module)
         }
       end
-      def ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction) when is_list(up_instructions) do
-        ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction, [])
+      def ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
+        ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction, module, [])
       end
-      def ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction), do: ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction)
+      def ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
+        ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction, module)
+      end
 
-      defp ensure_module_unloaded_after_last_runnable_instruction(instructions = [runnable_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, checked_instructions) do
+      defp ensure_module_unloaded_after_last_runnable_instruction(instructions = [runnable_instruction|rest], runnable_instruction, module, checked_instructions) do
         Enum.reverse(checked_instructions) ++ instructions # don't need to check instructions after instruction
       end
-      defp ensure_module_unloaded_after_last_runnable_instruction(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, checked_instructions) do
+      defp ensure_module_unloaded_after_last_runnable_instruction(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {instruction_module, :run, _arguments}}, module, checked_instructions) do
         found_unload_instruction = case cur_instruction do
           {:load_module, ^module} -> true
           {:load_module, ^module, _dep_mods} -> true
@@ -484,14 +489,14 @@ defmodule Edeliver.Relup.Instruction do
           _ -> false
         end
         if found_unload_instruction do
-          last_runnable_instruction = first_runnable_instruction(Enum.reverse(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction]), module)
+          last_runnable_instruction = first_runnable_instruction(Enum.reverse(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction]), instruction_module)
           insert_after_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, last_runnable_instruction)
-          |> ensure_module_unloaded_after_last_runnable_instruction(runnable_instruction, []) # continue finding unload instructions before
+          |> ensure_module_unloaded_after_last_runnable_instruction(runnable_instruction, module, []) # continue finding unload instructions before
         else
-          ensure_module_unloaded_after_last_runnable_instruction(rest, runnable_instruction, [cur_instruction|checked_instructions])
+          ensure_module_unloaded_after_last_runnable_instruction(rest, runnable_instruction, module, [cur_instruction|checked_instructions])
         end
       end
-      defp ensure_module_unloaded_after_last_runnable_instruction(_instructions = [], _runnable_instruction, checked_instructions) do
+      defp ensure_module_unloaded_after_last_runnable_instruction(_instructions = [], _runnable_instruction, _module, checked_instructions) do
         Enum.reverse(checked_instructions)
       end
 

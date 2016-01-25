@@ -83,7 +83,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
 
   @doc """
     Gets the supervisor child ids of the ranch socket accecptors (`ranch_acceptor`) from the
-    ranch acceptor supervisor or throws and logs an error if the cannot be found.
+    ranch acceptor supervisor or throws and logs an error if the acceptors cannot be found.
   """
   @spec ranch_acceptors(ranch_acceptors_sup::pid) :: [:supervisor.child_id]
   def ranch_acceptors(ranch_acceptors_sup) do
