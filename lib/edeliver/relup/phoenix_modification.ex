@@ -11,6 +11,7 @@ defmodule Edeliver.Relup.PhoenixModification do
     |> Edeliver.Relup.Instructions.StartSection.modify_relup(config, :check)
     |> Edeliver.Relup.Instructions.CheckProcessesRunningOldCode.modify_relup(config)
     |> Edeliver.Relup.Instructions.CheckRanchAcceptors.modify_relup(config)
+    |> Edeliver.Relup.Instructions.CheckRanchConnections.modify_relup(config)
     # prepare the upgrade
     |> Edeliver.Relup.Instructions.StartSection.modify_relup(config, :suspend)
     |> Edeliver.Relup.Instructions.SuspendRanchAcceptors.modify_relup(config)
