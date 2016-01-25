@@ -314,22 +314,30 @@ defmodule Edeliver.Relup.Instruction do
         }
       end
       def ensure_module_loaded_before_instruction(up_instructions, instruction, module) when is_list(up_instructions) do
-        ensure_module_loaded_before_instruction(up_instructions, instruction, module, [])
+        ensure_module_loaded_before_instruction(up_instructions, instruction, module, _found_instruction = false, [])
       end
       def ensure_module_loaded_before_instruction(instructions, instruction), do: ensure_module_loaded_before_instruction(instructions, instruction, __MODULE__)
 
-      defp ensure_module_loaded_before_instruction(_instructions = [cur_instruction|rest], instruction, module, checked_instructions) do
-        case cur_instruction do
-          {:load_module, ^module} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          {:load_module, ^module, _dep_mods} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          {:load_module, ^module, _pre_purge, _post_purge, _dep_mods} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          {:add_module,  ^module} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          {:add_module,  ^module, _dep_mods} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          {:load,       {^module, _pre_purge, _post_purge}} -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
-          _ -> ensure_module_loaded_before_instruction(rest, instruction, module, [cur_instruction|checked_instructions])
+      defp ensure_module_loaded_before_instruction(_instructions = [instruction|rest], instruction, module, found_instruction = false, checked_instructions) do
+        ensure_module_loaded_before_instruction(rest, instruction, module, _found_instruction = true, [instruction|checked_instructions])
+      end
+      defp ensure_module_loaded_before_instruction(instructions = [cur_instruction|rest], instruction, module, found_instruction, checked_instructions) do
+        found_load_instruction = case cur_instruction do
+          {:load_module, ^module} -> true
+          {:load_module, ^module, _dep_mods} -> true
+          {:load_module, ^module, _pre_purge, _post_purge, _dep_mods} -> true
+          {:add_module,  ^module} -> true
+          {:add_module,  ^module, _dep_mods} -> true
+          {:load,       {^module, _pre_purge, _post_purge}} -> true
+          _ -> false
+        end
+        cond do
+          found_load_instruction and found_instruction -> insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, instruction)
+          found_load_instruction and not found_instruction -> Enum.reverse(checked_instructions) ++ instructions # load instruction is already before given instruction
+          true -> ensure_module_loaded_before_instruction(rest, instruction, module, found_instruction, [cur_instruction|checked_instructions])
         end
       end
-      defp ensure_module_loaded_before_instruction(_instructions = [], _instruction, _module, checked_instructions) do
+      defp ensure_module_loaded_before_instruction(_instructions = [], _instruction, _module, _found_instruction, checked_instructions) do
         Enum.reverse(checked_instructions)
       end
 
@@ -348,11 +356,14 @@ defmodule Edeliver.Relup.Instruction do
         }
       end
       def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction) when is_list(up_instructions) do
-        ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, [])
+        ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, [])
       end
       def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction), do: ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction)
 
-      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, checked_instructions) do
+      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [runnable_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, _found_instruction = false, checked_instructions) do
+        ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, _found_instruction = true, [runnable_instruction|checked_instructions])
+      end
+      defp ensure_module_loaded_before_first_runnable_instructions(instructions = [cur_instruction|rest], runnable_instruction = {:apply, {module, :run, _arguments}}, found_instruction, checked_instructions) do
         found_load_instruction = case cur_instruction do
           {:load_module, ^module} -> true
           {:load_module, ^module, _dep_mods} -> true
@@ -362,14 +373,17 @@ defmodule Edeliver.Relup.Instruction do
           {:load,       {^module, _pre_purge, _post_purge}} -> true
           _ -> false
         end
-        if found_load_instruction do
-          first_runnable_instruction = first_runnable_instruction(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction], module)
-          insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, first_runnable_instruction)
-        else
-          ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, [cur_instruction|checked_instructions])
+        cond do
+          found_load_instruction and found_instruction ->
+            first_runnable_instruction = first_runnable_instruction(Enum.reverse(checked_instructions) ++ instructions ++ [runnable_instruction], module)
+            insert_before_instruction(Enum.reverse(checked_instructions) ++ rest, cur_instruction, first_runnable_instruction)
+          found_load_instruction and not found_instruction ->
+            Enum.reverse(checked_instructions) ++ instructions # load instruction is already before given runnable instruction
+          true ->
+            ensure_module_loaded_before_first_runnable_instructions(rest, runnable_instruction, found_instruction, [cur_instruction|checked_instructions])
         end
       end
-      defp ensure_module_loaded_before_first_runnable_instructions(_instructions = [], _runnable_instruction, checked_instructions) do
+      defp ensure_module_loaded_before_first_runnable_instructions(_instructions = [], _runnable_instruction, _found_instruction, checked_instructions) do
         Enum.reverse(checked_instructions)
       end
 
