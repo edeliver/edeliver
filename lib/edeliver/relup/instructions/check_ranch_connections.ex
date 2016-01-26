@@ -4,6 +4,17 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     This instruction will cause the upgrade to be canceled if the ranch connections
     cannot be found and because it is insterted before the "point of no return"
     it will run twice, once when checking the relup and once when executing the relup.
+
+    If `Phoenix.PubSub.PG2` is used as pubsub backend for phoenix channels,
+    running websocket processes will be detected and suspended by the
+
+      `Edeliver.Relup.Instructions.SuspendChannels`
+
+    instruction during the upgrade and resumed by the
+
+     `Edeliver.Relup.Instructions.ResumeChannels` instruction
+
+    after the upgrade / downgrade of the node.
   """
   use Edeliver.Relup.RunnableInstruction
   alias Edeliver.Relup.Instructions.CheckRanchAcceptors
@@ -141,6 +152,9 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     Checks whether the ranch connections can be found. If not the upgrade
     will be canceled. This function runs twice because it is executed before
     the "point of no return", once when checking the relup and once when executing the relup.
+    It also tries to detect the websocket processes if the `Phoenix.PubSub.PG2` pubsub
+    backend is used for phoenix websocket channels. It will not fail if that detection
+    is not possible, but a warning is printed
   """
   @spec run(otp_application_name::atom) :: :ok
   def run(otp_application_name) do
@@ -155,7 +169,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
       [] -> info "Detected that no websockets are connected to channels."
       websocket_connections = [_|_] -> info "#{inspect Enum.count(websocket_connections)} out of #{inspect Enum.count(connections)} connections are websocket channel connections."
       :not_detected ->
-        info "Cannot detect websocket channel connections."
+        warn  "Cannot detect websocket channel connections."
         debug "They won't be suspended but treated as normal http request connections."
         debug "Detection is possible only if 'Phoenix.PubSub.PG2' is used as pubsub backend."
     end

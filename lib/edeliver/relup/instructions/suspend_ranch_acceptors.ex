@@ -5,10 +5,10 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
     inserted right after the "point of no return". When the
     upgrade is done, the
 
-      `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction reenables the acceptors again. To make sure
-    that the ranch acceptors are found, use this instruciton
+    that the ranch acceptors are found, use this instruction
     after the
 
       `Edeliver.Relup.Instructions.CheckRanchAcceptors`
@@ -22,7 +22,7 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
 
       `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
-    instruction at the end of your instruction list to reenable
+    instruction at the end of your instructions list to reenable
     accepting tcp connection when the upgrade is done.
 
   """
