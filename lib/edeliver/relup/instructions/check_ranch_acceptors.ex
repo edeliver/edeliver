@@ -16,7 +16,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   def insert_where, do: &insert_before_point_of_no_return/2
 
   @doc """
-    Returns name of the application. This name is taken as argument
+    Returns the name of the application. This name is taken as argument
     for the `run/1` function and is required to access the acceptor processes
     through the supervision tree
   """
@@ -25,13 +25,13 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   end
 
   @doc """
-    Gets the pid of the ranch listener supervisor (`:ranch_listener_sup`) which supervises the
-    ranch acceptors supervisor (`:ranch_acceptors_sup`) and the connections supervisor
-    (`:ranch_conns_sup`). It throws and logs an error if they cannot be found in the supervison
-    tree of the application.
+    Returns the pid of the phoenix endpoint supervisor or throws and logs an error
+    if it cannot be found. It supervises the `Phoenix.Endpoint.Server` which supervises
+    the connections and acceptors, `Phoenix.Config` and the phoenix pubsub supervisor,
+    e.g. `Phoenix.PubSub.PG2`.
   """
-  @spec ranch_listener_sup(otp_application_name::atom) :: pid
-  def ranch_listener_sup(otp_application_name) when is_atom(otp_application_name) do
+  @spec endpoint(otp_application_name::atom) :: pid
+  def endpoint(otp_application_name) when is_atom(otp_application_name) do
     application_master_pid = :application_controller.get_master(otp_application_name)
     assume true = is_pid(application_master_pid), "Failed to detect ranch socket acceptors. Application master not found."
     assume {application_supervisor_pid, _} = :application_master.get_child(application_master_pid), "Failed to detect ranch socket acceptors. Application supervisor not found."
@@ -47,14 +47,27 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
       end
     end)
     assume [{_, endpoint_pid, _, _}] = matching_children, "Failed to detect ranch socket acceptors. Phoenix endpoint not found."
+    endpoint_pid
+  end
+
+  @doc """
+    Gets the pid of the ranch listener supervisor (`:ranch_listener_sup`) which supervises the
+    ranch acceptors supervisor (`:ranch_acceptors_sup`) and the connections supervisor
+    (`:ranch_conns_sup`). It throws and logs an error if they cannot be found in the supervison
+    tree of the application.
+  """
+  @spec ranch_listener_sup(otp_application_name::atom) :: pid
+  def ranch_listener_sup(otp_application_name) when is_atom(otp_application_name) do
+    endpoint_pid = endpoint(otp_application_name)
+    assume true = is_pid(endpoint_pid), "Failed to detect ranch socket acceptors. Phoenix endpoint not found."
     matching_children = Supervisor.which_children(endpoint_pid) |> Enum.filter(fn(child) ->
       case child do
         {Phoenix.Endpoint.Server, _pid, _type, [Phoenix.Endpoint.Server]} -> true
         _ -> false
       end
     end)
-    assume [{_, endpoint_supervisor_pid, _, _}] = matching_children, "Failed to detect ranch socket acceptors. Phoenix endpoint supervisor not found."
-    matching_children = Supervisor.which_children(endpoint_supervisor_pid) |> Enum.filter(fn(child) ->
+    assume [{_, endpoint_server_pid, _, _}] = matching_children, "Failed to detect ranch socket acceptors. Phoenix endpoint server not found."
+    matching_children = Supervisor.which_children(endpoint_server_pid) |> Enum.filter(fn(child) ->
       case child do
         {{:ranch_listener_sup, _}, _pid, _type, [:ranch_listener_sup]} -> true
         _ -> false

@@ -67,6 +67,76 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     acceptor_pids
   end
 
+  @privdoc """
+    Checks whether the given `supervisor` contains exactly one child matching the given `child_id`,
+    assigns the pid of the child to `var` and continues executing `instructions`. If no child
+    or several childs with the id was/were found, it returns `:not_detected`.
+  """
+  @spec supervised_child_with_id_or_return_not_detected(supervisor::pid, child_id::term, var::term, instructions::term) :: term | :not_detected
+  defmacrop supervised_child_with_id_or_return_not_detected(supervisor, child_id, var, instructions) do
+    quote do
+        case Supervisor.which_children(unquote(supervisor)) |> List.foldr([], fn child, acc ->
+          case child do
+             {unquote(child_id), pid, _type, _} -> [pid|acc]
+            _ -> acc
+          end
+         end) do
+          [unquote(var)] when is_pid(unquote(var)) ->
+              [do: result] = unquote(instructions)
+              result
+          _ -> :not_detected
+        end
+    end
+  end
+
+
+  @doc """
+    Returns the pids of the connections which are websocket connections for channels. This detection works
+    only if `Phoenix.PubSub.PG2` is used as pubsub backend. If detection fails, it returns `:not_detected`.
+    Knowing which processes of the known connections are websockets is useful because they should be suspended
+    during the hot code upgrade and resumed again afterwards. If detection fails, websocket connections must
+    be treated as "normal" http request connections. Detection of websocket connections is not possible either
+    by the phoenix api nor by the cowboy / ranch api. Thats why this function takes the processes that are
+    monitored by the `Phoenix.PubSub.Local` process and are a subset of the detected connections as websocket
+    connections for channels. The lookup for `Phoenix.PubSub.Local` process is dones by searching the supervision
+    tree of the application for:
+
+          `Phoenix.Endpoint` -> `Phoenix.PubSub.PG2` -> `Phoenix.PubSub.LocalSupervisor` -> `Supervisor` -> `Phoenix.PubSub.Local`
+  """
+  @spec websocket_channel_connections(otp_application_name::atom, connections::[pid]) :: [] | [pid] | :not_detected
+  def websocket_channel_connections(otp_application_name, connections) do
+    endpoint_pid = CheckRanchAcceptors.endpoint(otp_application_name)
+    assume true = is_pid(endpoint_pid), "Failed to detect websocket connections. Phoenix endpoint not found."
+    supervised_child_with_id_or_return_not_detected endpoint_pid, Phoenix.PubSub.PG2, pubsub_sup do
+      supervised_child_with_id_or_return_not_detected pubsub_sup, Phoenix.PubSub.LocalSupervisor, local_sup do
+        supervised_child_with_id_or_return_not_detected local_sup, 0, supervisor do
+          supervised_child_with_id_or_return_not_detected supervisor, Phoenix.PubSub.Local, pubsub_local do
+            case :erlang.process_info(pubsub_local, :monitors) do
+              {:monitors, monitors} when is_list(monitors) ->
+                monitored_pids = List.foldr(monitors, [], fn monitor, acc ->
+                  case monitor do
+                    {:process, pid} -> [pid|acc]
+                    _ -> acc
+                  end
+                end)
+                # if the connection as a linked `Phoenix.Socket` process
+                # which is monitored by the `Phoenix.PubSub.Local` pubsub backend
+                # it's a websocket connected to a phoenix channel
+                Enum.filter(connections, fn connection ->
+                  case :erlang.process_info(connection, :links) do
+                    {:links, pids_and_ports = [_,_|_]} -> # must have at least two links: one to the supervisor and one to the `Phoenix.Socket`
+                      Enum.any?(pids_and_ports, &(is_pid(&1) and Enum.member?(monitored_pids, &1)))
+                    _ -> false
+                  end
+                end)
+              _ -> :not_detected
+            end
+          end
+        end
+      end
+    end
+  end
+
   @doc """
     Checks whether the ranch connections can be found. If not the upgrade
     will be canceled. This function runs twice because it is executed before
@@ -81,7 +151,13 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     assume true = is_pid(ranch_connections_sup), "Failed to detect ranch socket connections. Ranch connections supervisor not found."
     assume true = is_list(connections = ranch_connections(ranch_connections_sup)), "Failed to detect ranch socket connections. No connection processes found."
     info "Found #{inspect Enum.count(connections)} ranch connections."
+    case websocket_channel_connections(otp_application_name, connections) do
+      [] -> info "Detected that no websockets are connected to channels."
+      websocket_connections = [_|_] -> info "#{inspect Enum.count(websocket_connections)} out of #{inspect Enum.count(connections)} connections are websocket channel connections."
+      :not_detected ->
+        info "Cannot detect websocket channel connections."
+        debug "They won't be suspended but treated as normal http request connections."
+        debug "Detection is possible only if 'Phoenix.PubSub.PG2' is used as pubsub backend."
+    end
   end
-
-
 end
