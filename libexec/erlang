@@ -787,9 +787,9 @@ git_checkout_remote() {
 # cleans the build directory on the remote build host.
 # by default all generated files are cleaned but that
 # can be adjusted by the GIT_CLEAN_PATHS env. This
-# function does nothing if SKIP_MIX_CLEAN="true"
+# function does nothing if SKIP_GIT_CLEAN="true"
 git_clean_remote() {
-  if [[ "$SKIP_MIX_CLEAN" = "true" ]]; then
+  if [[ "$SKIP_GIT_CLEAN" = "true" ]]; then
     status "Skipped cleaning generated files from last build"
   else
     GIT_CLEAN_PATHS=${GIT_CLEAN_PATHS:="."}
