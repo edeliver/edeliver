@@ -56,6 +56,40 @@ defmodule Mix.Tasks.Edeliver do
   @spec run(OptionParser.argv) :: :ok
   def run(args) do
     edeliver = Path.join [Mix.Project.config[:deps_path], "edeliver", "bin", "edeliver"]
-    if (res = Mix.shell.cmd(Enum.join([edeliver | args], " "))) > 0, do: System.halt(res)
+    if (res = cmd(Enum.join([edeliver | args], " "))) > 0, do: System.halt(res)
+  end
+
+  defp cmd(command) do
+    port = Port.open({:spawn, shell_command(command)}, [:stream, :binary, :exit_status, :nouse_stdio])
+    do_cmd(port)
+  end
+
+  defp do_cmd(port) do
+    receive do
+      {^port, {:data, data}} ->
+        IO.write(data)
+        do_cmd(port)
+      {^port, {:exit_status, status}} -> status
+    end
+  end
+
+  # Finding shell command logic from :os.cmd in OTP
+  # https://github.com/erlang/otp/blob/8deb96fb1d017307e22d2ab88968b9ef9f1b71d0/lib/kernel/src/os.erl#L184
+  defp shell_command(command) do
+    case :os.type do
+      {:unix, _} ->
+        command = command
+          |> String.replace("\"", "\\\"")
+          |> :binary.bin_to_list
+        'sh -c "' ++ command ++ '"'
+
+      {:win32, osname} ->
+        command = :binary.bin_to_list(command)
+        case {System.get_env("COMSPEC"), osname} do
+          {nil, :windows} -> 'command.com /c ' ++ command
+          {nil, _}        -> 'cmd /c ' ++ command
+          {cmd, _}        -> '#{cmd} /c ' ++ command
+        end
+    end
   end
 end
