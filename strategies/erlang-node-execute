@@ -132,7 +132,7 @@ __execute_node_command() {
     bin/${APP} ${_node_command} ${_config_arg}
   "
 
-  [ "${_node_index}" = "single_node" ] && local _terminal_option=-t || local _terminal_option=
+  [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
   ssh $_terminal_option -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
   local _status_code="$?"
   [ "${_node_index}" != "single_node" ] && echo -e "\n${_status_code}"
