@@ -1,6 +1,15 @@
 eDeliver Versions
 =================
 
+1.1.2
+
+- Fix ssh warning if edeliver is used as mix task
+- Allow user interaction when building in verbose mode
+- Suppress printing app script version if app script was generated with recent exrm version
+- Fix skipping git clean when SKIP_GIT_CLEAN env is set
+- Show very verbose output of exrm release task if it fails
+- Fix name of post hook which is executed after updating the deps
+
 1.1.1
 
 - added command line option `--mix-env=<env>`
