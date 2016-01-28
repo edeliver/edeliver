@@ -86,24 +86,8 @@ __execute_node_command_asynchronously() {
 __execute_node_command_synchronously() {
   local _node_command=$1
   local _node=${NODES# *}
-  __print_node_command_result "" "0" "$_node" ""
-  # {
-  #   local _result
-  #   local _lines=0
-  #   while read line; do
-  #     if [[ "$_lines" = "0" ]] && [[ "$line" =~ ": " ]]; then
-  #       local _node=${line%: *}
-  #       line=${line#*: }
-  #       echo "  node    : $_node"
-  #       echo -e "  response: $line\n"
-  #     elif [[ "$_lines" = "0" ]]; then
-  #       echo -e "  response: $line\n"
-  #     else
-  #       echo -e "            $line"
-  #     fi
-  #     _lines=$(($_lines+1))
-  #   done
-  # } < <(__execute_node_command "single_node" "$_node" "$_node_command")
+  __print_node_command_result "single_node" "0" "$_node" ""
+  echo -n "  response: "
   __execute_node_command "single_node" "$_node" "$_node_command"
 }
 
@@ -148,6 +132,7 @@ __print_node_command_result() {
   local _config; local _config_arg
   local _message=""
   _message="${bldgrn}$NODE_ENVIRONMENT${txtrst} node: $_node_index\n\n"
+  [[ "$_node_index" = "single_node" ]] && _message="${bldgrn}$NODE_ENVIRONMENT${txtrst} node:\n\n"
   echo
   local _user=${_node_name%@*}
   local _host=${_node_name#*@}
@@ -168,7 +153,9 @@ __print_node_command_result() {
     _message="${_message}  node    : $_node\n"
   fi
 
-  if [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
+  if [[ "$_node_index" = "single_node" ]]; then
+    echo -en "${_message}" && return 0
+  elif [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n"
   elif [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldred}failed${txtrst}\n";
