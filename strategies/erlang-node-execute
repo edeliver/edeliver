@@ -36,7 +36,7 @@ run() {
 # is printed continuously to the screen.
 execute_node_command() {
   local _node_command=$1
-  if [[ $(echo $NODES | wc -w) -eq 1 ]] && [[ "$_node_command" = "start" ]]; then
+  if [[ $(echo $NODES | wc -w) -eq 1 ]]; then
     __execute_node_command_synchronously "$_node_command"
   else
     __execute_node_command_asynchronously "$_node_command"
