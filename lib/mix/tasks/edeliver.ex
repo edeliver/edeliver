@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Edeliver do
   @spec run(OptionParser.argv) :: :ok
   def run(args) do
     edeliver = Path.join [Mix.Project.config[:deps_path], "edeliver", "bin", "edeliver"]
-    if (res = run_edeliver(Enum.join([edeliver | args], " "))) > 0, do: System.halt(res)
+    if (res = run_edeliver(Enum.join([edeliver | args] ++ ["--runs-as-mix-task"], " "))) > 0, do: System.halt(res)
   end
 
   defp run_edeliver(command) do

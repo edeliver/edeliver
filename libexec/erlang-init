@@ -321,6 +321,9 @@ do
     (--start-deploy)
       START_DEPLOY="true"
     ;;
+    (--runs-as-mix-task)
+      RUNS_AS_MIX_TASK="true"
+    ;;
     (-h|--help)
       __help
       exit 0

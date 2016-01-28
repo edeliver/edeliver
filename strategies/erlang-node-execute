@@ -91,7 +91,6 @@ __execute_node_command_synchronously() {
   __execute_node_command "single_node" "$_node" "$_node_command"
 }
 
-
 # executes a node command on a given node.
 __execute_node_command() {
   local _node_index=$1
