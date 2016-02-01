@@ -1,7 +1,11 @@
 eDeliver Versions
 =================
 
-1.1.2
+__1.1.3__
+
+- Fix hex.pm release by adding missing mix.exs
+
+__1.1.2__
 
 - Fix ssh warning if edeliver is used as mix task
 - Allow user interaction when building in verbose mode
@@ -10,7 +14,7 @@ eDeliver Versions
 - Show very verbose output of exrm release task if it fails
 - Fix name of post hook which is executed after updating the deps
 
-1.1.1
+__1.1.1__
 
 - added command line option `--mix-env=<env>`
 - automatic authorization of/on release store host
