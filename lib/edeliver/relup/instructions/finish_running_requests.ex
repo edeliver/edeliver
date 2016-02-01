@@ -116,16 +116,16 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
       websocket_connections = [_|_] -> connections -- websocket_connections
       :not_detected -> connections
     end
-    requets_count = Enum.count(request_connections)
-    if requets_count == 0 do
+    requests_count = Enum.count(request_connections)
+    if requests_count == 0 do
       info "No requests running."
     else
-      info "Waiting for #{inspect requets_count} requests..."
+      info "Waiting for #{inspect requests_count} requests..."
       remaining_requests = bulk_wait_for_termination(request_connections, timeout)
       remaining_requests_count = Enum.count(remaining_requests)
-      info "#{inspect requets_count-remaining_requests_count} requets finished."
+      info "#{inspect requests_count-remaining_requests_count} requets finished."
       if remaining_requests_count > 0 do
-        info "#{inspect remaining_requests_count} requets will be restarted after upgrade if they failed."
+        info "#{inspect remaining_requests_count} requests will be restarted after upgrade if they failed."
         notify_running_requests(remaining_requests, :upgrade_started)
       end
     end
