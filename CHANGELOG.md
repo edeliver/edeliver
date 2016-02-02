@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.1.4__
+
+- Fix selecting release when deploying and no version is given
+
 __1.1.3__
 
 - Fix hex.pm release by adding missing mix.exs
