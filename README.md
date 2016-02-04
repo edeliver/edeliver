@@ -140,7 +140,7 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
     mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
 
-Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn.
+Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
 #### Generate and Edit Upgrade Files (appup)
 
