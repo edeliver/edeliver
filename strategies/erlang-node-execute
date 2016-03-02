@@ -108,11 +108,13 @@ __execute_node_command() {
   [[ -n "$_config" ]] && _config_arg="--config=${_config}" || _config_arg=""
   [ "${_node_index}" != "single_node" ] && [ "${_node_command}" = "start" ] &&  _config_arg="$_config_arg --short"
 
+  [[ -n "$ECTO_REPOSITORY" ]] && local _node_env="ECTO_REPOSITORY='$ECTO_REPOSITORY' "
+
   _remote_job="
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_path}/${APP} $SILENCE
-    bin/${APP} ${_node_command} ${_config_arg}
+    ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
   "
 
   [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
