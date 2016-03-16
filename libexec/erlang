@@ -786,12 +786,11 @@ force_start_release() {
     cd ${DELIVER_TO}/${APP} $SILENCE
     ping_result=\$(bin/${APP} ping || :)
     if [[ \"\$ping_result\" = \"pong\" ]]; then
-      echo \"restarting node\" $SILENCE
-      bin/${APP} restart $SILENCE
-    else
-      echo \"starting node\" $SILENCE
-      bin/${APP} start $SILENCE
+      echo \"stopping node\" $SILENCE
+      bin/${APP} stop $SILENCE
     fi
+    echo \"starting node\" $SILENCE
+    bin/${APP} start $SILENCE
   "
 }
 
