@@ -1,4 +1,4 @@
-# **edeliver**
+# **edeliver** [![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
 
 ![edeliver logo](http://boldpoker.net/images/edeliver_500.png)
 
@@ -57,10 +57,10 @@ Edeliver tries to autodetect which system to use to compile the sources and buil
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
-__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package]({ :edeliver, "~> 1.0.0"},) to you `mix.exs` config:
+__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package](https://hex.pm/packages/edeliver) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, ">= 1.1.1"}]
+        [{:edeliver, ">= 1.1.4"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
