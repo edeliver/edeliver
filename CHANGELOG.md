@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.1.5__
+
+- Fix displaying all output for node commands
+
 __1.1.4__
 
 - Fix selecting release when deploying and no version is given

@@ -60,7 +60,7 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEAS
 __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package](https://hex.pm/packages/edeliver) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, ">= 1.1.4"}]
+        [{:edeliver, ">= 1.1.5"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
