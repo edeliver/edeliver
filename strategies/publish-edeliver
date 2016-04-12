@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+
+run() {
+  echo -en "${txtylw}"
+  echo -e  "This is an internal strategy used to publish edeliver itself"
+  echo -e  "as an hex package. If you want to add your own 'publish'"
+  echo -e  "strategy, add it as './deliver/strategies/erlang-publish'"
+  echo -e  "strategy to override this strategy."
+  echo -en "${txtrst}"
+  echo
+  confirm "Do you want to continue?" || exit 1
+  echo
+  status "Detecting current version"
+  local _current_version=$(detect_current_version)
+  status "Incrementing version"
+  local _new_version=$(increment_version "$_current_version")
+  update_version "$_new_version"
+  edit_changelog "$_current_version" "$_new_version"
+  status "Committing files"
+  git add -i
+  confirm "Commit changes?" &&  git commit -m "Update version to $_new_version" && git commit --amend
+  status "Pushing changes"
+  git status
+  confirm "Push changes?" && git push
+  status "Tagging version"
+  confirm "Tag version as v${_new_version}?" && git tag "v${_new_version}"
+  status "Pushing tag"
+  confirm "Push tag v${_new_version}?" && git push origin "v${_new_version}"
+  status "Publishing to hex.pm"
+  confirm "Publish to hex?" && mix hex.publish
+  status "Creating release on github"
+  confirm "Create release on github?" && open "https://github.com/boldpoker/edeliver/releases/new?tag=v${_new_version}"
+}
+
+
+detect_current_version() {
+  grep -oe '^\s*version:\s*"\d\+\(\.\d\+\)\?\(\.\d\+\)\?' "${BASE_PATH}/mix.exs" | cut -f2 -d'"'
+}
+
+increment_version() {
+  local _major _minor _patch _selection _version="$@"
+  read _major _minor _patch < <(tr '.' ' ' <<< "$_version")
+  [[ -z "$_minor" ]] && _minor="0"
+  [[ -z "$_patch" ]] && _patch="0"
+
+  >&2 echo
+  >&2 echo "  Current version: ${txtylw}${_version}${txtrst}"
+  >&2 echo
+  >&2 echo "    ${txtgrn}1) $_major.$_minor.$(($_patch+1))${txtrst} (default)"
+  >&2 echo "    2) $_major.$(($_minor+1)).0"
+  >&2 echo "    3) $(($_major + 1)).0.0"
+  >&2 echo
+  >&2 read -p "  Select new version: [1|2|3]: " -n 1 -r _reply
+  >&2 echo
+  >&2 echo
+  [[ "$_reply" == "1" || "$_reply" == "y" || -z "$_reply" ]] && echo "$_major.$_minor.$(($_patch+1))" && return 0
+  [[ "$_reply" == "2" ]] && echo "$_major.$(($_minor+1)).0" && return 0
+  [[ "$_reply" == "3" ]] && echo "$(($_major + 1)).0.0" && return 0
+  increment_version "$_version"
+}
+
+update_version() {
+  status "Updating version to $_new_version"
+  local _new_version="$1"
+  # libexec/defaults:3:DELIVER_VERSION="$_current_version"
+  sed -i -e "s/DELIVER_VERSION\s*=\s*\"[^\"]\{1,\}\"/DELIVER_VERSION=\"$_new_version\"/" "${BASE_PATH}/libexec/defaults" # | grep DELIVER_VER
+  # ./README.md:63:        [{:edeliver, ">= $_current_version"}]
+  sed -i -e "s/^\([[:space:]]*\[{:edeliver,[[:space:]]*\"[[:space:]]*>=\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '\[{:edeliver'
+  # README.md:82:      {edeliver, "1.0",
+  sed -i -e "s/^\([[:space:]]*{edeliver,[[:space:]]*\"\)[^\"]\{1,\}\"/\1$_new_version\"/" "${BASE_PATH}/README.md" # | grep '{edeliver'
+  # mix.exs:7:      version: "1.1.5",
+  sed -i -e "s/^\([[:space:]]*version:[[:space:]]*\"\)[^\"]\{1,\}\"/\1$_new_version\"/" "${BASE_PATH}/mix.exs" # | grep 'version:'
+}
+
+edit_changelog() {
+  local _old_version="$1" _new_version="$2"
+  if grep "$_new_version" "${BASE_PATH}/CHANGELOG.md"; then
+    status "Changelog already contains information for $_new_version"
+  else
+    status "Editing changelog"
+    local _line _last_tag=$(git describe --abbrev=0 --tags)
+    local _commits=$(git log "$_last_tag"...head --pretty=oneline | cut -d" " -f2- | awk '{print "- " $0}')
+    local _head=$(head -n2 "${BASE_PATH}/CHANGELOG.md") _tail=$(tail +3 "${BASE_PATH}/CHANGELOG.md")
+    echo -e "${_head}\n\n__${_new_version}__\n\n  # commits since ${_last_tag}\n${_commits}\n${_tail}" > "${BASE_PATH}/CHANGELOG.md"
+  fi
+  echo "Please close the file in the editor to continue"
+  $GIT_EDITOR "${BASE_PATH}/CHANGELOG.md"
+
+}

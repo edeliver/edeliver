@@ -10,8 +10,10 @@ defmodule Edeliver.Mixfile do
         licenses: ["MIT"],
         files:  [
           "bin",
+          "CHANGELOG.md",
           "lib",
           "libexec",
+          "mix.exs",
           "src",
           "strategies",
           "README.md",

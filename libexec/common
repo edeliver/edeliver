@@ -139,6 +139,9 @@ init_app_remotely() {
       cd $DELIVER_TO
       git init $SILENCE
       git config receive.denyCurrentBranch ignore
+    else
+      cd $DELIVER_TO
+      git config receive.denyCurrentBranch ignore
     fi
   "
   __exec_if_defined "post_init_app_remotely"

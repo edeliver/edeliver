@@ -116,3 +116,14 @@ finish() {
   __log "$_message"
   __log "===========================================================\n"
 }
+
+confirm() {
+  local _reply="" _message="$@"
+  read -p "${_message} [y|n]: " -n 1 -r _reply
+  if [[ "$_reply" =~ ^[Yy]$ ]]; then
+    echo
+  else
+    echo
+    return 1
+  fi
+}

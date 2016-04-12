@@ -334,6 +334,9 @@ do
     (--skip-relup-mod|--skip-relup-modification)
       SKIP_RELUP_MODIFICATIONS="true"
     ;;
+    (--runs-as-mix-task)
+      RUNS_AS_MIX_TASK="true"
+    ;;
     (-h|--help)
       __help
       exit 0
@@ -426,7 +429,11 @@ case "${COMMAND}" in
     [[ -n "${COMMAND_INFO}" ]] && STRATEGY="${STRATEGY}-${COMMAND_INFO}"
     if ! [[ -f "${BASE_PATH}/strategies/${STRATEGY}" ]]; then
       if ! [[ -f "$ORIGIN_DIR/.deliver/strategies/${STRATEGY}" ]]; then
-        __help; error_message "Unknown command ${COMMAND}.\n"; exit 2
+        if [[ "${COMMAND}" = "publish" ]] && [[ -f "${BASE_PATH}/strategies/publish-edeliver" ]]; then
+          STRATEGY="publish-edeliver"
+        else
+          __help; error_message "Unknown command ${COMMAND}.\n"; exit 2
+        fi
       fi
     fi
   ;;

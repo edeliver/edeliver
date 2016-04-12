@@ -301,7 +301,7 @@ __sync_remote() {
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
   local _host="$_hosts"
   if [[ "$VERBOSE" = "true" ]]; then
-    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nFAILED $?:\n${_remote_job}\n"
+    ssh -t -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nFAILED $?:\n${_remote_job}\n"
   else
     local _output _status
     _output=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
@@ -325,6 +325,29 @@ __sync_local() {
   fi
 }
 
+# monitors the parent pid if edeliver is started by a mix task.
+# this is required because edeliver is started from an erlang node
+# using "Port.open({:spawn, edeliver_command}, options)" and will
+# not detect if the erlang node is stopped using ctrl+c because
+# erlang uses its own break handler. it also kills al running
+# child pids which are usually ssh connections to build or
+# deploy servers.
+__monitor_parent_pid() {
+  local _edeliver_script_pid="$$"
+  local _parent_pid="$(ps -o ppid= -p $_edeliver_script_pid)"
+  local _child_pid
+  [[ "$_parent_pid" =~ ^[0-9]+$ ]] || return 0
+  while kill -0 $_edeliver_script_pid >/dev/null 2>&1; do
+    if kill -0 $_parent_pid >/dev/null 2>&1; then
+      sleep 0.5
+    else
+      for _child_pid in $(ps ax -o pid= -o ppid= | grep -e "${_edeliver_script_pid}\$" | grep -oe '^[[:digit:]]\+[^ ]' | sort -rn); do
+         [[ "$_child_pid" =~ ^[0-9]+$ ]] && kill -9 $_child_pid >/dev/null 2>&1
+      done
+      kill -9 $_edeliver_script_pid >/dev/null 2>&1
+    fi
+  done
+}
 
 # Logs all events (including formatting styles) so that people can tail,
 # inspect and use for general debugging.

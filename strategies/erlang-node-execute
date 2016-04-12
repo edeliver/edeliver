@@ -11,20 +11,22 @@ run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -n+2 | tr -d \\\""
   elif [[ "$NODE_ACTION" = ping ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="ping | tail -1"
+    NODE_ACTION="ping | tail -n+2"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].'"
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].' | tail -n+2"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Showing migrations is only supported when using mix as release command."
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     local __up_or_down="up"
     for args in $ARGS; do [[ "$arg" = "down" ]] && local __up_or_down="down"; done
     [[ -n "$VERSION" ]] && local __to_version=", \"$VERSION\"" || local __to_version=""
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[migrate, \"$APP\", ${__up_or_down}${__to_version}]].'"
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[migrate, \"$APP\", ${__up_or_down}${__to_version}]].' | tail -n+2"
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Executing migrations is only supported when using mix as release command."
+  elif [[ "$RELEASE_CMD" = "mix" ]]; then
+    NODE_ACTION="$NODE_ACTION | tail -n+2"
   fi
   __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
 }
@@ -36,7 +38,7 @@ run() {
 # is printed continuously to the screen.
 execute_node_command() {
   local _node_command=$1
-  if [[ $(echo $NODES | wc -w) -eq 1 ]] && [[ "$_node_command" = "start" ]]; then
+  if [[ $(echo $NODES | wc -w) -eq 1 ]]; then
     __execute_node_command_synchronously "$_node_command"
   else
     __execute_node_command_asynchronously "$_node_command"
@@ -86,27 +88,10 @@ __execute_node_command_asynchronously() {
 __execute_node_command_synchronously() {
   local _node_command=$1
   local _node=${NODES# *}
-  __print_node_command_result "" "0" "$_node" ""
-  # {
-  #   local _result
-  #   local _lines=0
-  #   while read line; do
-  #     if [[ "$_lines" = "0" ]] && [[ "$line" =~ ": " ]]; then
-  #       local _node=${line%: *}
-  #       line=${line#*: }
-  #       echo "  node    : $_node"
-  #       echo -e "  response: $line\n"
-  #     elif [[ "$_lines" = "0" ]]; then
-  #       echo -e "  response: $line\n"
-  #     else
-  #       echo -e "            $line"
-  #     fi
-  #     _lines=$(($_lines+1))
-  #   done
-  # } < <(__execute_node_command "single_node" "$_node" "$_node_command")
+  __print_node_command_result "single_node" "0" "$_node" ""
+  echo -n "  response: "
   __execute_node_command "single_node" "$_node" "$_node_command"
 }
-
 
 # executes a node command on a given node.
 __execute_node_command() {
@@ -125,14 +110,16 @@ __execute_node_command() {
   [[ -n "$_config" ]] && _config_arg="--config=${_config}" || _config_arg=""
   [ "${_node_index}" != "single_node" ] && [ "${_node_command}" = "start" ] &&  _config_arg="$_config_arg --short"
 
+  [[ -n "$ECTO_REPOSITORY" ]] && local _node_env="ECTO_REPOSITORY='$ECTO_REPOSITORY' "
+
   _remote_job="
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_path}/${APP} $SILENCE
-    bin/${APP} ${_node_command} ${_config_arg}
+    ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
   "
 
-  [ "${_node_index}" = "single_node" ] && local _terminal_option=-t || local _terminal_option=
+  [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
   ssh $_terminal_option -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
   local _status_code="$?"
   [ "${_node_index}" != "single_node" ] && echo -e "\n${_status_code}"
@@ -148,6 +135,7 @@ __print_node_command_result() {
   local _config; local _config_arg
   local _message=""
   _message="${bldgrn}$NODE_ENVIRONMENT${txtrst} node: $_node_index\n\n"
+  [[ "$_node_index" = "single_node" ]] && _message="${bldgrn}$NODE_ENVIRONMENT${txtrst} node:\n\n"
   echo
   local _user=${_node_name%@*}
   local _host=${_node_name#*@}
@@ -168,7 +156,9 @@ __print_node_command_result() {
     _message="${_message}  node    : $_node\n"
   fi
 
-  if [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
+  if [[ "$_node_index" = "single_node" ]]; then
+    echo -en "${_message}" && return 0
+  elif [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n"
   elif [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldred}failed${txtrst}\n";

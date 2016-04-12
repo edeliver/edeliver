@@ -48,6 +48,8 @@ else
   __remote_hosts
 
   __check_config
+  [[ "$RUNS_AS_MIX_TASK" = "true" ]] && __monitor_parent_pid &
+
 
   # Run the loaded strategy
   # Can be overwritten by each strategy, e.g. custom output

@@ -518,6 +518,7 @@ select_release_from_store() {
       RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
     fi
   else
+    [[ "$_release_type" = "release_or_upgrade_with_release" ]] && _release_type="*" && local _autoselect_release_if_relase_and_upgrade_exists="true"
     __detect_release_store_type
     local _release_files=( $(__get_releases_in_store "$_release_type" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
     if [ ${#_release_files[@]} -eq 1 ]; then
@@ -548,13 +549,18 @@ select_release_from_store() {
         done
         if [ ${#_releases_types_with_version[@]} -eq 1 ]; then
           _release_type=${_releases_types_with_version[0]}
-        else
-          hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
-          for _release_type in "${_releases_types_with_version[@]}"; do
-            hint_message " $_release_type"
-          done
-          hint_message "Enter Release Type:"
-          read _release_type
+        else # found release and upgrade
+          if [[ "$_autoselect_release_if_relase_and_upgrade_exists" = "true" ]]; then
+            _release_type="release"
+            RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
+          else
+            hint_message "Found ${#_releases_types_with_version[@]} different release types for version ${VERSION}."
+            for _release_type in "${_releases_types_with_version[@]}"; do
+              hint_message " $_release_type"
+            done
+            hint_message "Enter Release Type:"
+            read _release_type
+          fi
         fi
         RELEASE_FILE="${APP}_${VERSION}.${_release_type}.tar.gz"
       else
@@ -817,9 +823,9 @@ git_checkout_remote() {
 # cleans the build directory on the remote build host.
 # by default all generated files are cleaned but that
 # can be adjusted by the GIT_CLEAN_PATHS env. This
-# function does nothing if SKIP_MIX_CLEAN="true"
+# function does nothing if SKIP_GIT_CLEAN="true"
 git_clean_remote() {
-  if [[ "$SKIP_MIX_CLEAN" = "true" ]]; then
+  if [[ "$SKIP_GIT_CLEAN" = "true" ]]; then
     status "Skipped cleaning generated files from last build"
   else
     GIT_CLEAN_PATHS=${GIT_CLEAN_PATHS:="."}

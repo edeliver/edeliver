@@ -1,4 +1,4 @@
-# **edeliver**
+# **edeliver** [![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
 
 ![edeliver logo](http://boldpoker.net/images/edeliver_500.png)
 
@@ -57,10 +57,10 @@ Edeliver tries to autodetect which system to use to compile the sources and buil
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx`.
 
-__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package]({ :edeliver, "~> 1.0.0"},) to you `mix.exs` config:
+__If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package](https://hex.pm/packages/edeliver) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, ">= 1.1.1"}]
+        [{:edeliver, ">= 1.1.5"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
@@ -140,7 +140,7 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
     mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
 
-Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` arguemtn.
+Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
 #### Generate and Edit Upgrade Files (appup)
 
