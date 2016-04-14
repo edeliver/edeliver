@@ -1,0 +1,146 @@
+
+defmodule Edeliver.Release.Version.Test do
+  use ExUnit.Case
+  alias Mix.Tasks.Release.Version, as: ReleaseVersion
+  import ExUnit.CaptureIO
+  import ReleaseVersion, only: :functions
+
+  setup_all do
+    :meck.new ReleaseVersion, [:passthrough]
+    :meck.expect(ReleaseVersion, :get_git_revision, fn -> "82a5834" end)
+    :meck.expect(ReleaseVersion, :get_commit_count, fn ->   "12345" end)
+    :meck.expect(ReleaseVersion, :get_branch, fn ->   "feature-xyz" end)
+    :meck.expect(ReleaseVersion, :get_date, fn ->      "2016.04.14" end)
+    :ok
+  end
+
+  test "mocking get git revision" do
+    assert "82a5834" = get_git_revision
+  end
+
+  test "mocking get commit count" do
+    assert "12345" = get_commit_count
+  end
+
+  test "mocking get current branch" do
+    assert "feature-xyz" = get_branch
+  end
+
+  test "mocking get current date" do
+    assert "2016.04.14" = get_date
+  end
+
+  test "printing current release version for show argument" do
+    assert capture_io(fn ->
+      assert :ok = modify_version_with_args "1.2.3", "show"
+    end) == "1.2.3\n"
+  end
+
+  test "printing current release version if there are no arguments" do
+    assert capture_io(fn ->
+      assert :ok = modify_version_with_args "1.0.0", ""
+    end) == "1.0.0\n"
+  end
+
+
+  test "appending commit count" do
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-commit-count"
+    assert {:modified, "1.1.0+12345"} = modify_version_with_args "1.1.0", "commit-count"
+  end
+
+  test "appending git revision" do
+    assert {:modified, "1.0.0+82a5834"} = modify_version_with_args "1.0.0", "append-git-revision"
+    assert {:modified, "1.0.1+82a5834"} = modify_version_with_args "1.0.1", "git-revision"
+    assert {:modified, "1.2.3+82a5834"} = modify_version_with_args "1.2.3", "revision"
+  end
+
+  test "appending git branch" do
+    assert {:modified, "1.0.0+feature-xyz"} = modify_version_with_args "1.0.0", "append-git-branch"
+    assert {:modified, "1.0.1+feature-xyz"} = modify_version_with_args "1.0.1", "git-branch"
+    assert {:modified, "1.2.3+feature-xyz"} = modify_version_with_args "1.2.3", "branch"
+  end
+
+  test "appending date" do
+    assert {:modified, "1.0.0+2016.04.14"} = modify_version_with_args "1.0.0", "append-build-date"
+    assert {:modified, "1.0.1+2016.04.14"} = modify_version_with_args "1.0.1", "build-date"
+    assert {:modified, "1.2.3+2016.04.14"} = modify_version_with_args "1.2.3", "date"
+  end
+
+  test "appending commit count and git revision" do
+    assert {:modified, "1.0.0+12345-82a5834"} = modify_version_with_args "1.0.0", "append-commit-count append-git-revision"
+    assert {:modified, "1.2.0+12345-82a5834"} = modify_version_with_args "1.2.0", "commit-count+git-revision"
+    assert {:modified, "1.2.3+82a5834-12345"} = modify_version_with_args "1.2.3", "append-git-revision append-commit-count"
+    assert {:modified, "1.0.3+82a5834-12345"} = modify_version_with_args "1.0.3", "git-revision+commit-count"
+  end
+
+  test "appending commit count and git branch" do
+    assert {:modified, "1.0.0+12345-feature-xyz"} = modify_version_with_args "1.0.0", "append-commit-count append-git-branch"
+    assert {:modified, "1.2.0+12345-feature-xyz"} = modify_version_with_args "1.2.0", "commit-count+git-branch"
+    assert {:modified, "1.2.3+feature-xyz-12345"} = modify_version_with_args "1.2.3", "append-git-branch append-commit-count"
+    assert {:modified, "1.0.3+feature-xyz-12345"} = modify_version_with_args "1.0.3", "git-branch+commit-count"
+  end
+
+  test "increasing patch version" do
+    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increase patch"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increase patch version"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "patch"
+    assert {:modified, "1.2.4"} = modify_version_with_args "1.2.3", "increase patch"
+    assert {:modified, "1.2.4"} = modify_version_with_args "1.2.3", "patch"
+    assert {:modified, "1.2.1"} = modify_version_with_args "1.2", "patch"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1", "increase patch"
+  end
+
+  test "increasing minor version" do
+    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increase minor"
+    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increase minor version"
+    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "minor"
+    assert {:modified, "2.2.0"} = modify_version_with_args "2.1.3", "increase minor"
+    assert {:modified, "1.3.0"} = modify_version_with_args "1.2.0", "minor"
+    assert {:modified, "1.3.0"} = modify_version_with_args "1.2", "minor"
+    assert {:modified, "2.1.0"} = modify_version_with_args "2", "increase minor"
+  end
+
+  test "increasing major version" do
+    assert {:modified, "2.0.0"} = modify_version_with_args "1.0.0", "increase major"
+    assert {:modified, "2.0.0"} = modify_version_with_args "1.0.0", "major"
+    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increase major"
+    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increase major version"
+    assert {:modified, "2.0.0"} = modify_version_with_args "1.2.0", "major"
+    assert {:modified, "2.0.0"} = modify_version_with_args "1.2", "major"
+    assert {:modified, "5.0.0"} = modify_version_with_args "4", "increase major"
+  end
+
+  test "increasing version and appending metadata" do
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increase major version append-git-revision"
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "major+git-revision"
+    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "increase minor append-git-revision append-commit-count append-branch"
+    assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
+  end
+
+  test "should fail for 'count' argument without leading 'commit-'" do
+    assert <<_,_,_,_,_>> <> "Error: Unknown option 'count'" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "count"
+    end)
+  end
+
+  test "should fail for illegal major, minor or patch combinations" do
+    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options:" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "major minor"
+    end)
+  end
+
+  test "should fail for unknown arguments" do
+    assert <<_,_,_,_,_>> <> "Error: Unknown options" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "foo bar"
+    end)
+  end
+
+  ### test helpers ####
+
+  defp modify_version_with_args(version, args) do
+    args |> to_argv() |> parse_args() |> modify_version(version)
+  end
+
+  defp to_argv(string), do: String.split(string)
+
+end
