@@ -59,6 +59,7 @@ To append metadata permanentely you can set the `AUTO_VERSION` configuration var
 
 ```
 
+`--increment-version=` and `--set-version=` can be used in conjunction with the `--auto-version=` option. The `AUTO_VERSION` default is also used unless the `--auto-version=` overrides it.
 
 ##### Use the Auto-Versioning / Increment-Version mix task locally
 
@@ -67,10 +68,17 @@ It is required to clean the build output before* and to run the `release.version
 
 ```sh
   mix release.version show
+  1.2.3
+  mix do clean, release.version increase major revision branch --dry-run
+  Would update version from 1.2.3 to 2.0.0+82a5834-test
+  # prints only the info above. You can always ommit the 'append-git-' part.
   mix do clean, release.version append-git-revision, release
-  mix do clean, release.version append-commit-count append-git-revision, release
+  # creates version 1.2.3+82a5834
+  mix do clean, release.version append-commit-count append-git-revision append-git-branch, release
+  # creates version 1.2.3+3027-82a5834-master
   mix do clean, release.version increase major, release
-  mix do clean, release.version set 1.3.0-beta.1, release
+  AUTO_VERSION="append-git-revision" mix do clean, release.version set 1.3.0-beta.1, release
+  # creates version 1.3.0-beta.1+82a5834
 ```
 
 (*) The build files must be removed to ensure that the `your_app.app` file will be (re-)generated with the new version.

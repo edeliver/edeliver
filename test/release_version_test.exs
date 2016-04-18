@@ -36,13 +36,6 @@ defmodule Edeliver.Release.Version.Test do
     end) == "1.2.3\n"
   end
 
-  test "printing current release version if there are no arguments" do
-    assert capture_io(fn ->
-      assert :ok = modify_version_with_args "1.0.0", ""
-    end) == "1.0.0\n"
-  end
-
-
   test "appending commit count" do
     assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-git-commit-count"
     assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-commit-count"
@@ -146,6 +139,19 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
   end
 
+  test "append version metadata if AUTO_VERSION env is set and no arguments are passed" do
+    assert :ok = System.put_env("AUTO_VERSION", "append-git-revision")
+    assert {:modified, "1.0.0+82a5834"} = modify_version_with_args "1.0.0", ""
+  end
+
+  test "AUTO_VERSION should be used in conjunction with increase major|minor|patch or set version" do
+    assert :ok = System.put_env("AUTO_VERSION", "append-git-revision")
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increase major"
+    assert {:modified, "1.1.0+82a5834"} = modify_version_with_args "1.0.0", "increase minor"
+    assert {:modified, "1.0.1+82a5834"} = modify_version_with_args "1.0.0", "increase patch"
+    assert {:modified, "2.0.0-beta+82a5834"} = modify_version_with_args "1.0.0", "set 2.0.0-beta"
+  end
+
   test "should fail for 'count' argument without leading 'commit-'" do
     assert <<_,_,_,_,_>> <> "Error: Unknown option 'count'" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "count"
@@ -186,6 +192,14 @@ defmodule Edeliver.Release.Version.Test do
       assert :error = modify_version_with_args "1.0.0", ""
     end)
   end
+
+  test "should fail if no args are set and no AUTO_VERSION env is set" do
+    assert :ok = System.delete_env("AUTO_VERSION")
+    assert <<_,_,_,_,_>> <> "Error: No arguments passed and no AUTO_VERSION env is set" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", ""
+    end)
+  end
+
 
   ### test helpers ####
 

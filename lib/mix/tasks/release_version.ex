@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Release.Version do
 
   # Usage:
 
-    * mix release.version [show]
+    * mix release.version show
     * mix do clean, release.version set <new-version> [Option], release
     * mix do clean, release.version increase [patch|minor|major] [version] [Option], release
     * mix do clean, release.version [append-][git-]revision|commit-count|branch [Option], release
@@ -38,6 +38,11 @@ defmodule Mix.Tasks.Release.Version do
     * `-Q`, `--quiet`   Print only errors while modifying version
     * `-D`, `--dry-run` Print only new version without changing it
 
+  ## Environment Variables
+
+    * `AUTO_VERSION` as long nor arguments are passed directly which append metadata to the version
+                     (`[append-][git-]revision|commit-count|branch|build-data) the values from that
+                     env are used to append metadata.
 
   ## Example
 
@@ -141,19 +146,61 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec parse_args(OptionParser.argv) :: :show | {:error, message::String.t} | {:modify, [modification_fun]}
   def parse_args(args) do
-    if args == [] && (default_args = System.get_env("AUTO_VERSION")) do
-      default_args = args = OptionParser.split(default_args)
+    append_metadata_options = ["commit_count", "revision", "date", "branch"]
+    update_version_options  = ["major", "minor", "patch", "set"]
+
+    args = normalize_args(args)
+    has_append_metadata_in_args? = Enum.any?(append_metadata_options, &(Enum.member?(args, &1)))
+    {args, default_args} = if auto_version = System.get_env("AUTO_VERSION") do
+      # if no arguments appending metadata exists, use the values from AUTO_VERSION env
+      case OptionParser.split(auto_version) |> normalize_args() do
+        default_args = [_|_] when not has_append_metadata_in_args? -> {args ++ default_args, default_args}
+        default_args = [_|_] -> {args, default_args}
+        _ -> {args, []}
+      end
     else
-      default_args = []
+      {args, []}
     end
-    args = args |> List.foldr([], fn(arg, acc) ->
+    {version_to_set, args} = get_version_to_set_from_args(args, [])
+    known_options = update_version_options ++ append_metadata_options
+    unknown_options = args -- known_options
+    illegal_combinations = Enum.filter args, &(Enum.member?(update_version_options, &1))
+    cond do
+      args == ["show"] -> :show
+      unknown_options == ["count"] -> {:error, "Unknown option 'count'.\nDid you mean 'commit-count'?"}
+      Enum.count(unknown_options) > 0 -> {:error, "Unknown options: #{Enum.join(unknown_options, " ")}"}
+      args == [] -> {:error, "No arguments passed and no AUTO_VERSION env is set."}
+      Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options: #{Enum.join(illegal_combinations, " ")} can't be used together."}
+      Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
+      Enum.any?(default_args, &(Enum.member?(illegal_combinations, &1))) ->  {:error, "Increasing major|minor|path or setting version is not allowed as default set in 'AUTO_VERSION' env."}
+      true ->
+        modification_functions = Enum.map args, fn(arg) ->
+          case arg do
+            "set" when version_to_set != nil -> &(modify_version_set(&1, version_to_set))
+            _ -> String.to_atom("modify_version_" <> arg)
+          end
+        end
+        {:modify, modification_functions}
+    end
+  end
+
+  @doc """
+    Normalizes the arguments passed to this task. This is done by
+    splitting arguments separated by a `+`, removing leading `append-`
+    `-git` and `-build` strings and renaming `commit-count` to
+    `commit_count`
+  """
+  @spec normalize_args(OptionParser.argv) :: OptionParser.argv
+  def normalize_args(args) do
+    args |> List.foldr([], fn(arg, acc) ->
       if String.contains?(arg, "+") do
         String.split(arg, "+") ++ acc
       else
         [arg | acc]
       end
-    end) |> Enum.filter(&(&1 != "increase" && &1 != "version"))
-    args = args |> Enum.map(fn(arg) ->
+    end)
+    |> Enum.filter(&(&1 != "increase" && &1 != "version"))
+    |> Enum.map(fn(arg) ->
       case arg do
         "append-" <> command -> command
         command -> command
@@ -170,27 +217,6 @@ defmodule Mix.Tasks.Release.Version do
         command -> command
       end
     end)
-    {version_to_set, args} = get_version_to_set_from_args(args, [])
-    known_options = ["major", "minor", "patch", "commit_count", "revision", "date", "branch", "set"]
-    unknown_options = args -- known_options
-    illegal_combinations = Enum.filter args, &(Enum.member?(["major", "minor", "patch", "set"], &1))
-    cond do
-      args == ["show"] -> :show
-      unknown_options == ["count"] -> {:error, "Unknown option 'count'.\nDid you mean 'commit-count'?"}
-      Enum.count(unknown_options) > 0 -> {:error, "Unknown options: #{Enum.join(unknown_options, " ")}"}
-      args == [] -> :show
-      Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options: #{Enum.join(illegal_combinations, " ")} can't be used together."}
-      Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
-      Enum.any?(default_args, &(Enum.member?(illegal_combinations, &1))) ->  {:error, "Increasing major|minor|path or setting version is not allowed as default set in 'AUTO_VERSION' env."}
-      true ->
-        modification_functions = Enum.map args, fn(arg) ->
-          case arg do
-            "set" when version_to_set != nil -> &(modify_version_set(&1, version_to_set))
-            _ -> String.to_atom("modify_version_" <> arg)
-          end
-        end
-        {:modify, modification_functions}
-    end
   end
 
   @doc """
