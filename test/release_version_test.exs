@@ -159,10 +159,10 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "should fail for illegal major, minor or patch combinations" do
-    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options:" <> _ = capture_io(:stderr, fn ->
+    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "major minor"
     end)
-    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options:" <> _ = capture_io(:stderr, fn ->
+    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "major set 2.0.0-beta"
     end)
   end
@@ -174,10 +174,10 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "should fail if version to set is missing" do
-    assert <<_,_,_,_,_>> <> "Error: No version to set. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
+    assert <<_,_,_,_,_>> <> "Error: No version to set for 'release.version' task. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "set"
     end)
-    assert <<_,_,_,_,_>> <> "Error: No version to set. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
+    assert <<_,_,_,_,_>> <> "Error: No version to set for 'release.version' task. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "set append-commit-count"
     end)
   end
@@ -195,7 +195,7 @@ defmodule Edeliver.Release.Version.Test do
 
   test "should fail if no args are set and no AUTO_VERSION env is set" do
     assert :ok = System.delete_env("AUTO_VERSION")
-    assert <<_,_,_,_,_>> <> "Error: No arguments passed and no AUTO_VERSION env is set" <> _ = capture_io(:stderr, fn ->
+    assert <<_,_,_,_,_>> <> "Error: No arguments passed to 'release.version' task and no AUTO_VERSION env is set" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", ""
     end)
   end

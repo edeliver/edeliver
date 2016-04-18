@@ -167,12 +167,13 @@ defmodule Mix.Tasks.Release.Version do
     illegal_combinations = Enum.filter args, &(Enum.member?(update_version_options, &1))
     cond do
       args == ["show"] -> :show
-      unknown_options == ["count"] -> {:error, "Unknown option 'count'.\nDid you mean 'commit-count'?"}
-      Enum.count(unknown_options) > 0 -> {:error, "Unknown options: #{Enum.join(unknown_options, " ")}"}
-      args == [] -> {:error, "No arguments passed and no AUTO_VERSION env is set."}
-      Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options: #{Enum.join(illegal_combinations, " ")} can't be used together."}
-      Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
-      Enum.any?(default_args, &(Enum.member?(illegal_combinations, &1))) ->  {:error, "Increasing major|minor|path or setting version is not allowed as default set in 'AUTO_VERSION' env."}
+      unknown_options == ["count"] -> {:error, "Unknown option 'count' for 'release.version' task.\nDid you mean 'commit-count'?"}
+      Enum.count(unknown_options) == 1 -> {:error, "Unknown option #{Enum.join(unknown_options, " ")} for 'release.version' task."}
+      Enum.count(unknown_options) > 1 -> {:error, "Unknown options for 'release.version' task: #{Enum.join(unknown_options, " ")}"}
+      args == [] -> {:error, "No arguments passed to 'release.version' task and no AUTO_VERSION env is set."}
+      Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options for 'release.version' task: #{Enum.join(illegal_combinations, " ")} can't be used together."}
+      Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set for 'release.version' task. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
+      Enum.any?(default_args, &(Enum.member?(illegal_combinations, &1))) ->  {:error, "Increasing major|minor|path or setting version is not allowed as default set in 'AUTO_VERSION' env for 'release.version' task."}
       true ->
         modification_functions = Enum.map args, fn(arg) ->
           case arg do
