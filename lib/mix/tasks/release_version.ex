@@ -173,9 +173,13 @@ defmodule Mix.Tasks.Release.Version do
       end
     end) |> Enum.map(fn(arg) ->
       case arg do
-        "commit-count" -> "commit_count"
         "git-" <> command -> command
         "build-" <> command -> command
+        command -> command
+      end
+    end) |> Enum.map(fn(arg) ->
+      case arg do
+        "commit-count" -> "commit_count"
         command -> command
       end
     end)

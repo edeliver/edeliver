@@ -44,6 +44,7 @@ defmodule Edeliver.Release.Version.Test do
 
 
   test "appending commit count" do
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-git-commit-count"
     assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-commit-count"
     assert {:modified, "1.1.0+12345"} = modify_version_with_args "1.1.0", "commit-count"
   end
