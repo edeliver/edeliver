@@ -285,7 +285,11 @@ defmodule Mix.Tasks.Release.Version do
   @doc "Gets the current branch that will be built"
   @spec get_branch() :: String.t
   def get_branch() do
-    System.cmd( "git", ["rev-parse", "--abbrev-ref", "HEAD"]) |> elem(0) |> String.rstrip
+    System.cmd( "git", ["rev-parse", "--abbrev-ref", "HEAD"]) |> elem(0) |> String.rstrip |> valid_semver_metadata()
+  end
+
+  def valid_semver_metadata(string) do
+    IO.chardata_to_string(for <<c <- string>>, (c >= ?a and c <= ?z) or (c >= ?A and c <= ?Z) or (c >= ?0 and c <= ?9) or c == ?-, do: c)
   end
 
   @doc "Gets the current date in the form yyyymmdd"

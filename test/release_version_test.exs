@@ -203,6 +203,11 @@ defmodule Edeliver.Release.Version.Test do
     end)
   end
 
+  test "use valid semver for branch metadata" do
+    assert "foo-bar-123" = valid_semver_metadata("foo-bar-123")
+    assert "foo-barbaz" = valid_semver_metadata("foo-bar.baz")
+    assert "foo-barz" = valid_semver_metadata("foo-barüz")
+  end
 
   ### test helpers ####
 
