@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Release.Version do
     * `append-git-revision` Appends sha1 git revision of current HEAD
     * `append-git-commit-count` Appends the number of commits across all branches
     * `append-git-branch` Appends the current branch that is built
-    * `append-build-date` Appends the build date as YYYY.MM.DD
+    * `append-build-date` Appends the build date as YYYYMMDD
     * `increase` Increases the release version
       - `patch` Increases the patch version (default). The last part of a tripartite version.
       - `minor` Increases the minor version. The middle part of a tripartite version.
@@ -35,36 +35,47 @@ defmodule Mix.Tasks.Release.Version do
 
   ## Options
     * `-V`, `--verbose` Verbose output
-    * `-Q`, `--quiet` Print only errors while modifying version
+    * `-Q`, `--quiet`   Print only errors while modifying version
+    * `-D`, `--dry-run` Print only new version without changing it
 
 
   ## Example
 
-    `MIX_ENV=prod mix do release.version append-git-revision, release`
+    `MIX_ENV=prod mix do clean, release.version append-git-revision, release`
   """
   @spec run(OptionParser.argv) :: :ok
   def run(args) do
-    case args do
-      ["show" | options] ->                print_version(options)
-      ["set", new_version | options] ->    set_version(check_new_version(new_version), options)
-      ["set"] ->                           check_new_version("--")
-      ["increase" | options] ->            set_version(get_increase_option(options), options)
-      ["append-git-revision" | options] -> set_version(:git, options)
-      options ->                           print_version(options)
+    case OptionParser.parse(args, aliases: [V: :verbose, Q: :quiet, D: :dry_run], switches: [verbose: :boolean, quiet: :boolean, dry_run: :boolean]) do
+      {switches, args, []} ->
+        case parse_args(args) do
+          {:modify, modification_functions} ->
+            case Keyword.get(switches, :dry_run, false) do
+              true ->
+                {:modified, new_version} = modify_version({:modify, modification_functions}, old_version = get_version)
+                Mix.Shell.IO.info "Would update version from #{old_version} to #{new_version}"
+              false -> update_release_version(modification_functions, switches)
+            end
+          :show -> print_version
+          {:error, message} -> Mix.raise message
+        end
+      {_, _, [{unknown_option, _}]} -> Mix.raise "Error: Unknown argument #{unknown_option} for 'release.version' task."
+      {_, _, unknown_options} ->
+        unknown_options = unknown_options |> Enum.map(&(elem(&1, 0))) |> Enum.join(", ")
+        Mix.raise "Error: Unknown arguments #{unknown_options} for 'release.version' task."
     end
   end
 
   @privdoc """
-    Sets the release version to the new value or increases it
+    Sets the release version to the new value by using the passed update funs.
   """
-  @spec set_version(version::String.t|:patch|:minor|:major|:git, options::[String.t]) :: new_version::String.t
-  defp set_version(version, options) do
+  @spec update_release_version(modification_functions::[modification_fun], options::[String.t]) :: new_version::String.t
+  defp update_release_version(modification_functions, options) do
     {old_version, new_version} = Agent.get_and_update Mix.ProjectStack, fn(state) ->
       [root=%{config: config}|rest] = state.stack
       {old_version, new_version, config} = List.foldr config, {"","", []}, fn({key, value}, {old_version, new_version, config}) ->
         if key == :version do
           old_version = value
-          new_version = update_version(old_version, version)
+          {:modified, new_version} = modify_version({:modify, modification_functions}, old_version)
           value = new_version
         end
         {old_version, new_version, [{key, value}|config]}
@@ -75,7 +86,7 @@ defmodule Mix.Tasks.Release.Version do
     debug "Changed release version from #{old_version} to #{new_version}", options
   end
 
-  defp print_version(_options) do
+  defp print_version() do
     Mix.Shell.IO.info get_version
   end
 
@@ -106,12 +117,6 @@ defmodule Mix.Tasks.Release.Version do
       [major|_] -> "#{inspect String.to_integer(major)+1}" <> ".0.0"
     end
   end
-  defp update_version(old_version, :git) do
-    git_revision = System.cmd( "git", ["rev-parse", "--short", "HEAD"]) |> elem(0) |> String.rstrip
-    case String.split(old_version, "-") do
-      [version|_] -> version <> "-" <> git_revision
-    end
-  end
   defp update_version(_old_version, version = <<_,_::binary>>) do
     version
   end
@@ -122,27 +127,9 @@ defmodule Mix.Tasks.Release.Version do
     end
   end
 
-  defp quiet?(options) do
-    Enum.member?(options, "-Q") or Enum.member?(options, "--quiet")
-  end
+  defp quiet?(options),   do: Keyword.get(options, :quiet, false)
+  defp verbose?(options), do: Keyword.get(options, :verbose, false)
 
-  defp verbose?(options) do
-    Enum.member?(options, "-V") or Enum.member?(options, "--verbose")
-  end
-
-  defp check_new_version("--" <> _) do
-    Mix.Shell.IO.error "Missing version to set."
-    System.halt 1
-  end
-  defp check_new_version(version), do: version
-
-  defp get_increase_option(options) do
-    cond do
-      Enum.member?(options, "major") -> :major
-      Enum.member?(options, "minor") -> :minor
-      true -> :patch
-    end
-  end
 
   @type modification_arg :: {modified_version::String.t, has_metadata::boolean}
   @type modification_fun :: ((modification_arg) -> modification_arg)
@@ -259,24 +246,25 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec get_git_revision() :: String.t
   def get_git_revision() do
-    ""
+    System.cmd( "git", ["rev-parse", "--short", "HEAD"]) |> elem(0) |> String.rstrip
   end
 
   @doc "Gets the current number of commits across all branches"
   @spec get_commit_count() :: String.t
   def get_commit_count() do
-    "" # git rev-list --all --count
+    System.cmd( "git", ["rev-list", "--all", "--count"]) |> elem(0) |> String.rstrip
   end
 
   @doc "Gets the current branch that will be built"
   @spec get_branch() :: String.t
   def get_branch() do
-
+    System.cmd( "git", ["rev-parse", "--abbrev-ref", "HEAD"]) |> elem(0) |> String.rstrip
   end
 
-
+  @doc "Gets the current date in the form yyyymmdd"
   @spec get_date :: String.t
   def get_date() do
-
+    {{year, month, day}, _time} = :calendar.local_time
+    :io_lib.format('~4.10.0b~2.10.0b~2.10.0b', [year, month, day]) |> IO.iodata_to_binary
   end
 end

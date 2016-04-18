@@ -28,9 +28,9 @@ Notice: This feature cannot be used in conjunction with the `--skip-mix-clean` c
   mix edeliver build release --auto-version=git-branch
   # creates version 1.0.0+master
   mix edeliver build upgrade --auto-version=build-date
-  # creates version 1.0.0+2016.04.14
+  # creates version 1.0.0+20160414
   mix edeliver build upgrade --auto-version=git-revision+build-date
-  # creates version 1.0.0+82a5834-2016.04.14
+  # creates version 1.0.0+82a5834-20160414
 ```
 
 ##### Append metadata to version permanentely
