@@ -110,6 +110,18 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "5.0.0"} = modify_version_with_args "4", "increase major"
   end
 
+  test "get version to set from args" do
+    assert {_version_to_set = nil, ["increase", "major"]} = get_version_to_set_from_args("increase major" |> to_argv(), [])
+    assert {_version_to_set = "2.0.0-beta", ["set"]} = get_version_to_set_from_args("set 2.0.0-beta" |> to_argv(), [])
+    assert {_version_to_set = "2.1.0-beta.1", ["set", "append-commit-count"]} = get_version_to_set_from_args("set 2.1.0-beta.1 append-commit-count" |> to_argv(), [])
+  end
+
+  test "setting version " do
+    assert {:modified, "1.2.3-beta.4"} = modify_version_with_args "1.0.0", "set version 1.2.3-beta.4"
+    assert {:modified, "2.0.0-beta+12345"} = modify_version_with_args "1.0.0", "set version 2.0.0-beta append-commit-count"
+    assert {:modified, "2.0.0-beta+12345-82a5834"} = modify_version_with_args "1.0.0", "set version 2.0.0-beta append-commit-count append-git-revision"
+  end
+
   test "increasing version and appending metadata" do
     assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increase major version append-git-revision"
     assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "major+git-revision"
@@ -127,11 +139,23 @@ defmodule Edeliver.Release.Version.Test do
     assert <<_,_,_,_,_>> <> "Error: Illegal combination of options:" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "major minor"
     end)
+    assert <<_,_,_,_,_>> <> "Error: Illegal combination of options:" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "major set 2.0.0-beta"
+    end)
   end
 
   test "should fail for unknown arguments" do
     assert <<_,_,_,_,_>> <> "Error: Unknown options" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "foo bar"
+    end)
+  end
+
+  test "should fail if version to set is missing" do
+    assert <<_,_,_,_,_>> <> "Error: No version to set. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "set"
+    end)
+    assert <<_,_,_,_,_>> <> "Error: No version to set. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", "set append-commit-count"
     end)
   end
 

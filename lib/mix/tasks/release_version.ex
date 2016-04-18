@@ -75,7 +75,7 @@ defmodule Mix.Tasks.Release.Version do
     debug "Changed release version from #{old_version} to #{new_version}", options
   end
 
-  defp print_version(options) do
+  defp print_version(_options) do
     Mix.Shell.IO.info get_version
   end
 
@@ -169,6 +169,7 @@ defmodule Mix.Tasks.Release.Version do
         command -> command
       end
     end)
+    {version_to_set, args} = get_version_to_set_from_args(args, [])
     known_options = ["major", "minor", "patch", "commit_count", "revision", "date", "branch", "set"]
     unknown_options = args -- known_options
     illegal_combinations = Enum.filter args, &(Enum.member?(["major", "minor", "patch", "set"], &1))
@@ -178,9 +179,26 @@ defmodule Mix.Tasks.Release.Version do
       Enum.count(unknown_options) > 0 -> {:error, "Unknown options: #{Enum.join(unknown_options, " ")}"}
       args == [] -> :show
       Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options: #{Enum.join(illegal_combinations, " ")} can't be used together."}
-      true -> {:modify, Enum.map(args, &(String.to_atom("modify_version_" <> &1)))}
+      Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
+      true ->
+        modification_functions = Enum.map args, fn(arg) ->
+          case arg do
+            "set" when version_to_set != nil -> &(modify_version_set(&1, version_to_set))
+            _ -> String.to_atom("modify_version_" <> arg)
+          end
+        end
+        {:modify, modification_functions}
     end
   end
+
+  @doc """
+    Gets the version which should be set as fixed version (instead of incrementing) from the args
+    and returns the args without that value.
+  """
+  @spec get_version_to_set_from_args(args::OptionParser.argv, remaining_args::OptionParser.argv) :: {version_to_set::String.t|nil, args_without_version::OptionParser.argv}
+  def get_version_to_set_from_args(_args = [], remaining_args), do: {_version = nil, Enum.reverse(remaining_args)}
+  def get_version_to_set_from_args(_args = ["set", version | remaining], remaining_args), do: {version, Enum.reverse(remaining_args) ++ ["set"|remaining]}
+  def get_version_to_set_from_args(_args = [other | remaining], remaining_args), do: get_version_to_set_from_args(remaining, [other|remaining_args])
 
   def modify_version_major({version, has_metadata}), do: {update_version(version, :major), has_metadata}
   def modify_version_minor({version, has_metadata}), do: {update_version(version, :minor), has_metadata}
@@ -189,6 +207,8 @@ defmodule Mix.Tasks.Release.Version do
   def modify_version_revision({version, has_metadata}), do:     {add_metadata(version, __MODULE__.get_git_revision, has_metadata), _has_metadata = true}
   def modify_version_date({version, has_metadata}), do:         {add_metadata(version, __MODULE__.get_date, has_metadata),         _has_metadata = true}
   def modify_version_branch({version, has_metadata}), do:       {add_metadata(version, __MODULE__.get_branch, has_metadata),       _has_metadata = true}
+
+  def modify_version_set({_version, has_metadata}, version_to_set), do: {version_to_set, has_metadata}
 
 
   defp add_metadata(version, metadata, _had_metadata = false), do: version <> "+" <> metadata
@@ -205,12 +225,15 @@ defmodule Mix.Tasks.Release.Version do
   def modify_version(:show, version) do
     IO.puts version
   end
-  def modify_version({:error, message}, version) do
+  def modify_version({:error, message}, _version) do
     IO.puts :stderr, IO.ANSI.red <> "Error: " <> message <> IO.ANSI.reset
     :error
   end
   def modify_version({:modify, modification_functions}, version) do
-    {version, _} = Enum.reduce modification_functions, {version, false}, &(apply(__MODULE__,&1, [&2]))
+    {version, _} = Enum.reduce modification_functions, {version, false},
+      fn(modification_function, acc) when is_atom(modification_function) -> apply(__MODULE__, modification_function, [acc])
+        (modification_function, acc) when is_function(modification_function, 1) -> apply(modification_function, [acc])
+    end
     {:modified, version}
   end
 
