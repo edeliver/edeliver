@@ -147,8 +147,18 @@ defmodule Mix.Tasks.Release.Version do
   @type modification_arg :: {modified_version::String.t, has_metadata::boolean}
   @type modification_fun :: ((modification_arg) -> modification_arg)
 
+  @doc """
+    Parses the arguments passed to this `release.version` task and merges them
+    with the `AUTO_VERSION` environment variable. This arguments must not contain
+    any output flags like `-V` or `-Q`.
+  """
   @spec parse_args(OptionParser.argv) :: :show | {:error, message::String.t} | {:modify, [modification_fun]}
   def parse_args(args) do
+    if args == [] && (default_args = System.get_env("AUTO_VERSION")) do
+      default_args = args = OptionParser.split(default_args)
+    else
+      default_args = []
+    end
     args = args |> List.foldr([], fn(arg, acc) ->
       if String.contains?(arg, "+") do
         String.split(arg, "+") ++ acc
@@ -180,6 +190,7 @@ defmodule Mix.Tasks.Release.Version do
       args == [] -> :show
       Enum.count(illegal_combinations) > 1 -> {:error, "Illegal combination of options: #{Enum.join(illegal_combinations, " ")} can't be used together."}
       Enum.member?(args, "set") && (version_to_set == nil || Enum.member?(known_options, version_to_set)) -> {:error, "No version to set. Please add the version as argument after 'set' like: 'set 2.0.0-beta'."}
+      Enum.any?(default_args, &(Enum.member?(illegal_combinations, &1))) ->  {:error, "Increasing major|minor|path or setting version is not allowed as default set in 'AUTO_VERSION' env."}
       true ->
         modification_functions = Enum.map args, fn(arg) ->
           case arg do

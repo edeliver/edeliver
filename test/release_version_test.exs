@@ -129,6 +129,22 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
   end
 
+  test "use AUTO_VERSION env as default" do
+    assert :ok = System.put_env("AUTO_VERSION", "append-commit-count append-git-branch")
+    assert {:modified, "1.0.0+12345-feature-xyz"} = modify_version_with_args "1.0.0", ""
+
+    assert :ok = System.put_env("AUTO_VERSION", "append-git-branch append-commit-count")
+    assert {:modified, "1.2.3+feature-xyz-12345"} = modify_version_with_args "1.2.3", ""
+  end
+
+  test "arguments should override AUTO_VERSION env" do
+    assert :ok = System.put_env("AUTO_VERSION", "append-commit-count append-git-branch")
+    assert {:modified, "1.0.0+82a5834"} = modify_version_with_args "1.0.0", "append-git-revision"
+
+    assert :ok = System.put_env("AUTO_VERSION", "append-git-branch append-commit-count")
+    assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
+  end
+
   test "should fail for 'count' argument without leading 'commit-'" do
     assert <<_,_,_,_,_>> <> "Error: Unknown option 'count'" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "count"
@@ -156,6 +172,17 @@ defmodule Edeliver.Release.Version.Test do
     end)
     assert <<_,_,_,_,_>> <> "Error: No version to set. Please add the version as argument" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", "set append-commit-count"
+    end)
+  end
+
+  test "should fail if increasing or setting version is used in AUTO_VERSION env" do
+    assert :ok = System.put_env("AUTO_VERSION", "increase minor")
+    assert <<_,_,_,_,_>> <> "Error: Increasing major|minor|path or setting version is not allowed" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", ""
+    end)
+    assert :ok = System.put_env("AUTO_VERSION", "set 2.0.0-beta")
+    assert <<_,_,_,_,_>> <> "Error: Increasing major|minor|path or setting version is not allowed" <> _ = capture_io(:stderr, fn ->
+      assert :error = modify_version_with_args "1.0.0", ""
     end)
   end
 
