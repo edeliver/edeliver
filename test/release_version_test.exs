@@ -14,6 +14,10 @@ defmodule Edeliver.Release.Version.Test do
     :ok
   end
 
+  setup do
+    assert :ok = System.delete_env("AUTO_VERSION")
+  end
+
   test "mocking get git revision" do
     assert "82a5834" = get_git_revision
   end
@@ -194,7 +198,6 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "should fail if no args are set and no AUTO_VERSION env is set" do
-    assert :ok = System.delete_env("AUTO_VERSION")
     assert <<_,_,_,_,_>> <> "Error: No arguments passed to 'release.version' task and no AUTO_VERSION env is set" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", ""
     end)
