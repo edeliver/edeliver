@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.1.6__
+
+- Fix issue caused by CDPATH being set
+
 __1.1.5__
 
 - Fix displaying all output for node commands
