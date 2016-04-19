@@ -53,7 +53,9 @@ defmodule Mix.Tasks.Edeliver do
     * `--skip-mix-clean` Skip the 'mix clean step' for faster builds. Makes only sense in addition to the --skip-git-clean
     * `--skip-relup-mod`  Skip modification of relup file. Custom relup instructions are not added
     * `--relup-mod=<module-name>` The name of the module to modify the relup
-    * `--auto-version=[patch|minor|major|git]` Automatically increases the patch, minor or major version or appends the git sha1 revision to the current version
+    * `--auto-version=revision|commit-count|branch|date` Automatically append metadata to release version.
+    * `--increment-version=major|minor|patch` Increase the version for the current build.
+    * `--set-version=<release-version>` Set the release version for the current build.
     * `--mix-env=<env>` Build with custom mix env $MIX_ENV. Default is 'prod'
 
   """

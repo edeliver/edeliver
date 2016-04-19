@@ -131,6 +131,19 @@ erlang_get_and_update_deps() {
   __exec_if_defined "post_erlang_get_and_update_deps"
 }
 
+# joins the arguments by the first argument
+__join_string() {
+  local IFS="$1"
+  shift
+  echo "$@" | xargs # xargs removes the whitespaces at the beginning and at the end
+}
+
+# gets the arguments from the --auto-version=, --increment-version and --set-version
+# options and concatenates them ready to be used as arguments for the release.version
+# mis tasks
+__get_auto_version_args() {
+  __join_string " " "$INCREMENT_RELEASE_VERSION" "$SET_RELEASE_VERSION" "$AUTO_RELEASE_VERSION"
+}
 
 # compiles the sources on the remote build host
 erlang_clean_compile() {
@@ -141,12 +154,9 @@ erlang_clean_compile() {
 
   if [ "$RELEASE_CMD" = "mix" ]; then
     [[ "$MODE" = "verbose" ]] && local _auto_release_verbose="--verbose"
-    if [[ "$AUTO_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]]; then
-      local _set_auto_version=" release.version increase $AUTO_RELEASE_VERSION $_auto_release_verbose,"
-    elif [[ "$AUTO_RELEASE_VERSION" == "git" ]]; then
-      local _set_auto_version=" release.version append-git-revision $_auto_release_verbose,"
-    elif [[ -n "$AUTO_RELEASE_VERSION" ]]; then
-      local _set_auto_version=" release.version set \"$AUTO_RELEASE_VERSION\" $_auto_release_verbose,"
+    local _auto_version_args="$(__get_auto_version_args)"
+    if [[ -n "$_auto_version_args" ]] || [[ -n "$AUTO_VERSION" ]]; then
+      local _set_auto_version=" release.version $_auto_version_args $_auto_release_verbose,"
     fi
   fi
   __sync_remote "
@@ -157,15 +167,18 @@ erlang_clean_compile() {
       echo \"using rebar to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
       $REBAR_CMD compile
-
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]] && APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do${_set_auto_version} compile || APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean,${_set_auto_version} compile
+      if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do${_set_auto_version} compile
+      else
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do clean,${_set_auto_version} compile
+      fi
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do deps.compile,${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do deps.compile,${_set_auto_version} compile
       else
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD do clean, deps.compile,${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do clean, deps.compile,${_set_auto_version} compile
       fi
     fi
   "
@@ -191,12 +204,9 @@ erlang_generate_release() {
     # until the release task fails and then it might be helpful to see the very very verbose output.
     [[ "$MODE" = "verbose" ]] && local _mix_release_verbosity="normal" || local _mix_release_verbosity="verbose"
     [[ "$MODE" = "verbose" ]] && local _auto_release_verbose="--verbose"
-    if [[ "$AUTO_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]]; then
-      local _set_auto_version="do release.version increase $AUTO_RELEASE_VERSION $_auto_release_verbose, "
-    elif [[ "$AUTO_RELEASE_VERSION" == "git" ]]; then
-      local _set_auto_version="do release.version append-git-revision $_auto_release_verbose, "
-    elif [[ -n "$AUTO_RELEASE_VERSION" ]]; then
-      local _set_auto_version="do release.version set \"$AUTO_RELEASE_VERSION\" $_auto_release_verbose, "
+    local _auto_version_args="$(__get_auto_version_args)"
+    if [[ -n "$_auto_version_args" ]] || [[ -n "$AUTO_VERSION" ]]; then
+      local _set_auto_version="do release.version $_auto_version_args $_auto_release_verbose, "
     fi
   fi
 
@@ -213,9 +223,8 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" $MIX_CMD $_set_auto_version release $_force_no_interaction --verbosity=$_mix_release_verbosity
+      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD $_set_auto_version release $_force_no_interaction --verbosity=$_mix_release_verbosity
     fi
-
   "
 
   __exec_if_defined "post_erlang_generate_release"
@@ -1037,10 +1046,10 @@ __detect_remote_release_version() {
 __show_upgrade_version_does_not_differ_error_message() {
     error_message "The build upgrade has the same version as the installed version."
     error_message "That release cannot be deployed as an upgrade. Alter the release version"
-    error_message "or consider using the --auto-version=[git|patch|minor|major] option"
+    error_message "or consider using the --auto-version=revision|commit-count|date option"
     error_message "to automatically increase the version or append the git revision."
     error_message "It is recommended to enable the git-auto-revision permanently"
-    error_message "for automatic upgrades by setting AUTO_RELEASE_VERSION=git in the config."
+    error_message "for automatic upgrades by setting AUTO_VERSION=revision in the config."
 }
 
 __detect_exrm_version() {
