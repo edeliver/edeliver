@@ -127,6 +127,13 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
   end
 
+  test "appending metadata and increasing version" do
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "append-git-revision increase major version "
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "git-revision+major"
+    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "append-git-revision increase minor append-commit-count append-branch"
+    assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "commit-count revision patch branch"
+  end
+
   test "use AUTO_VERSION env as default" do
     assert :ok = System.put_env("AUTO_VERSION", "append-commit-count append-git-branch")
     assert {:modified, "1.0.0+12345-feature-xyz"} = modify_version_with_args "1.0.0", ""

@@ -162,6 +162,7 @@ defmodule Mix.Tasks.Release.Version do
       {args, []}
     end
     {version_to_set, args} = get_version_to_set_from_args(args, [])
+    args = sort_args_append_metadata_last(args, [], [])
     known_options = update_version_options ++ append_metadata_options
     unknown_options = args -- known_options
     illegal_combinations = Enum.filter args, &(Enum.member?(update_version_options, &1))
@@ -228,6 +229,19 @@ defmodule Mix.Tasks.Release.Version do
   def get_version_to_set_from_args(_args = [], remaining_args), do: {_version = nil, Enum.reverse(remaining_args)}
   def get_version_to_set_from_args(_args = ["set", version | remaining], remaining_args), do: {version, Enum.reverse(remaining_args) ++ ["set"|remaining]}
   def get_version_to_set_from_args(_args = [other | remaining], remaining_args), do: get_version_to_set_from_args(remaining, [other|remaining_args])
+
+  @doc """
+      Sorts the args in that way, that all args incrementing or setting the version come first
+      and all args appending metadata come last by not changing their particular order.
+  """
+  @spec sort_args_append_metadata_last(args::OptionParser.argv, increment_version_args::OptionParser.argv, append_metadata_args::OptionParser.argv) :: args::OptionParser.argv
+  def sort_args_append_metadata_last(_args = [], increment_version_args, append_metadata_args), do: Enum.reverse(increment_version_args) ++ Enum.reverse(append_metadata_args)
+  def sort_args_append_metadata_last(_args = [arg|rest], increment_version_args, append_metadata_args) when arg in ["major", "minor", "patch", "set"] do
+     sort_args_append_metadata_last(rest, [arg|increment_version_args], append_metadata_args)
+  end
+  def sort_args_append_metadata_last(_args = [arg|rest], increment_version_args, append_metadata_args) do
+     sort_args_append_metadata_last(rest, increment_version_args, [arg|append_metadata_args])
+  end
 
   def modify_version_major({version, has_metadata}), do: {update_version(version, :major), has_metadata}
   def modify_version_minor({version, has_metadata}), do: {update_version(version, :minor), has_metadata}
