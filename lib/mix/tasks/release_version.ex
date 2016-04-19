@@ -196,7 +196,7 @@ defmodule Mix.Tasks.Release.Version do
   def normalize_args(args) do
     args |> List.foldr([], fn(arg, acc) ->
       if String.contains?(arg, "+") do
-        String.split(arg, "+") ++ acc
+        String.split(arg, "+", trim: true) ++ acc
       else
         [arg | acc]
       end
