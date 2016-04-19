@@ -8,10 +8,10 @@ while [ -h "$SOURCE" ]
 do
   SOURCE="$(readlink "$SOURCE")"
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-  DIR="$( cd -P "$( dirname "$SOURCE"  )" && pwd )"
+  DIR="$( cd -P "$( dirname "$SOURCE"  )" >/dev/null 2>&1 && pwd )"
 done
 # DIR is now pointing to the bin dir, BASE_PATH is one level up
-BASE_PATH="$(cd "$DIR/.." && pwd)"
+BASE_PATH="$(cd "$DIR/.." >/dev/null 2>&1 && pwd)"
 
 # All functions starting with __ are private ones
 # You can overwrite them, but ideally they should be left alone.
