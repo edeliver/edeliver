@@ -16,33 +16,40 @@ defmodule Mix.Tasks.Release.Version do
 
   # Usage:
 
-    * mix release.version show
-    * mix do clean, release.version set <new-version> [Option], release
-    * mix do clean, release.version increment [patch|minor|major] [version] [Option], release
-    * mix do clean, release.version [append-][git-]revision|commit-count|branch [Option], release
-    * mix do clean, release.version [append-][build-]date [Option], release
+    * `mix release.version show`
+    * `mix do clean, release.version Append-Metadata... [Option], release`
+    * `mix do clean, release.version increment [patch|minor|major] [version] [Append-Metadata...] [Option], release`
+    * `mix do clean, release.version set <new-version> [Append-Metadata...] [Option], release`
 
-  ## Actions
+  ## Append-Metadata
+
+    * `[append-][git-]revision` Appends sha1 git revision of current HEAD
+    * `[append-][git-]branch` Appends the current branch that is built
+    * `[append-][build-]date` Appends the build date as YYYYMMDD
+    * `[append-][git-]commit-count[-all[-branches]|-branch|]` Appends the number of commits
+      from the current branch or across all branches (default).  Appending the commit count
+      from the current branch makes more sense, if the branch name is also appended as metadata
+      to avoid conflicts from different branches.
+
+  ## Version Modification
+
     * `show` Displays the current release version.
-    * `append-git-revision` Appends sha1 git revision of current HEAD
-    * `append-git-commit-count` Appends the number of commits across all branches
-    * `append-git-branch` Appends the current branch that is built
-    * `append-build-date` Appends the build date as YYYYMMDD
-    * `increment` Increments the release version
+    * `increment` Increments the release version for the current build
       - `patch` Increments the patch version (default). The last part of a tripartite version.
       - `minor` Increments the minor version. The middle part of a tripartite version.
       - `major` Increments the major version. The first part of a tripartite version.
+    * `set <new-version>` Sets the release version for the current build
 
   ## Options
+
     * `-V`, `--verbose` Verbose output
     * `-Q`, `--quiet`   Print only errors while modifying version
     * `-D`, `--dry-run` Print only new version without changing it
 
   ## Environment Variables
 
-    * `AUTO_VERSION` as long nor arguments are passed directly which append metadata to the version
-                     (`[append-][git-]revision|commit-count|branch|build-data`) the values from that
-                     env are used to append metadata.
+    * `AUTO_VERSION` as long no arguments are passed directly which append metadata to the version
+     (flags from the Append-Metadata section) the values from that env are used to append metadata.
 
   ## Example
 
@@ -146,7 +153,7 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec parse_args(OptionParser.argv) :: :show | {:error, message::String.t} | {:modify, [modification_fun]}
   def parse_args(args) do
-    append_metadata_options = ["commit_count", "revision", "date", "branch"]
+    append_metadata_options = ["commit_count", "commit_count_branch", "revision", "date", "branch"]
     update_version_options  = ["major", "minor", "patch", "set"]
 
     args = normalize_args(args)
@@ -201,7 +208,7 @@ defmodule Mix.Tasks.Release.Version do
         [arg | acc]
       end
     end)
-    |> Enum.filter(&(&1 != "increment" && &1 != "version"))
+    |> Enum.filter(&(&1 != "increment" && &1 != "version" && &1 != "increase"))
     |> Enum.map(fn(arg) ->
       case arg do
         "append-" <> command -> command
@@ -214,8 +221,12 @@ defmodule Mix.Tasks.Release.Version do
         command -> command
       end
     end) |> Enum.map(fn(arg) ->
+      String.replace_suffix(arg, "-branches", "") |>
+      String.replace_suffix("-all", "")
+    end) |> Enum.map(fn(arg) ->
       case arg do
         "commit-count" -> "commit_count"
+        "commit-count-branch" -> "commit_count_branch"
         command -> command
       end
     end)
@@ -246,10 +257,11 @@ defmodule Mix.Tasks.Release.Version do
   def modify_version_major({version, has_metadata}), do: {update_version(version, :major), has_metadata}
   def modify_version_minor({version, has_metadata}), do: {update_version(version, :minor), has_metadata}
   def modify_version_patch({version, has_metadata}), do: {update_version(version, :patch), has_metadata}
-  def modify_version_commit_count({version, has_metadata}), do: {add_metadata(version, __MODULE__.get_commit_count, has_metadata), _has_metadata = true}
-  def modify_version_revision({version, has_metadata}), do:     {add_metadata(version, __MODULE__.get_git_revision, has_metadata), _has_metadata = true}
-  def modify_version_date({version, has_metadata}), do:         {add_metadata(version, __MODULE__.get_date, has_metadata),         _has_metadata = true}
-  def modify_version_branch({version, has_metadata}), do:       {add_metadata(version, __MODULE__.get_branch, has_metadata),       _has_metadata = true}
+  def modify_version_commit_count({version, has_metadata}),        do: {add_metadata(version, __MODULE__.get_commit_count, has_metadata),        _has_metadata = true}
+  def modify_version_commit_count_branch({version, has_metadata}), do: {add_metadata(version, __MODULE__.get_commit_count_branch, has_metadata), _has_metadata = true}
+  def modify_version_revision({version, has_metadata}),            do: {add_metadata(version, __MODULE__.get_git_revision, has_metadata),        _has_metadata = true}
+  def modify_version_date({version, has_metadata}),                do: {add_metadata(version, __MODULE__.get_date, has_metadata),                _has_metadata = true}
+  def modify_version_branch({version, has_metadata}),              do: {add_metadata(version, __MODULE__.get_branch, has_metadata),              _has_metadata = true}
 
   def modify_version_set({_version, has_metadata}, version_to_set), do: {version_to_set, has_metadata}
 
@@ -294,6 +306,12 @@ defmodule Mix.Tasks.Release.Version do
   @spec get_commit_count() :: String.t
   def get_commit_count() do
     System.cmd( "git", ["rev-list", "--all", "--count"]) |> elem(0) |> String.rstrip
+  end
+
+  @doc "Gets the current number of commits in the current branch"
+  @spec get_commit_count_branch() :: String.t
+  def get_commit_count_branch() do
+    System.cmd( "git", ["rev-list", "--count", "HEAD"]) |> elem(0) |> String.rstrip
   end
 
   @doc "Gets the current branch that will be built"

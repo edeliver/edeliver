@@ -1,9 +1,10 @@
 ### Using Auto-Versioning
 
-edeliver provides a way to automatically __increment__ the current __version__ for the __current build__ or to __append__ the __git commit count__ and/or __revision__ as [version metadata](http://semver.org/#spec-item-10).
+edeliver provides a way to automatically __increment__ the current __version__ for the __current build__ and/or to __append__ the __git commit count__ and/or __revision__ as [version metadata](http://semver.org/#spec-item-10).
 __Using a different version for each release is essential__ especially if you build hot code __upgrades__, but also makes sense to see wich version is running, e.g. when using `mix edeliver version [staging|production]`.
 
 Notice: This feature cannot be used in conjunction with the `--skip-mix-clean` command line option or the `SKIP_MIX_CLEAN=true` config respectively*.
+For detailed information also try `mix edeliver help upgrade`, `mix edeliver help release` or `mix help release.version`.
 
 ##### Append git commit count and/or revision to the release version
 

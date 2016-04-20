@@ -8,9 +8,10 @@ defmodule Edeliver.Release.Version.Test do
   setup_all do
     :meck.new ReleaseVersion, [:passthrough]
     :meck.expect(ReleaseVersion, :get_git_revision, fn -> "82a5834" end)
-    :meck.expect(ReleaseVersion, :get_commit_count, fn ->   "12345" end)
-    :meck.expect(ReleaseVersion, :get_branch, fn ->   "feature-xyz" end)
-    :meck.expect(ReleaseVersion, :get_date, fn ->      "20160414" end)
+    :meck.expect(ReleaseVersion, :get_commit_count, fn -> "12345" end)
+    :meck.expect(ReleaseVersion, :get_commit_count_branch, fn ->   "4321" end)
+    :meck.expect(ReleaseVersion, :get_branch, fn -> "feature-xyz" end)
+    :meck.expect(ReleaseVersion, :get_date, fn -> "20160414" end)
     :ok
   end
 
@@ -41,9 +42,19 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "appending commit count" do
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-git-commit-count-all"
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-git-commit-count-all-branches"
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "git-commit-count-all-branches"
+    assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "commit-count-all"
     assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-git-commit-count"
     assert {:modified, "1.0.0+12345"} = modify_version_with_args "1.0.0", "append-commit-count"
     assert {:modified, "1.1.0+12345"} = modify_version_with_args "1.1.0", "commit-count"
+  end
+
+  test "appending commit count for current branch" do
+    assert {:modified, "1.0.0+4321"} = modify_version_with_args "1.0.0", "append-git-commit-count-branch"
+    assert {:modified, "1.0.0+4321"} = modify_version_with_args "1.0.0", "git-commit-count-branch"
+    assert {:modified, "1.0.0+4321"} = modify_version_with_args "1.0.0", "commit-count-branch"
   end
 
   test "appending git revision" do
