@@ -43,7 +43,7 @@ ${txtbld}Options:${txtrst}
              ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst} env
              in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
              e.g. ${bldwht}git-revison+git-branch${txtrst} creates version 1.2.3-82a5834-master.
-  --increment-version=major|minor|patch  Increases the major, minor or patch
+  --increment-version=major|minor|patch  Increments the major, minor or patch
              version ${txtylw}for the current build${txtrst}.
   --set-version=<release-version> Sets the release version for ${txtylw}the current build${txtrst}.
 

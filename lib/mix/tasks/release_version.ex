@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Release.Version do
   before and the release task must be executed after. Increasing version
   and appending metadata to the version can be combined, e.g:
 
-  `mix do clean, release.version increase minor append-git-revision append-branch, release`
+  `mix do clean, release.version increment minor append-git-revision append-branch, release`
 
   To automatically append metadata, you can set the `$AUTO_VERSION` environment variable.
 
@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Release.Version do
 
     * mix release.version show
     * mix do clean, release.version set <new-version> [Option], release
-    * mix do clean, release.version increase [patch|minor|major] [version] [Option], release
+    * mix do clean, release.version increment [patch|minor|major] [version] [Option], release
     * mix do clean, release.version [append-][git-]revision|commit-count|branch [Option], release
     * mix do clean, release.version [append-][build-]date [Option], release
 
@@ -28,10 +28,10 @@ defmodule Mix.Tasks.Release.Version do
     * `append-git-commit-count` Appends the number of commits across all branches
     * `append-git-branch` Appends the current branch that is built
     * `append-build-date` Appends the build date as YYYYMMDD
-    * `increase` Increases the release version
-      - `patch` Increases the patch version (default). The last part of a tripartite version.
-      - `minor` Increases the minor version. The middle part of a tripartite version.
-      - `major` Increases the major version. The first part of a tripartite version.
+    * `increment` Increments the release version
+      - `patch` Increments the patch version (default). The last part of a tripartite version.
+      - `minor` Increments the minor version. The middle part of a tripartite version.
+      - `major` Increments the major version. The first part of a tripartite version.
 
   ## Options
     * `-V`, `--verbose` Verbose output
@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Release.Version do
   ## Environment Variables
 
     * `AUTO_VERSION` as long nor arguments are passed directly which append metadata to the version
-                     (`[append-][git-]revision|commit-count|branch|build-data) the values from that
+                     (`[append-][git-]revision|commit-count|branch|build-data`) the values from that
                      env are used to append metadata.
 
   ## Example
@@ -201,7 +201,7 @@ defmodule Mix.Tasks.Release.Version do
         [arg | acc]
       end
     end)
-    |> Enum.filter(&(&1 != "increase" && &1 != "version"))
+    |> Enum.filter(&(&1 != "increment" && &1 != "version"))
     |> Enum.map(fn(arg) ->
       case arg do
         "append-" <> command -> command

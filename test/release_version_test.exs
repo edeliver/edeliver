@@ -79,37 +79,37 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "increasing patch version" do
-    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increase patch"
-    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increase patch version"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increment patch"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "increment patch version"
     assert {:modified, "1.0.1"} = modify_version_with_args "1.0.0", "patch"
-    assert {:modified, "1.2.4"} = modify_version_with_args "1.2.3", "increase patch"
+    assert {:modified, "1.2.4"} = modify_version_with_args "1.2.3", "increment patch"
     assert {:modified, "1.2.4"} = modify_version_with_args "1.2.3", "patch"
     assert {:modified, "1.2.1"} = modify_version_with_args "1.2", "patch"
-    assert {:modified, "1.0.1"} = modify_version_with_args "1", "increase patch"
+    assert {:modified, "1.0.1"} = modify_version_with_args "1", "increment patch"
   end
 
   test "increasing minor version" do
-    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increase minor"
-    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increase minor version"
+    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increment minor"
+    assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "increment minor version"
     assert {:modified, "1.1.0"} = modify_version_with_args "1.0.0", "minor"
-    assert {:modified, "2.2.0"} = modify_version_with_args "2.1.3", "increase minor"
+    assert {:modified, "2.2.0"} = modify_version_with_args "2.1.3", "increment minor"
     assert {:modified, "1.3.0"} = modify_version_with_args "1.2.0", "minor"
     assert {:modified, "1.3.0"} = modify_version_with_args "1.2", "minor"
-    assert {:modified, "2.1.0"} = modify_version_with_args "2", "increase minor"
+    assert {:modified, "2.1.0"} = modify_version_with_args "2", "increment minor"
   end
 
   test "increasing major version" do
-    assert {:modified, "2.0.0"} = modify_version_with_args "1.0.0", "increase major"
+    assert {:modified, "2.0.0"} = modify_version_with_args "1.0.0", "increment major"
     assert {:modified, "2.0.0"} = modify_version_with_args "1.0.0", "major"
-    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increase major"
-    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increase major version"
+    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increment major"
+    assert {:modified, "3.0.0"} = modify_version_with_args "2.1.3", "increment major version"
     assert {:modified, "2.0.0"} = modify_version_with_args "1.2.0", "major"
     assert {:modified, "2.0.0"} = modify_version_with_args "1.2", "major"
-    assert {:modified, "5.0.0"} = modify_version_with_args "4", "increase major"
+    assert {:modified, "5.0.0"} = modify_version_with_args "4", "increment major"
   end
 
   test "get version to set from args" do
-    assert {_version_to_set = nil, ["increase", "major"]} = get_version_to_set_from_args("increase major" |> to_argv(), [])
+    assert {_version_to_set = nil, ["increment", "major"]} = get_version_to_set_from_args("increment major" |> to_argv(), [])
     assert {_version_to_set = "2.0.0-beta", ["set"]} = get_version_to_set_from_args("set 2.0.0-beta" |> to_argv(), [])
     assert {_version_to_set = "2.1.0-beta.1", ["set", "append-commit-count"]} = get_version_to_set_from_args("set 2.1.0-beta.1 append-commit-count" |> to_argv(), [])
   end
@@ -121,16 +121,16 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "increasing version and appending metadata" do
-    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increase major version append-git-revision"
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increment major version append-git-revision"
     assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "major+git-revision"
-    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "increase minor append-git-revision append-commit-count append-branch"
+    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "increment minor append-git-revision append-commit-count append-branch"
     assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "patch commit-count revision branch"
   end
 
   test "appending metadata and increasing version" do
-    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "append-git-revision increase major version "
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "append-git-revision increment major version "
     assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "git-revision+major"
-    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "append-git-revision increase minor append-commit-count append-branch"
+    assert {:modified, "2.2.0+82a5834-12345-feature-xyz"} = modify_version_with_args "2.1.3", "append-git-revision increment minor append-commit-count append-branch"
     assert {:modified, "1.2.1+12345-82a5834-feature-xyz"} = modify_version_with_args "1.2", "commit-count revision patch branch"
   end
 
@@ -160,11 +160,11 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.0.0+82a5834"} = modify_version_with_args "1.0.0", ""
   end
 
-  test "AUTO_VERSION should be used in conjunction with increase major|minor|patch or set version" do
+  test "AUTO_VERSION should be used in conjunction with increment major|minor|patch or set version" do
     assert :ok = System.put_env("AUTO_VERSION", "append-git-revision")
-    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increase major"
-    assert {:modified, "1.1.0+82a5834"} = modify_version_with_args "1.0.0", "increase minor"
-    assert {:modified, "1.0.1+82a5834"} = modify_version_with_args "1.0.0", "increase patch"
+    assert {:modified, "2.0.0+82a5834"} = modify_version_with_args "1.0.0", "increment major"
+    assert {:modified, "1.1.0+82a5834"} = modify_version_with_args "1.0.0", "increment minor"
+    assert {:modified, "1.0.1+82a5834"} = modify_version_with_args "1.0.0", "increment patch"
     assert {:modified, "2.0.0-beta+82a5834"} = modify_version_with_args "1.0.0", "set 2.0.0-beta"
   end
 
@@ -199,7 +199,7 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "should fail if increasing or setting version is used in AUTO_VERSION env" do
-    assert :ok = System.put_env("AUTO_VERSION", "increase minor")
+    assert :ok = System.put_env("AUTO_VERSION", "increment minor")
     assert <<_,_,_,_,_>> <> "Error: Increasing major|minor|path or setting version is not allowed" <> _ = capture_io(:stderr, fn ->
       assert :error = modify_version_with_args "1.0.0", ""
     end)

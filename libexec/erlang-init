@@ -50,7 +50,7 @@ __help() {
       --skip-relup-mod  Skip modification of relup file. Custom relup instructions are not added
       --relup-mod=<module-name> The name of the module to modify the relup
       --auto-version=revision|commit-count|branch|date Automatically append metadata to release version.
-      --increment-version=major|minor|patch Increase the version for the current build.
+      --increment-version=major|minor|patch Increment the version for the current build.
       --set-version=<release-version> Set the release version for the current build.
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured

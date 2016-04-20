@@ -1047,7 +1047,7 @@ __show_upgrade_version_does_not_differ_error_message() {
     error_message "The build upgrade has the same version as the installed version."
     error_message "That release cannot be deployed as an upgrade. Alter the release version"
     error_message "or consider using the --auto-version=revision|commit-count|date option"
-    error_message "to automatically increase the version or append the git revision."
+    error_message "to automatically increment the version or append the git revision."
     error_message "It is recommended to enable the git-auto-revision permanently"
     error_message "for automatic upgrades by setting AUTO_VERSION=revision in the config."
 }
