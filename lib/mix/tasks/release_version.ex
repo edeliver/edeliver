@@ -24,9 +24,10 @@ defmodule Mix.Tasks.Release.Version do
   ## Append-Metadata
 
     * `[append-][git-]revision` Appends sha1 git revision of current HEAD
-    * `[append-][git-]branch` Appends the current branch that is built
+    * `[append-][git-]branch[-unless-master]` Appends the current branch that is built. If
+      `-unless-master` is used, the branch is only appended unless it is the master branch.
     * `[append-][build-]date` Appends the build date as YYYYMMDD
-    * `[append-][git-]commit-count[-all[-branches]|-branch|]` Appends the number of commits
+    * `[append-][git-]commit-count[-all[-branches]|-branch]` Appends the number of commits
       from the current branch or across all branches (default).  Appending the commit count
       from the current branch makes more sense, if the branch name is also appended as metadata
       to avoid conflicts from different branches.
@@ -153,7 +154,7 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec parse_args(OptionParser.argv) :: :show | {:error, message::String.t} | {:modify, [modification_fun]}
   def parse_args(args) do
-    append_metadata_options = ["commit_count", "commit_count_branch", "revision", "date", "branch"]
+    append_metadata_options = ["commit_count", "commit_count_branch", "revision", "date", "branch", "branch_unless_master"]
     update_version_options  = ["major", "minor", "patch", "set"]
 
     args = normalize_args(args)
@@ -227,6 +228,7 @@ defmodule Mix.Tasks.Release.Version do
       case arg do
         "commit-count" -> "commit_count"
         "commit-count-branch" -> "commit_count_branch"
+        "branch-unless-master" -> "branch_unless_master"
         command -> command
       end
     end)
@@ -262,6 +264,13 @@ defmodule Mix.Tasks.Release.Version do
   def modify_version_revision({version, has_metadata}),            do: {add_metadata(version, __MODULE__.get_git_revision, has_metadata),        _has_metadata = true}
   def modify_version_date({version, has_metadata}),                do: {add_metadata(version, __MODULE__.get_date, has_metadata),                _has_metadata = true}
   def modify_version_branch({version, has_metadata}),              do: {add_metadata(version, __MODULE__.get_branch, has_metadata),              _has_metadata = true}
+  def modify_version_branch_unless_master({version, has_metadata}) do
+    case __MODULE__.get_branch do
+      "master"     -> {version, has_metadata}
+      other_branch -> {add_metadata(version, other_branch, has_metadata), _has_metadata = true}
+    end
+  end
+
 
   def modify_version_set({_version, has_metadata}, version_to_set), do: {version_to_set, has_metadata}
 

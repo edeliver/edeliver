@@ -22,12 +22,14 @@ ${txtbld}Options:${txtrst}
              passed as ${bldwht}--branch=${txtrst} argument or in the master (default).
   --mix-env=<env> Build the release with a custom mix environment.
              Default is ${bldwht}prod${txtrst}.
-  --auto-version=[git-]revision|[git-]commit-count|[git-]branch|[build-]date
-             ${txtgrn}Appends${txtrst} the git sha1 revision, the current commit count (across
-             all branches), the current branch name and/or the build date as
-             ${txtgrn}metadata to the current release version${txtrst}. To append that metadata
-             ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst} env
-             in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
+  --auto-version=[git-]revision|[git-]commit-count[-all[-branches]|-branch]
+             |[git-]branch[-unless-master]|[build-]date ${txtgrn}Appends${txtrst} the git sha1
+             revision, the current commit count either across all branches
+             (default) or for the current branch, the current branch name
+             (optionally only unless it is the master branch) and/or the
+             build date as ${txtgrn}metadata to the current upgrade version${txtrst}. To append
+             that metadata ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst}
+             env in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
              e.g. ${bldwht}git-revison+git-branch${txtrst} creates version 1.2.3-82a5834-master.
   --increment-version=major|minor|patch  Increments the major, minor or patch
              version ${txtylw}for the current build${txtrst}.

@@ -69,6 +69,27 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.2.3+feature-xyz"} = modify_version_with_args "1.2.3", "branch"
   end
 
+  test "append git branch only unless master" do
+    assert <<_,_::binary>> = mocked_branch = get_branch
+    assert mocked_branch != "master"
+    try do
+      assert {:modified, "1.0.0+feature-xyz"} = modify_version_with_args "1.0.0", "append-git-branch-unless-master"
+      assert {:modified, "1.0.1+feature-xyz"} = modify_version_with_args "1.0.1", "git-branch-unless-master"
+      assert {:modified, "1.2.3+feature-xyz"} = modify_version_with_args "1.2.3", "branch-unless-master"
+      assert {:modified, "1.2.3+82a5834-feature-xyz"} = modify_version_with_args "1.2.3", "git-revision+branch-unless-master"
+      assert {:modified, "1.2.3+feature-xyz-82a5834"} = modify_version_with_args "1.2.3", "branch-unless-master+git-revision"
+      :meck.expect(ReleaseVersion, :get_branch, fn -> "master" end)
+      assert {:modified, "1.0.0"} = modify_version_with_args "1.0.0", "append-git-branch-unless-master"
+      assert {:modified, "1.0.1"} = modify_version_with_args "1.0.1", "git-branch-unless-master"
+      assert {:modified, "1.2.3"} = modify_version_with_args "1.2.3", "branch-unless-master"
+      assert {:modified, "1.2.3+82a5834"} = modify_version_with_args "1.2.3", "git-revision+branch-unless-master"
+      assert {:modified, "1.2.3+82a5834"} = modify_version_with_args "1.2.3", "branch-unless-master+git-revision"
+    after
+      :meck.expect(ReleaseVersion, :get_branch, fn -> mocked_branch end)
+      assert mocked_branch == get_branch
+    end
+  end
+
   test "appending date" do
     assert {:modified, "1.0.0+20160414"} = modify_version_with_args "1.0.0", "append-build-date"
     assert {:modified, "1.0.1+20160414"} = modify_version_with_args "1.0.1", "build-date"

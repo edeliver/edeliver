@@ -407,7 +407,7 @@ do
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#append-*}
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#git-*}
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#build-*}
-          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|date)$ ]]; then
+          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|branch-unless-master|date)$ ]]; then
             __help; error_message "Illegal value for --auto-version= option: '${ORIGINAL_AUTO_VERSION_ARG}'.\n"; exit 2
           fi
         done
