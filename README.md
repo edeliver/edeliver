@@ -14,29 +14,48 @@ Examples:
 
 **Build** an erlang/elixir release **and deploy** it on your **production hosts**:
 
-    mix edeliver build release --branch=feature
-    mix edeliver deploy release to production
-    mix edeliver start production
-
+```sh
+mix edeliver build release --branch=feature
+mix edeliver deploy release to production
+mix edeliver start production
+```
 
 Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
-    # build upgrade from tag v1.0 to v2.0
+```sh
+# build upgrade from tag v1.0 to v2.0
 
-    mix edeliver build upgrade --from=v1.0 --to=v2.0
-    mix edeliver deploy upgrade to production
+mix edeliver build upgrade --from=v1.0 --to=v2.0
+mix edeliver deploy upgrade to production
 
-    # or if you have the old release in your release store,
-    # you can build the upgrade with that old release instead of the old git revision/tag
+# or if you have the old release in your release store,
+# you can build the upgrade with that old release instead of the old git revision/tag
 
-    mix edeliver build upgrade --with=v1.0 --to=v2.0
-    mix edeliver deploy upgrade to production
+mix edeliver build upgrade --with=v1.0 --to=v2.0
+mix edeliver deploy upgrade to production
 
-    # run ecto migrations manually:
-    mix edeliver migrate production
-    # or automatically during upgrade when upgrade is built with --run-migrations
+# run ecto migrations manually:
+mix edeliver migrate production
+# or automatically during upgrade when upgrade is built with --run-migrations
+```
 
-The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
+The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edeliver edit relup` command.
+
+To execute that steps by a single command and upgrade e.g. all production nodes **automatically**  from their running version to the current version using **hot code upgrade** without restarting, you can use the `upgrade` command:
+
+```
+mix edeliver upgrade production
+```
+
+This performs the following steps automatically:
+
+* Detect current version on all running nodes
+* Validate that all nodes run the same version
+* Build new upgrade from that version to the current version
+* Auto-patch the relup file
+* Deploy (hot code) upgrade while nodes are running
+* Validate that all nodes run the upgraded version
+* Deploy the release to not running nodes
 
 
 ### Installation
