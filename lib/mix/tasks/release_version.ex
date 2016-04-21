@@ -209,7 +209,7 @@ defmodule Mix.Tasks.Release.Version do
         [arg | acc]
       end
     end)
-    |> Enum.filter(&(&1 != "increment" && &1 != "version" && &1 != "increase"))
+    |> Enum.filter(&(&1 != "increment" && &1 != "version" && &1 != "increase" && String.strip(&1) != ""))
     |> Enum.map(fn(arg) ->
       case arg do
         "append-" <> command -> command
