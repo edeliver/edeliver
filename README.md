@@ -222,6 +222,23 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Maintenance
+
+edeliver has a set of commands to maintain erlang/elixir nodes on staging or production hosts:
+
+```sh
+
+	mix edeliver ping production # shows which nodes are up and running
+	mix edeliver version production # shows the release version running on the nodes 
+	mix edeliver show migrations on production # shows pending database migrations
+	mix edeliver migrate production # run database migrations
+	mix edeliver restart production # or start or stop
+	...
+	
+```
+
+
+
 ### Extended Options
 
 If something goes wrong, retry with the `--verbose` option. If you want to see (really) everything what happens, try the `--debug` option.
