@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.2.1__
+
+- Fix syntax on migrate task with down operation
+
 __1.2.0__
 
 - Add `upgrade` task to automatically upgrade all nodes
