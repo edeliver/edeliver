@@ -157,7 +157,7 @@ __format_response() {
     local _is_first_line="true" _line _revision="$(grep -oe '[0-9a-fA-F]\{7\}' <<< "$_response")"
     if [[ -n "$_revision" ]]; then
       echo -e "${txtylw}$_response${txtrst}"
-      local _branch="$(git branch -a --contains "$_revision" | cut -b3-)"
+      local _branch="$(git branch -a --contains "$_revision" | head -n 1 | cut -b3-)"
       [[ -n "$_branch" ]] && echo -e "  branch  : ${_branch}"
       echo "  revision: $_revision"
       local _commit_date="$(git show -s --format=%ci "$_revision" 2>/dev/null)"
