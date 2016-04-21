@@ -1,6 +1,14 @@
 eDeliver Versions
 =================
 
+__1.2.0__
+
+- Add `upgrade` task to automatically upgrade all nodes
+- Add auto-versioning to append metadata to release versions
+- Add command help `mix edeliver help <command>`
+- Add automatic relup modifications
+- Experimental support for auto-upgrades of phoenix apps
+
 __1.1.6__
 
 - Fix issue caused by CDPATH being set
