@@ -60,12 +60,58 @@ To append metadata permanentely you can set the `AUTO_VERSION` configuration var
     conflicts from different branches.
 
 
-Using __commit count accross all branches__ (`commit-count[-all[-branches]`) __or__ using the __build date__ (`[build-]date`) __as first metadata__ to append, enables edeliver to __consider__ that values __when sorting__ versions. Using `[git-]revision` or commit count for the current branch in conjunction with the branch name (`commit-count-branch+branch`) enables you to __uniquely identify__ the built/deployed __version__. edeliver can then display the commit message for that version (and the 5 previous commit messages) if `edeliver version [staging|production]` is used with the `--verbose` flag. To achieve both (sorting and identifying versions) and to see whether a feature branch is built/deployed, the following permanent auto-versioning option is recommended: `AUTO_VERSION=commit-count+git-revision+branch-unless-master`.
+Using __commit count accross all branches__ (`commit-count[-all[-branches]`) __or__ using the __build date__ (`[build-]date`) __as first metadata__ to append, enables edeliver to __consider__ that values __when sorting__ versions. Using `[git-]revision` or commit count for the current branch in conjunction with the branch name (`commit-count-branch+branch`) enables you to __uniquely identify__ the built/deployed __version__. If the revision is used, __edeliver can display the commit message for that version__ (and the 5 previous commit messages) if `edeliver version [staging|production]` is used. To achieve both (sorting and identifying versions) and to see whether a feature branch is built/deployed, the following permanent auto-versioning option is recommended: `AUTO_VERSION=commit-count+git-revision+branch-unless-master`.
 
 
 For more information also try `mix edeliver help upgrade`, `mix edeliver help release` or `mix help release.version`.
 
+Example Output for `edeliver version` task if `git-revision` is used for auto-versioning:
 
+```sh
+$ mix edeliver version production
+
+EDELIVER YOUR_APP WITH VERSION COMMAND
+
+-----> getting release versions from production servers
+
+production node: 0
+
+  user    : production
+  host    : host-01.domain.net
+  path    : /your/deploy/path
+  response: 1.2.3+4915-e834c67
+  branch  : master
+  revision: e834c67
+  date    : 2016-04-19 17:10:13 (git commit)
+  commits : Use autoversion for edeliver
+            Update release version to 1.2.3
+            Revert something
+            Add something
+            ...
+
+
+production node: 1
+
+  user    : production
+  host    : host-12.domain.net
+  path    : /your/deploy/path
+  response: 1.2.3+4931-4805b65
+  branch  : feature
+  revision: 4805b65
+  date    : 2016-04-21 16:41:01 (git commit)
+  commits : Add another feature
+            Add new feature
+            Use autoversion for edeliver
+            Update release version to 1.2.3
+            Revert something
+            Add something
+            ...
+
+
+VERSION DONE!
+```
+
+Then number of commits can be adjusted by the `VERSION_INFO_LAST_COMMITS` env / config.
 
 ##### Increment / Set Version for the current release / upgrade
 
