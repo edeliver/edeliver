@@ -22,10 +22,18 @@ ${txtbld}Options:${txtrst}
              passed as ${bldwht}--branch=${txtrst} argument or in the master (default).
   --mix-env=<env> Build the release with a custom mix environment.
              Default is ${bldwht}prod${txtrst}.
-  --auto-version=[patch|minor|major|git] Automatically increases the patch,
-             minor or major version of the release or appends the git sha1
-             revision to the current version. If any other term is used
-             that string is used as the version of the new release.
+  --auto-version=[git-]revision|[git-]commit-count[-all[-branches]|-branch]
+             |[git-]branch[-unless-master]|[build-]date ${txtgrn}Appends${txtrst} the git sha1
+             revision, the current commit count either across all branches
+             (default) or for the current branch, the current branch name
+             (optionally only unless it is the master branch) and/or the
+             build date as ${txtgrn}metadata to the current upgrade version${txtrst}. To append
+             that metadata ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst}
+             env in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
+             e.g. ${bldwht}git-revison+git-branch${txtrst} creates version 1.2.3-82a5834-master.
+  --increment-version=major|minor|patch  Increments the major, minor or patch
+             version ${txtylw}for the current build${txtrst}.
+  --set-version=<release-version> Sets the release version for ${txtylw}the current build${txtrst}.
 
 ${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
   --skip-git-clean Don't build from a clean state for faster builds. Can be

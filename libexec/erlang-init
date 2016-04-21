@@ -49,8 +49,9 @@ __help() {
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
       --skip-relup-mod  Skip modification of relup file. Custom relup instructions are not added
       --relup-mod=<module-name> The name of the module to modify the relup
-      --auto-version=[patch|minor|major|git] Automatically increases the patch, minor or major version
-                        or appends the git sha1 revision to the current version
+      --auto-version=revision|commit-count|branch|date Automatically append metadata to release version.
+      --increment-version=major|minor|patch Increment the version for the current build.
+      --set-version=<release-version> Set the release version for the current build.
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured
       --mix-env=<env>   Build with custom mix env $MIX_ENV. Default is 'prod'
@@ -94,6 +95,9 @@ if (( $# )); then
           (appups|appup)
             COMMAND_INFO="appup"
           ;;
+          (-*)
+            __help; error_message "No build type found. Use release|upgrade\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown build type ${arg}. Use release|upgrade\n"; exit 2
           ;;
@@ -109,6 +113,9 @@ if (( $# )); then
         case "${arg}" in
           (release|upgrade)
             COMMAND_INFO="${arg}"
+          ;;
+          (-*)
+            __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
           ;;
           (*)
             __help; error_message "Unknown deploy type ${arg}. Use release|upgrade\n"; exit 2
@@ -144,6 +151,9 @@ if (( $# )); then
           (release|config)
             CHECK_CMD="${arg}"
           ;;
+          (-*)
+            __help; error_message "No check type found. Use release|config\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown check type ${arg}. Use release|config\n"; exit 2
           ;;
@@ -159,6 +169,9 @@ if (( $# )); then
         case "${arg}" in
           (release|upgrade)
             COMMAND_INFO="${arg}"
+          ;;
+          (-*)
+            __help; error_message "No release type found. Use release|upgrade\n"; exit 2
           ;;
           (*)
             __help; error_message "Unknown release type ${arg}. Use release|upgrade\n"; exit 2
@@ -205,6 +218,9 @@ if (( $# )); then
               NODE_ENVIRONMENT="staging"
             fi
           ;;
+          (-*)
+            __help; error_message "No show command found. Use releases|appups|relups\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2
           ;;
@@ -248,6 +264,9 @@ if (( $# )); then
           (relup|relups)
             COMMAND_INFO="relup"
           ;;
+          (-*)
+            __help; error_message "No edit command found. Use appup|relup\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2
           ;;
@@ -269,8 +288,11 @@ if (( $# )); then
             INCREASE_VERSION_TYPE="$arg"
             COMMAND_INFO="versions"
           ;;
+          (-*)
+            __help; error_message "Increase type not found. Use versions|major|minor\n"; exit 2
+          ;;
           (*)
-            __help; error_message "Unknown increase command ${arg}. Use versions|major|minor\n"; exit 2
+            __help; error_message "Unknown increase type ${arg}. Use versions|major|minor\n"; exit 2
           ;;
         esac
       else
@@ -327,6 +349,9 @@ do
     ;;
     (--skip-mix-clean)
       SKIP_MIX_CLEAN="true"
+      [[ -n "$SET_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      [[ -n "$AUTO_RELEASE_VERSION" ]] && __help && error_message "Option --auto-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
     ;;
     (--start-deploy)
       START_DEPLOY="true"
@@ -376,6 +401,28 @@ do
         RELUP_MODIFICATION_MODULE=${arg##--relup-mod=}
       elif [[ "${arg}" =~ ^--auto-version= ]]; then
         AUTO_RELEASE_VERSION=${arg##--auto-version=}
+        IFS='+' read -ra AUTO_VERSION_ARGS <<< "$AUTO_RELEASE_VERSION"
+        for AUTO_VERSION_ARG in "${AUTO_VERSION_ARGS[@]}"; do
+          ORIGINAL_AUTO_VERSION_ARG=$AUTO_VERSION_ARG
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#append-*}
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#git-*}
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#build-*}
+          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|branch-unless-master|date)$ ]]; then
+            __help; error_message "Illegal value for --auto-version= option: '${ORIGINAL_AUTO_VERSION_ARG}'.\n"; exit 2
+          fi
+        done
+        unset AUTO_VERSION_ARGS AUTO_VERSION_ARG ORIGINAL_AUTO_VERSION_ARG
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --auto-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      elif [[ "${arg}" =~ ^--increment-version= ]]; then
+        INCREMENT_RELEASE_VERSION=${arg##--increment-version=}
+        ! [[ "$INCREMENT_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]] && __help && error_message "Value for --increment-version= option must be either patch, minor or major.\n" && exit 2
+        [[ -n "$SET_RELEASE_VERSION" ]] && __help && error_message "Option --increment-version= cannot be used together with the --set-version= option.\n" && exit 2
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --set-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      elif [[ "${arg}" =~ ^--set-version= ]]; then
+        SET_RELEASE_VERSION=${arg##--set-version=}
+        [[ -z "$SET_RELEASE_VERSION" ]] && __help && error_message "Value for --set-version= option must not be empty.\n" && exit 2
+        [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --increment-version= option.\n" && exit 2
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi
