@@ -114,22 +114,23 @@ Then use the linked binary `./edeliver` instead of the `mix edeliver` tasks from
 
 Create a `.deliver` directory in your project folder and add the `config` file:
 
-    #!/usr/bin/env bash
+```sh
+#!/usr/bin/env bash
 
-    APP="your-erlang-app" # name of your release
+APP="your-erlang-app" # name of your release
 
-    BUILD_HOST="build-system.acme.org" # host where to build the release
-    BUILD_USER="build" # local user at build host
-    BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
+BUILD_HOST="build-system.acme.org" # host where to build the release
+BUILD_USER="build" # local user at build host
+BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
 
-    STAGING_HOSTS="test1.acme.org test2.acme.org" # staging / test hosts separated by space
-    STAGING_USER="test" # local user at staging hosts
-    TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO
+STAGING_HOSTS="test1.acme.org test2.acme.org" # staging / test hosts separated by space
+STAGING_USER="test" # local user at staging hosts
+TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO
 
-    PRODUCTION_HOSTS="deploy1.acme.org deploy2.acme.org" # deploy / production hosts separated by space
-    PRODUCTION_USER="production" # local user at deploy hosts
-    DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
-
+PRODUCTION_HOSTS="deploy1.acme.org deploy2.acme.org" # deploy / production hosts separated by space
+PRODUCTION_USER="production" # local user at deploy hosts
+DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
+```
 
 It uses ssh and scp to build and deploy the releases. Is is **recommended** that you use ssh and scp with **keys + passphrase** only. You can use `ssh-add` if your don't want to enter your passphrase every time.
 
