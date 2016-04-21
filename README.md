@@ -176,6 +176,11 @@ Builds a release upgrade package that can be deployed to production hosts with r
 
 From the appup instructions of all included and updated applications, a __[relup](http://www.erlang.org/doc/man/relup.html)__ file is generated during the `build upgrade` command and included in the upgrade package. It contains the final upgrade instructions for the new release version. If there are __dependencies between applications__, it might be necessary to __modify this file__, e.g. changing the order of the applications or modules that are reloaded. Also if you don't want to reuse the appups for other releases, __it is much more convenient__ to modify this file instead of the appups which must be generated in a special step before.
 
+#### Auto-Versioning
+
+edeliver provides a way to automatically __increment__ the current __version__ for the __current build__ and/or to __append__ the __git commit count__ and/or __revision__ as [version metadata](http://semver.org/#spec-item-10). __Using a different versions for each release is essential__ especially if you build hot code __upgrades__, but also makes sense to see wich version is running, e.g. when using `mix edeliver version`. For more information check the `--auto-version=` option described e.g in `mix edeliver help upgrade` or in the [wiki](https://github.com/boldpoker/edeliver/wiki/Auto-Versioning).
+
+
 #### Build Restrictions
 
 To build **upgrades** it is required that there is **only one release** in the release directory (`rel`) of you project **configured** in your `rebar.config`. E.g. if you want to build two different releases `project-dir/rel/release_a` and `project-dir/rel/release_b` you need two `rebar.config` files that refer only to either one of that release directories in the `sub_dirs` section.
