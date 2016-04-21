@@ -161,17 +161,11 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
-#### Generate and Edit Upgrade Files (appup)
-
-    mix edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                           [--to=<git-tag-or-revision>] [--branch=<git-branch>]
-
-Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) with instructions how to load the new code when an upgrade package is built. If your application __isn't used as dependency / library__ for other applications, you might __just__ want to __edit the final relup file__ as described later. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**.
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
     mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+                              [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped** (and build is faster). For the live upgrade process, you can **provide custom application upgrade files [(appup)](http://www.erlang.org/doc/man/appup.html)** as described in the previous section, or __modify the generated final upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html))__ as described in the next section (more convenient).
 
