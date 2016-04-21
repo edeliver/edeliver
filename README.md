@@ -222,6 +222,14 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Extended Options
+
+If something goes wrong, retry with the `--verbose` option. If you want to see (really) everything what happens, try the `--debug` option.
+
+
+For detailed information about the edeliver commands and their options, try `mix edeliver help <command>`. 
+
+For advanced usage have a look also at the [wiki](https://github.com/boldpoker/edeliver/wiki).
 
 ### Recommended Project Structure
 
@@ -255,15 +263,6 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
              |   + sys.config              <- app configuration for the release build
              |   + vm.args                 <- erlang vm args for the node
              + reltool.config              <- should have the install_upgrade.escript in overlay section
-
-
-
-### Extended Options
-
-If something goes wrong, retry with the `--verbose` option.
-
-If you have large release files that may be delivered to some of the deploy hosts already or if you want to deploy an old version again, you can skip the copy process by passing the `--skip-existing` option. edeliver checks then whether the release file exist already and have equal md5 checksum.
-
 
 
 ---
