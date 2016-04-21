@@ -10,6 +10,7 @@ __help() {
   echo -e "${txtbld}Usage:${txtrst}
   edeliver <build-command|deploy-command|node-command|local-command> command-info [Options]
   edeliver --help|--version
+  edeliver help <command>
 
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
@@ -18,6 +19,7 @@ __help() {
 
   ${txtbld}Deploy Commands:${txtrst}
   edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+  edeliver upgrade [staging|production] [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
 
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version [staging|production] [Options]
@@ -45,9 +47,14 @@ __help() {
       --clean-deploy    Delete the release, lib and erts-* directories before deploying the release
       --skip-git-clean  Don't build from a clean state for faster builds. See $GIT_CLEAN_PATHS env
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
+      --skip-relup-mod  Skip modification of relup file. Custom relup instructions are not added
+      --relup-mod=<module-name> The name of the module to modify the relup
+      --auto-version=revision|commit-count|branch|date Automatically append metadata to release version.
+      --increment-version=major|minor|patch Increment the version for the current build.
+      --set-version=<release-version> Set the release version for the current build.
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
       --host=[u@]vwx.yz Run command only on that host, even if different hosts are configured
-      --mix-env=<env>   Build with custom mix env $MIX_ENV. Default is 'prod'
+      --mix-env=<env>   Build with custom mix env \$MIX_ENV. Default is 'prod'
 
 ${txtbld}Miscellaneous:${txtrst}
   Sometimes you will be asked, if you omit a required argument (e.g --from for the build upgrade task).
@@ -55,6 +62,47 @@ ${txtbld}Miscellaneous:${txtrst}
 
   BUILD_HOST=build-2.acme.com edeliver build release
   GIT_CLEAN_PATHS='_build rel priv/generated' edeliver build release
+"
+}
+
+__build_help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver build release|upgrade [Options]
+
+${bldylw}Info:${txtrst}
+  Builds either a release or and upgrade on the build host and copies it
+  to the release store. A release can be used by the edeliver
+  ${bldwht}deploy release${txtrst} command to deploy it on staging or production hosts.
+  ${txtgrn}The built release can be used after a restart${txtrst} of the node.
+  An upgrade can be used by the edeliver ${bldwht}deploy upgrade${txtrst} command
+  to deploy it onstaging or production hosts. ${txtgrn}The built upgrade
+  can be used for hot code upgrades without a restart${txtrst} of the node.
+
+  For more information try ${bldwht}edeliver help build release${txtrst}
+  or ${bldwht}edeliver help build upgrade${txtrst}.
+"
+}
+
+
+__deploy_help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver deploy release [[to] staging|production] [Options]
+
+${bldylw}Info:${txtrst}
+  Deploys either a release or an upgrade on all staging (default)
+  or production hosts. A release must have been built before by
+  the ${bldwht}build release${txtrst} command while an ${txtylw}upgrade must have been built
+  before${txtrst} by the ${bldwht}build upgrade${txtrst} command ${txtylw}from the version
+  that is running on that nodes${txtrst}.
+
+  Deploying a release requires a restart of the node
+  while deploying an upgrade updates the node by using
+  ${txtgrn}hot code upgrade${txtrst} and no restart of the nodes is required.
+
+  For more information try ${bldwht}edeliver help deploy release${txtrst}
+  or ${bldwht}edeliver help deploy upgrade${txtrst}.
 "
 }
 
@@ -71,6 +119,8 @@ __available_strategies() {
   echo ""
 }
 
+[[ "$1" == "help" ]] && PRINT_COMMAND_HELP=true && shift
+
 # parse command
 if (( $# )); then
   arg="$1" && shift
@@ -86,11 +136,16 @@ if (( $# )); then
           (appups|appup)
             COMMAND_INFO="appup"
           ;;
+          (-*)
+            [[ "$PRINT_COMMAND_HELP" = "true" ]] && __build_help && exit 2
+            __help; error_message "No build type found. Use release|upgrade\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown build type ${arg}. Use release|upgrade\n"; exit 2
           ;;
         esac
       else # no build type found
+        [[ "$PRINT_COMMAND_HELP" = "true" ]] && __build_help && exit 2
         __help; error_message "No build type found. Use release|upgrade\n"; exit 2
       fi
     ;;
@@ -102,11 +157,16 @@ if (( $# )); then
           (release|upgrade)
             COMMAND_INFO="${arg}"
           ;;
+          (-*)
+            [[ "$PRINT_COMMAND_HELP" = "true" ]] && __deploy_help && exit 2
+            __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown deploy type ${arg}. Use release|upgrade\n"; exit 2
           ;;
         esac
       else # no build type found
+        [[ "$PRINT_COMMAND_HELP" = "true" ]] && __deploy_help && exit 2
         __help; error_message "No deploy type found. Use release|upgrade\n"; exit 2
       fi
     ;;
@@ -136,6 +196,9 @@ if (( $# )); then
           (release|config)
             CHECK_CMD="${arg}"
           ;;
+          (-*)
+            __help; error_message "No check type found. Use release|config\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown check type ${arg}. Use release|config\n"; exit 2
           ;;
@@ -151,6 +214,9 @@ if (( $# )); then
         case "${arg}" in
           (release|upgrade)
             COMMAND_INFO="${arg}"
+          ;;
+          (-*)
+            __help; error_message "No release type found. Use release|upgrade\n"; exit 2
           ;;
           (*)
             __help; error_message "Unknown release type ${arg}. Use release|upgrade\n"; exit 2
@@ -197,6 +263,9 @@ if (( $# )); then
               NODE_ENVIRONMENT="staging"
             fi
           ;;
+          (-*)
+            __help; error_message "No show command found. Use releases|appups|relups\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown show command ${arg}. Use releases|appups|relups\n"; exit 2
           ;;
@@ -240,6 +309,9 @@ if (( $# )); then
           (relup|relups)
             COMMAND_INFO="relup"
           ;;
+          (-*)
+            __help; error_message "No edit command found. Use appup|relup\n"; exit 2
+          ;;
           (*)
             __help; error_message "Unknown edit command ${arg}. Use appup|relup\n"; exit 2
           ;;
@@ -261,8 +333,11 @@ if (( $# )); then
             INCREASE_VERSION_TYPE="$arg"
             COMMAND_INFO="versions"
           ;;
+          (-*)
+            __help; error_message "Increase type not found. Use versions|major|minor\n"; exit 2
+          ;;
           (*)
-            __help; error_message "Unknown increase command ${arg}. Use versions|major|minor\n"; exit 2
+            __help; error_message "Unknown increase type ${arg}. Use versions|major|minor\n"; exit 2
           ;;
         esac
       else
@@ -283,7 +358,9 @@ if (( $# )); then
     ;;
   esac
 else # no command found
-  __help; error_message "No command found.\n"; exit 2
+  __help
+  [[ "$PRINT_COMMAND_HELP" != "true" ]] && error_message "No command found.\n";
+  exit 2
 fi
 
 while (( $# ))
@@ -317,9 +394,15 @@ do
     ;;
     (--skip-mix-clean)
       SKIP_MIX_CLEAN="true"
+      [[ -n "$SET_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      [[ -n "$AUTO_RELEASE_VERSION" ]] && __help && error_message "Option --auto-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
     ;;
     (--start-deploy)
       START_DEPLOY="true"
+    ;;
+    (--skip-relup-mod|--skip-relup-modification)
+      SKIP_RELUP_MODIFICATIONS="true"
     ;;
     (--runs-as-mix-task)
       RUNS_AS_MIX_TASK="true"
@@ -358,7 +441,33 @@ do
       elif [[ "${arg}" =~ ^--host= ]]; then
         HOST=${arg##--host=}
       elif [[ "${arg}" =~ ^--mix-env= ]]; then
-        TARGET_MIX_ENV=${arg##--mix-env=}
+        TARGET_MIX_ENV=${arg##--relup-mod=}
+      elif [[ "${arg}" =~ ^--relup-mod= ]]; then
+        RELUP_MODIFICATION_MODULE=${arg##--relup-mod=}
+      elif [[ "${arg}" =~ ^--auto-version= ]]; then
+        AUTO_RELEASE_VERSION=${arg##--auto-version=}
+        IFS='+' read -ra AUTO_VERSION_ARGS <<< "$AUTO_RELEASE_VERSION"
+        for AUTO_VERSION_ARG in "${AUTO_VERSION_ARGS[@]}"; do
+          ORIGINAL_AUTO_VERSION_ARG=$AUTO_VERSION_ARG
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#append-*}
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#git-*}
+          AUTO_VERSION_ARG=${AUTO_VERSION_ARG#build-*}
+          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|branch-unless-master|date)$ ]]; then
+            __help; error_message "Illegal value for --auto-version= option: '${ORIGINAL_AUTO_VERSION_ARG}'.\n"; exit 2
+          fi
+        done
+        unset AUTO_VERSION_ARGS AUTO_VERSION_ARG ORIGINAL_AUTO_VERSION_ARG
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --auto-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      elif [[ "${arg}" =~ ^--increment-version= ]]; then
+        INCREMENT_RELEASE_VERSION=${arg##--increment-version=}
+        ! [[ "$INCREMENT_RELEASE_VERSION" =~  ^(patch|minor|major)$ ]] && __help && error_message "Value for --increment-version= option must be either patch, minor or major.\n" && exit 2
+        [[ -n "$SET_RELEASE_VERSION" ]] && __help && error_message "Option --increment-version= cannot be used together with the --set-version= option.\n" && exit 2
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --set-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+      elif [[ "${arg}" =~ ^--set-version= ]]; then
+        SET_RELEASE_VERSION=${arg##--set-version=}
+        [[ -z "$SET_RELEASE_VERSION" ]] && __help && error_message "Value for --set-version= option must not be empty.\n" && exit 2
+        [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --increment-version= option.\n" && exit 2
+        [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi
@@ -387,7 +496,7 @@ esac
 case "${COMMAND}" in
   (build)
     STRATEGY="erlang-${COMMAND}-${COMMAND_INFO}"
-    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
+    if [[ ! ${COMMAND_INFO} = "release" ]] && [[ "$PRINT_COMMAND_HELP" != "true" ]] && [[ -z "$FROM" ]] && [[ -z "$WITH" ]]; then
       __help; error_message "build command requires --from= or --with argument.\n"; exit 2
     fi
   ;;
@@ -414,6 +523,8 @@ case "${COMMAND}" in
       if ! [[ -f "$ORIGIN_DIR/.deliver/strategies/${STRATEGY}" ]]; then
         if [[ "${COMMAND}" = "publish" ]] && [[ -f "${BASE_PATH}/strategies/publish-edeliver" ]]; then
           STRATEGY="publish-edeliver"
+        elif [[ "$PRINT_COMMAND_HELP" = "true" ]]; then
+          __help; exit 0
         else
           __help; error_message "Unknown command ${COMMAND}.\n"; exit 2
         fi

@@ -14,29 +14,48 @@ Examples:
 
 **Build** an erlang/elixir release **and deploy** it on your **production hosts**:
 
-    mix edeliver build release --branch=feature
-    mix edeliver deploy release to production
-    mix edeliver start production
-
+```sh
+mix edeliver build release --branch=feature
+mix edeliver deploy release to production
+mix edeliver start production
+```
 
 Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
-    # build upgrade from tag v1.0 to v2.0
+```sh
+# build upgrade from tag v1.0 to v2.0
 
-    mix edeliver build upgrade --from=v1.0 --to=v2.0
-    mix edeliver deploy upgrade to production
+mix edeliver build upgrade --from=v1.0 --to=v2.0
+mix edeliver deploy upgrade to production
 
-    # or if you have the old release in your release store,
-    # you can build the upgrade with that old release instead of the old git revision/tag
+# or if you have the old release in your release store,
+# you can build the upgrade with that old release instead of the old git revision/tag
 
-    mix edeliver build upgrade --with=v1.0 --to=v2.0
-    mix edeliver deploy upgrade to production
+mix edeliver build upgrade --with=v1.0 --to=v2.0
+mix edeliver deploy upgrade to production
 
-    # run ecto migrations manually:
-    mix edeliver migrate production
-    # or automatically during upgrade when upgrade is built with --run-migrations
+# run ecto migrations manually:
+mix edeliver migrate production
+# or automatically during upgrade when upgrade is built with --run-migrations
+```
 
-The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edit relup` command.
+The deployed upgrade will be **available immediately, without restarting** your application. If the generated [upgrade instructions (relup)](http://www.erlang.org/doc/man/relup.html) for the hot code upgrade are not sufficient, you can modify these files before installing the upgrade by using the `edeliver edit relup` command.
+
+To execute that steps by a single command and upgrade e.g. all production nodes **automatically**  from their running version to the current version using **hot code upgrade** without restarting, you can use the `upgrade` command:
+
+```
+mix edeliver upgrade production
+```
+
+This performs the following steps automatically:
+
+* Detect current version on all running nodes
+* Validate that all nodes run the same version
+* Build new upgrade from that version to the current version
+* Auto-patch the relup file
+* Deploy (hot code) upgrade while nodes are running
+* Validate that all nodes run the upgraded version
+* Deploy the release to not running nodes
 
 
 ### Installation
@@ -116,7 +135,7 @@ It uses ssh and scp to build and deploy the releases. Is is **recommended** that
 
 Maybe it is required to __configure git on your build host__ (git user name / email) or to clone the repository initially at the `BUILD_AT` path. And of course you need to __install [erlang](http://www.erlang.org/) and [elixir](http://elixir-lang.org/)__ on the `BUILD_HOST`. If you use mix to build the releases, you should __install [hex](https://hex.pm)__ on the build hosts before the first build (otherwise mix asks interactively to install it). Run the build command with __`--verbose`__ if it fails the first time.
 
-To use __different configurations on different hosts__ for your erlang/elixir release, you can configure edeliver to link the `vm.args` and / or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) to build the releases.
+To use __different configurations on different hosts__ for your erlang/elixir release, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and / or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) to build the releases.
 
 There are **four kinds of commands**: **build commands** which compile the sources and build the erlang release **on the remote build system**, **deploy commands** which deliver the built releases to the **remote production systems**, **node commands** that **control** the nodes (e.g. starting/stopping) and **local commands**.
 
@@ -142,17 +161,11 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
-#### Generate and Edit Upgrade Files (appup)
-
-    mix edeliver build appups --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                           [--to=<git-tag-or-revision>] [--branch=<git-branch>]
-
-Builds [release upgrade files (appup)](http://www.erlang.org/doc/man/appup.html) with instructions how to load the new code when an upgrade package is built. If your application __isn't used as dependency / library__ for other applications, you might __just__ want to __edit the final relup file__ as described later. The appup files are generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` parameter is passed at the command line which referes the the old git revision or tag to build the appup files from. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped**. The **generated appup files will be copied** to the `appup/OldVersion-NewVersion/*.appup` directory in your release store. You can **modify the generated** appup **files of your applications**, and delete all upgrade files of dependend apps or also of your apps, if the generated default upgrade script is sufficient. These files will be **incuded when the upgrade is built** with the `build upgrade` command and **overwrite the generated default appup files**.
 
 #### Build an Upgrade Package for Live Updates of Running Nodes
 
     mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                            [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+                              [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
 Builds a release upgrade package that can be deployed to production hosts with running nodes. The upgrade is generated between two git revisions or tags or from an old revision / tag to the current master branch. Requires that the `--from=` argument passed at the command line which referes the the old git revision or tag to build the upgrade from and an optional `--to=` argument, if the upgrade should not be created to the latest version. If an **old release exists** already **in the release store**, it can be used by passing the old release number to the `--with=` argument. In that case the **building the old release** from the previous git revision **can be skipped** (and build is faster). For the live upgrade process, you can **provide custom application upgrade files [(appup)](http://www.erlang.org/doc/man/appup.html)** as described in the previous section, or __modify the generated final upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html))__ as described in the next section (more convenient).
 
@@ -162,6 +175,11 @@ Builds a release upgrade package that can be deployed to production hosts with r
     mix edeliver edit relup [--version=<upgrade-version>]
 
 From the appup instructions of all included and updated applications, a __[relup](http://www.erlang.org/doc/man/relup.html)__ file is generated during the `build upgrade` command and included in the upgrade package. It contains the final upgrade instructions for the new release version. If there are __dependencies between applications__, it might be necessary to __modify this file__, e.g. changing the order of the applications or modules that are reloaded. Also if you don't want to reuse the appups for other releases, __it is much more convenient__ to modify this file instead of the appups which must be generated in a special step before.
+
+#### Auto-Versioning
+
+edeliver provides a way to automatically __increment__ the current __version__ for the __current build__ and/or to __append__ the __git commit count__ and/or __revision__ as [version metadata](http://semver.org/#spec-item-10). __Using a different versions for each release is essential__ especially if you build hot code __upgrades__, but also makes sense to see wich version is running, e.g. when using `mix edeliver version`. For more information check the `--auto-version=` option described e.g in `mix edeliver help upgrade` or in the [wiki](https://github.com/boldpoker/edeliver/wiki/Auto-Versioning).
+
 
 #### Build Restrictions
 
@@ -209,6 +227,31 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Maintenance
+
+edeliver has a set of commands to maintain erlang/elixir nodes on staging or production hosts:
+
+```sh
+
+	mix edeliver ping production # shows which nodes are up and running
+	mix edeliver version production # shows the release version running on the nodes 
+	mix edeliver show migrations on production # shows pending database migrations
+	mix edeliver migrate production # run database migrations
+	mix edeliver restart production # or start or stop
+	...
+	
+```
+
+
+
+### Extended Options
+
+If something goes wrong, retry with the `--verbose` option. If you want to see (really) everything what happens, try the `--debug` option.
+
+
+For detailed information about the edeliver commands and their options, try `mix edeliver help <command>`. 
+
+For advanced usage have a look also at the [wiki](https://github.com/boldpoker/edeliver/wiki).
 
 ### Recommended Project Structure
 
@@ -242,15 +285,6 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
              |   + sys.config              <- app configuration for the release build
              |   + vm.args                 <- erlang vm args for the node
              + reltool.config              <- should have the install_upgrade.escript in overlay section
-
-
-
-### Extended Options
-
-If something goes wrong, retry with the `--verbose` option.
-
-If you have large release files that may be delivered to some of the deploy hosts already or if you want to deploy an old version again, you can skip the copy process by passing the `--skip-existing` option. edeliver checks then whether the release file exist already and have equal md5 checksum.
-
 
 
 ---

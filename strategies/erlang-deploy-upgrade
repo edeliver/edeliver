@@ -3,6 +3,28 @@
 require_deploy_config
 set_deploy_hosts
 
+help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver deploy upgrade [[to] staging|production] [Options]
+
+${txtbld}Options:${txtrst}
+  --version=<release-version> The version to upgrade the running nodes to. The version
+             of the upgrade must have been built before from the version that is running
+             on all nodes and ${txtylw}must exist in the release store${txtrst}. If this option
+             is omitted, you will be asked to select the version.
+  --host=[u@]vwx.yz Deploy the upgrade only to that host, even if different hosts
+             are configured.
+
+${bldylw}Info:${txtrst}
+  Deploys an upgrade on all staging (default) or production hosts ${txtgrn}using hot code upgrade${txtrst}.
+  The ${txtylw}upgrade must have been built before${txtrst} by the ${bldwht}build upgrade${txtrst} command
+  ${txtylw}from the version that is running on the nodes${txtrst} it will be deployed to.
+  ${txtgrn}No restart of the nodes${txtrst} is required.
+  "
+}
+
+
 run() {
   authorize_hosts
   authorize_release_store_host

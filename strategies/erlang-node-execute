@@ -7,11 +7,66 @@ REQUIRED_CONFIGS+=("NODE_ENVIRONMENT")
 
 require_node_config
 
+help() {
+  case "$NODE_ACTION" in
+    (start|stop|restart|ping|version)
+      echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver $NODE_ACTION [staging|production] [Options]
+
+${txtbld}Options:${txtrst}
+  --host=[u@]vwx.yz Run command only on that host,
+                    even if different hosts are configured"
+    case "$NODE_ACTION" in
+        (start)    echo -e "\n${bldylw}Info:${txtrst} Starts the node(s) on the deploy hosts.\n" ;;
+        (stop)     echo -e "\n${bldylw}Info:${txtrst} Stops the node(s) on the deploy hosts.\n" ;;
+        (restart)  echo -e "\n${bldylw}Info:${txtrst} Restarts the application on the deploy host(s) (not the emulator).\n" ;;
+        (ping)     echo -e "\n${bldylw}Info:${txtrst} Checks whether the node(s) on the deploy host(s)\n      are running.\n" ;;
+        (version)  echo -e "\n${bldylw}Info:${txtrst} Displays the running version(s) on the deploy host(s).\n" ;;
+    esac
+    ;;
+    (migrate)
+      echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver migrate [staging|production] [up|down] [--version=<migration-version>]
+
+${txtbld}Options:${txtrst}
+  --host=[u@]vwx.yz Run migrations only on that host,
+                    even if different hosts are configured
+  --version=<migration-version> The version to migrate to.
+
+${bldylw}Info:${txtrst}
+  Migrates the database schema on the deploy host(s) either
+  ${bldwht}up${txtrst} or ${bldwht}down${txtrst}. Make sure the release / upgrade containing
+  the migrations is installed before.
+    "
+    ;;
+    (migrations)
+      echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver [show] migrations [on] [staging|production]
+
+${txtbld}Options:${txtrst}
+  --host=[u@]vwx.yz Show migrations only from that host,
+                    even if different hosts are configured
+
+${bldylw}Info:${txtrst} Shows the pending migration on the deploy host(s).
+    "
+    ;;
+    (*)
+      [[ -n "$COMMAND_INFO" ]] && local _command="$COMMAND $COMMAND_INFO" || local _command="$COMMAND"
+      error "\nNo custom help provided for command '$_command'. Try --help option.\n"
+    ;;
+  esac
+}
+
 run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -n+2 | tr -d \\\""
+  elif [[ "$NODE_ACTION" = ping ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
+    NODE_ACTION="ping | tail -n+2"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\"]].' | tail -n+2"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
@@ -88,8 +143,43 @@ __execute_node_command_synchronously() {
   local _node=${NODES# *}
   __print_node_command_result "single_node" "0" "$_node" ""
   echo -n "  response: "
-  __execute_node_command "single_node" "$_node" "$_node_command"
+  local _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
+  __format_response "$_response"
 }
+
+# formats the response when node command is executed
+# synchronously. If version is displayed and --verbose option passed
+# the last git revisions are displayed in addition if the version
+# contains the git revsion.
+__format_response() {
+  local _response="$@"
+  if [[ "$COMMAND" = "version" ]] && [[ "$_response" =~ "+" ]]; then
+    local _is_first_line="true" _line _revision="$(grep -oe '[0-9a-fA-F]\{7\}' <<< "$_response")"
+    if [[ -n "$_revision" ]]; then
+      echo -e "${txtylw}$_response${txtrst}"
+      local _branch="$(git branch -a --contains "$_revision" | head -n 1 | cut -b3-)"
+      [[ -n "$_branch" ]] && echo -e "  branch  : ${_branch}"
+      echo "  revision: $_revision"
+      local _commit_date="$(git show -s --format=%ci "$_revision" 2>/dev/null)"
+      [[ -n "$_commit_date" ]] && echo -e "  date    : $_commit_date (git commit)"
+      local _last_commits=${VERSION_INFO_LAST_COMMITS:-5}
+      (IFS='
+'
+      for _line in $(git log "$_revision" -"$_last_commits" --pretty=oneline 2>/dev/null | cut -d" " -f2-); do
+        _line="$(xargs <<< "$_line")"
+        [[ "$_is_first_line" = "true" ]] && echo -n "  commits : " || echo -n "            "
+        echo -e "$_line"
+        _is_first_line="false"
+      done
+      [[ "$_is_first_line" = "false" ]] && [[ "$_last_commits" != "1" ]] && echo "            ..."
+      )
+      return 0
+    fi
+  fi
+  echo "${bldylw}$_response${txtrst}"
+
+}
+
 
 # executes a node command on a given node.
 __execute_node_command() {
@@ -157,7 +247,8 @@ __print_node_command_result() {
   if [[ "$_node_index" = "single_node" ]]; then
     echo -en "${_message}" && return 0
   elif [[ "$_status_code" = "0" ]] && [[ -n "$_node_index" ]]; then
-    _message="${_message}  response: ${bldylw}${_node_action_response}${txtrst}\n"
+    _node_action_response="$(__format_response "$_node_action_response")"
+    _message="${_message}  response: ${_node_action_response}\n"
   elif [[ -n "$_node_index" ]]; then
     _message="${_message}  response: ${bldred}failed${txtrst}\n";
     [[ -n "$_node_action_response" ]] && {

@@ -32,23 +32,31 @@ if [ -f "$ORIGIN_DIR/.deliver/help" ]; then
 fi
 source "$BASE_PATH/libexec/erlang-init"
 
-__capture_runtime_configs
-__find_all_strategies
+
+if [[ "$PRINT_COMMAND_HELP" = "true" ]]; then
+  __find_all_strategies
+  __load_strategy
+  help
+else
+  __capture_runtime_configs
+  __find_all_strategies
+
+  __load_app_config
+  __default_app_config
+  __apply_runtime_configs
+  __load_strategy
+  __remote_hosts
+
+  __check_config
+  [[ "$RUNS_AS_MIX_TASK" = "true" ]] && __monitor_parent_pid &
 
 
-__load_app_config
-__default_app_config
-__apply_runtime_configs
-__load_strategy
-__remote_hosts
-__check_config
-[[ "$RUNS_AS_MIX_TASK" = "true" ]] && __monitor_parent_pid &
+  # Run the loaded strategy
+  # Can be overwritten by each strategy, e.g. custom output
+  #
+  begin
+  run
+  finish
 
-# Run the loaded strategy
-# Can be overwritten by each strategy, e.g. custom output
-#
-begin
-run
-finish
-
-exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status
+  exit 0 # if we reached this point, everything went according to plan, use the appropriate exit status
+fi

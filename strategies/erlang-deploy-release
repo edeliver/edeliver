@@ -7,6 +7,31 @@ OPTIONAL_CONFIGS+=("START_DEPLOY")
 require_deploy_config
 set_deploy_hosts
 
+help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver deploy release [[to] staging|production] [Options]
+
+${txtbld}Options:${txtrst}
+  --version=<release-version> The version to deploy. The version must have been built
+             before and ${txtylw}must exist in the release store${txtrst}. If this option
+             is omitted, you will be asked to select the version.
+  --clean-deploy Deletes the ${bldwht}release${txtrst}, ${bldwht}lib${txtrst} and ${bldwht}erts-*${txtrst} directories before deploying the release.
+             The application folder will contain only the deployed release. ${txtgrn}Default behaviour is
+             to keep older releases${txtrst} which can be started on request.
+  --start-deploy Starts the deployed release. ${txtylw}If release is running, it will be restarted!${txtrst}
+  --host=[u@]vwx.yz Deploy the release only to that host, even if different hosts are configured.
+
+${bldylw}Info:${txtrst}
+  Deploys a release on all staging (default) or production hosts.
+  The release must have been built before by the ${bldwht}build release${txtrst} command
+  (or by the ${bldwht}build upgrade${txtrst} command if exrm is used as release tool)
+  ${txtgrn}The built release can be used after a (re)start${txtrst} of the node
+  or if the ${bldwht}--start-deploy${txtrst} option is used.
+  "
+}
+
+
 run() {
   authorize_hosts
   authorize_release_store_host

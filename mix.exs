@@ -26,6 +26,7 @@ defmodule Edeliver.Mixfile do
 
   defp deps, do: [
     {:exrm, ">= 0.16.0"},
+    {:meck, "~> 0.8.4", only: :test},
   ]
 
 end

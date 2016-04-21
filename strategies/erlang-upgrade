@@ -1,0 +1,308 @@
+#!/usr/bin/env bash
+
+REQUIRED_CONFIGS+=("APP")
+REQUIRED_CONFIGS+=("BUILD_HOST")
+REQUIRED_CONFIGS+=("BUILD_USER")
+REQUIRED_CONFIGS+=("BUILD_AT")
+OPTIONAL_CONFIGS+=("TO")
+OPTIONAL_CONFIGS+=("REBAR_CONFIG")
+
+TO="${TO:=$(get_latest_commit)}"
+
+help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver upgrade [Options]
+
+${txtbld}Options:${txtrst}
+  --to=<git-tag> The revision to build the upgrade for. Default is the HEAD
+             of the master branch or the branch passed as ${bldwht}--branch=${txtrst} argument.
+  --branch=<git-branch> The branch to build. ${txtylw}Default is the master branch${txtrst}.
+             ${txtgrn}The branch doesn't need to be pushed to remote${txtrst} before building.
+             The revision passed as ${bldwht}--from=${txtrst} or ${bldwht}--to=${txtrst} argument must be in
+             that branch.
+  --mix-env=<env> Build the upgrade with a custom mix environment.
+             Default is ${bldwht}prod${txtrst}.
+  --start-deploy ${txtgrn}Start the new version${txtrst} of the release ${txtgrn}that was deployed
+             to${txtrst} hosts with ${txtgrn}offline nodes${txtrst}
+  --skip-relup-mod Skip modification of the grenerated relup instructions.
+             No custom relup instructions are added.
+  --relup-mod=<module-name> The name of the module to modify the relup
+             if there are several modules. The module must implement
+             the Behaviour Edeliver.Relup.Modification.
+  --auto-version=[git-]revision|[git-]commit-count[-all[-branches]|-branch]
+             |[git-]branch[-unless-master]|[build-]date ${txtgrn}Appends${txtrst} the git sha1
+             revision, the current commit count either across all branches
+             (default) or for the current branch, the current branch name
+             (optionally only unless it is the master branch) and/or the
+             build date as ${txtgrn}metadata to the current upgrade version${txtrst}. To append
+             that metadata ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst}
+             env in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
+             e.g. ${bldwht}git-revison+git-branch${txtrst} creates version 1.2.3-82a5834-master.
+  --increment-version=major|minor|patch  Increments the major, minor or patch
+             version ${txtylw}for the current build${txtrst}.
+  --set-version=<release-version> Sets the release version for ${txtylw}the current build${txtrst}.
+
+${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
+  --skip-git-clean Don't build from a clean state for faster builds. Can be
+             adjusted by the ${bldwht}GIT_CLEAN_PATHS${txtrst} environment variable. Should be
+             at least ${bldwht}rel${txtrst} for elixir releases.
+  --skip-mix-clean Skip the 'mix clean step' for faster builds. Can be used
+             in addition to ${bldwht}--skip-git-clean${txtrst} Option for incremental builds.
+
+${bldylw}Info:${txtrst}
+  ${txtgrn}Builds an upgrade${txtrst} on the build host based on the current version
+  running on the staging (default) or production hosts and
+  ${txtylw}deploys the upgrade${txtrst} to all nodes using ${txtgrn}hot code upgrade${txtrst}.
+  It performs these single steps:
+
+    * detect current version on all running nodes
+    * validate all nodes run the same version
+    * build new upgrade to that version (or use existing)
+    * patch relup file if necessary (see ${bldwht}build upgrade${txtrst}) command
+    * deploy (hot code) upgrade while nodes are running
+    * validate that all nodes run the upgraded version
+    * deploy the release to not running nodes
+  "
+}
+
+
+set_deploy_hosts
+
+
+run() {
+  [[ "$MODE" = "verbose" ]] && local _verbose="--verbose"
+  [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production" || export DEPLOY_ENVIRONMENT="staging"
+  # detect revision to install on build host
+  local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH")
+  [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
+  status "Upgrading to revision $_revision_to_install from branch $_branch_to_install"
+  local _hosts="${HOSTS_APP_USER}" _host
+  status "Detecting release versions on $DEPLOY_ENVIRONMENT hosts"
+  local _running_release_version
+  local _offline_deploy_hosts=() _online_upgrade_hosts=() _online_upgrade_hosts_with_user=()
+  # detect which deploy hosts are up and the version running on that hosts <-------------------------------------------
+  for _host in $_hosts
+  do
+    __verbose -n "Checking version on host $_host"
+    local _installed_release_version
+    _installed_release_version=$(__get_installed_version_on_host $_host)
+    if [[ "$?" -ne 0 ]]; then
+      __is_node_offline $_host \
+        && __verbose -e "\rNode on deploy host $_host is down." && _offline_deploy_hosts+=("${_host##*@}") \
+        || error "\nDetection of version failed on $_host"
+    else # version detection succeeded
+      __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
+      _online_upgrade_hosts+=("${_host##*@}")
+      _online_upgrade_hosts_with_user+=("$_host")
+      if [[ -z "$_running_release_version" ]]; then
+        _running_release_version="$_installed_release_version"
+      elif [[ "$_running_release_version" != "$_installed_release_version" ]]; then
+        error_message "Different version $_installed_release_version is running on host $_host."
+        error_message "Expecting all nodes to run version $_running_release_version."
+        error_message "Please upgrade nodes running older versions first or upgrade"
+        error         "only selected nodes by using the --host=[u@]vwx.yz option"
+      fi
+    fi
+  done
+  [[ "${#_online_upgrade_hosts[@]}" -gt 0 && "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online and ${#_offline_deploy_hosts[@]} releases to offline hosts"
+  [[ "${#_online_upgrade_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online hosts"
+  [[ "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying ${#_offline_deploy_hosts[@]} releases to offline hosts"
+  # build upgrade  <---------------------------------------------------------------------------------------------------
+  local _built_upgrade=false _upgrade_version_to_install
+  if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts[@]}" -gt 0 ]]; then
+    # check whehter installed version is the latest version
+    local _revision_from_version=$(__revision_from_version "$_running_release_version")
+    local _version_without_revision=$(__version_without_revision "$_running_release_version")
+    if [[ -n "$_revision_from_version" && "$_revision_from_version" = "$_revision_to_install"  ]]; then
+      error "Revision $_revision_to_install from branch $_branch_to_install is already deployed as version $_running_release_version."
+    elif [[ "$AUTO_RELEASE_VERSION" = "git" && -n "$_version_without_revision" ]]; then
+      # check whether release with revision to install already exists in release store
+      _upgrade_version_to_install="${_version_without_revision}-${_revision_to_install}"
+      status "Checking whether version $_upgrade_version_to_install to install is in release store"
+      __is_upgrade_version_in_release_store "$_upgrade_version_to_install" \
+        && _built_upgrade=true \
+        && __verbose "${txtgrn}Using upgrade version $_upgrade_version_to_install from release store${txtrst}" \
+        || __verbose "Version $_upgrade_version_to_install not found in release store"
+    fi
+    # if version does not contain revision we can detect the new version only by building the upgrade
+    # this is checked automatically in the erlang-build-upgrade strategy later
+    if [[ "$_built_upgrade" != true ]]; then
+      status "Checking whether installed version $_installed_release_version is in release store"
+      __is_original_version_in_release_store "$_installed_release_version" \
+        && WITH="$_installed_release_version" \
+        && __verbose "${txtgrn}Using version $_installed_release_version from release store for building the upgrade${txtrst}" \
+        || __verbose "Version $_installed_release_version not found in release store"
+      [[ -z "$WITH" ]] && FROM="$_version_without_revision"
+      # actual build process <-----------------------------------------------------------------------------------------
+      status "Building the upgrade from version $_installed_release_version"
+      set_build_hosts
+      update_hosts_app_user
+      # use build upgrade strategy to build the upgrade
+      source $(dirname ${BASH_SOURCE[0]})/erlang-build-upgrade
+      run
+      set_deploy_hosts
+      update_hosts_app_user
+      _upgrade_version_to_install="$RELEASE_VERSION"
+    fi # building upgrade finished
+    # deploy upgrade to online hosts running the same version <--------------------------------------------------------
+    status "Upgrading $DEPLOY_ENVIRONMENT hosts to version $_upgrade_version_to_install"
+    HOSTS="${_online_upgrade_hosts[@]}"
+    update_hosts_app_user
+    VERSION="$_upgrade_version_to_install"
+    source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-upgrade
+    run
+  fi
+
+  # deploy clean release to offline hosts and start it <---------------------------------------------------------------
+  if [[  "${#_offline_deploy_hosts[@]}" -gt 0 ]]; then
+    local _release_version_to_install="$_upgrade_version_to_install"
+    if [[ "$_built_upgrade" != "true" ]]; then
+      # no upgrade was build because no nodes are running
+      # so we need to build a release
+      status "Building the release"
+      set_build_hosts
+      update_hosts_app_user
+      # use build upgrade strategy to build the upgrade
+      source $(dirname ${BASH_SOURCE[0]})/erlang-build-release
+      run
+      set_deploy_hosts
+      update_hosts_app_user
+      _release_version_to_install="$RELEASE_VERSION"
+    fi
+    status "Deploying version $_release_version_to_install to $DEPLOY_ENVIRONMENT hosts"
+    HOSTS="${_offline_deploy_hosts[@]}"
+    update_hosts_app_user
+    VERSION="$_release_version_to_install"
+    source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-release
+    run
+  fi
+
+  # validate that online hosts run the new version and are still alive <-----------------------------------------------
+  set_deploy_hosts
+  local _validate_upgrade_error_message
+  for _host in $_online_upgrade_hosts_with_user
+  do
+    __verbose -n "Checking upgraded version on host $_host"
+    _installed_release_version=$(__get_installed_version_on_host $_host)
+    if [[ "$?" -ne 0 ]]; then
+      __is_node_offline $_host \
+        && __verbose -e "\rNode on deploy host $_host is down." && _validate_upgrade_error_message="${_validate_upgrade_error_message}\nNode on $_host is down after upgrade." \
+        || _validate_upgrade_error_message="${_validate_upgrade_error_message}\nDetection of upgraded version failed on $_host."
+    else # version detection succeeded
+      __verbose -e "\rVersion $_installed_release_version is installed on host $_host"
+      if [[ "$_installed_release_version" != "$_upgrade_version_to_install" ]]; then
+        _validate_upgrade_error_message="${_validate_upgrade_error_message}\nNode on $_host was not upgraded. Still running version $_installed_release_version."
+      fi
+    fi
+  done
+  [[ -n "$_validate_upgrade_error_message" ]] && error "$_validate_upgrade_error_message\n" || :
+}
+
+
+# executes a command given as second argument on the
+# deploy host given as first argument by first sourcing
+# the ~/.profile and changing into the application directory
+__execute_on_deploy_host() {
+  local _host="$1"
+  local _command="$2"
+
+  ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
+    set -e
+    [ -f ~/.profile ] && source ~/.profile
+    cd $DELIVER_TO/$APP $SILENCE
+    $_command"
+}
+
+
+# checks whether the node on the deploy host passed as first
+# argument responds to pings or not. returns 0 if node is online
+# and returns 1 if node is offline.
+__is_node_offline() {
+  local _deploy_host="$1"
+  [[ "pong" != "$(__execute_on_deploy_host "$_deploy_host" "bin/$APP ping" | tail -1)" ]]
+}
+
+# prints the currently running release version
+# on the deploy host passed as first argument.
+__get_installed_version_on_host() {
+ local _deploy_host="$1"
+ __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
+}
+
+# prints an erlang script which detects the current
+# release from the list of installed releases returned
+# by the release_handler.which_releases function.
+__current_release_erl_script() {
+  cat <<END_OF_SCRIPT
+  {ok,Tokens,_} = erl_scan:string(io:get_line("") ++ "."),
+  {ok,Releases} = erl_parse:parse_term(Tokens),
+  SortedReleases = lists:sort(fun({_NameA, _VersionA, _LibNameA, StatusA}, {_NameB, _VersionB, _LibNameB, StatusB}) ->
+    if
+     StatusA == StatusB -> true;
+     StatusA == current -> true;
+     StatusA == permanent -> StatusB /= current;
+     true -> false
+    end
+  end, Releases),
+  case [{Version, Status} || {_Name, Version, _LibName, Status} <- SortedReleases, Status == current orelse Status == permanent] of
+   [{CurrentVersion, current} | _] -> io:format("~s", [CurrentVersion]);
+   [{PermanentVersion, permanent}] -> io:format("~s", [PermanentVersion]);
+   _ -> halt(1)
+  end.
+END_OF_SCRIPT
+}
+
+# prints the revision from the release version
+# if it contains the revision like that: "1.2.3-abcdef0".
+# if the version does not contain the revision an
+# empty string is printed
+__revision_from_version() {
+  local _version="$1"
+  local _revision=${_version##*-}
+  [[ "$_revision" =~ ^[a-fA-F0-9]+$ ]] && echo "$_revision" || echo ""
+}
+
+# prints the version without the revision part if there is any
+__version_without_revision() {
+  local _version="$1"
+  echo "${_version%%-*}"
+}
+
+# checks whether the version passed as first argument
+# is in the release store and is an upgrade. this release
+# can be deployed later as upgrade
+__is_upgrade_version_in_release_store() {
+  __is_version_is_release_store "$1" "upgrade"
+}
+
+# checks whether the version passed as first argument
+# is in the release store and is an upgrade or an release
+# this release or upgrade can be used to build an upgrade
+# the the current versoin
+__is_original_version_in_release_store() {
+  __is_version_is_release_store "$1" "*"
+}
+
+# checks whether the release with the version passed as first
+# arguement and the type of the second arguement exists in the
+# release store. returns 0 if it exists and 1 if it doesn't.
+# the release type passed as second argument can be either
+# "release", "upgrade" or "*" for both types.
+__is_version_is_release_store() {
+  local _release_version="$1"
+  local _release_type="$2"
+  local _release_files=$(__get_releases_in_store "$_release_type") _release_file
+  for _release_file in $_release_files; do
+    if [[ "$_release_file" = ${APP}_${_release_version}.${_release_type}.tar.gz ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+
+# prints verbose output if verbose mode is enabled
+__verbose() {
+  [[ "$MODE" = "verbose" ]] && echo $@ || :
+}

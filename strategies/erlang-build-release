@@ -8,6 +8,48 @@ OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 
 set_build_hosts
 
+help() {
+  echo -e "
+${bldwht}Usage:${txtrst}
+  edeliver build release [Options]
+
+${txtbld}Options:${txtrst}
+  --branch=<git-branch> The branch to build. ${txtylw}Default is the master branch${txtrst}.
+             ${txtgrn}The branch doesn't need to be pushed to remote${txtrst} before building.
+             The revision passed as ${bldwht}--revision=${txtrst} argument must be in that branch.
+  --tag=<git-tag> The tag to build.
+  --revision=<git-revision> The revision to build. ${txtylw}Must be in the branch${txtrst}
+             passed as ${bldwht}--branch=${txtrst} argument or in the master (default).
+  --mix-env=<env> Build the release with a custom mix environment.
+             Default is ${bldwht}prod${txtrst}.
+  --auto-version=[git-]revision|[git-]commit-count[-all[-branches]|-branch]
+             |[git-]branch[-unless-master]|[build-]date ${txtgrn}Appends${txtrst} the git sha1
+             revision, the current commit count either across all branches
+             (default) or for the current branch, the current branch name
+             (optionally only unless it is the master branch) and/or the
+             build date as ${txtgrn}metadata to the current upgrade version${txtrst}. To append
+             that metadata ${txtgrn}automatically for each build${txtrst} set the ${bldwht}AUTO_VERSION${txtrst}
+             env in the config. Values can also be combined using the ${bldwht}+${txtrst} char,
+             e.g. ${bldwht}git-revison+git-branch${txtrst} creates version 1.2.3-82a5834-master.
+  --increment-version=major|minor|patch  Increments the major, minor or patch
+             version ${txtylw}for the current build${txtrst}.
+  --set-version=<release-version> Sets the release version for ${txtylw}the current build${txtrst}.
+
+${txtbld}Faster Builds:${txtrst} ${txtblu}(Faster builds might fail during build or during runtime)${txtrst}
+  --skip-git-clean Don't build from a clean state for faster builds. Can be
+             adjusted by the ${bldwht}GIT_CLEAN_PATHS${txtrst} environment variable. Should be
+             at least ${bldwht}rel${txtrst} for elixir releases.
+  --skip-mix-clean Skip the 'mix clean step' for faster builds. Can be used
+             in addition to ${bldwht}--skip-git-clean${txtrst} Option for incremental builds.
+
+${bldylw}Info:${txtrst}
+  Builds a release on the build host and copies it to the release store.
+  It can be used by the edeliver ${bldwht}deploy release${txtrst} command to deploy it on
+  staging or production hosts.
+  ${txtgrn}The built release can be used after a restart${txtrst} of the node.
+  "
+}
+
 run() {
   authorize_hosts
   init_app_remotely
