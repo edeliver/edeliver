@@ -323,12 +323,32 @@ defmodule Mix.Tasks.Release.Version do
     System.cmd( "git", ["rev-list", "--count", "HEAD"]) |> elem(0) |> String.rstrip
   end
 
-  @doc "Gets the current branch that will be built"
+  @doc """
+    Gets the current branch that will be built. Since the git repository on the build
+    host is usually in a detatched state because a specific revision is checked out
+    when building (see `git_reset_remote()` in `libexec/common`), this won't work:
+
+    `git rev-parse --abbrev-ref HEAD`
+
+    Instead
+
+    `git branch --contains <revision>` is used.
+  """
   @spec get_branch() :: String.t
   def get_branch() do
-    System.cmd( "git", ["rev-parse", "--abbrev-ref", "HEAD"]) |> elem(0) |> String.rstrip |> valid_semver_metadata()
+    System.cmd( "git", ["branch", "--contains", get_revision]) |> elem(0)
+    |> String.split("\n", trim: true)
+    |> Enum.filter(&(!String.contains?(&1, "detached") && !String.contains?(&1, "head") && !String.contains?(&1, "HEAD")))
+    |> Enum.map(&(String.strip(&1))) |> List.first() |> valid_semver_metadata()
   end
 
+  @privdoc "Returns the current revision which is checked out and will be built."
+  @spec get_revision() :: String.t
+  defp get_revision() do
+    System.cmd( "git", ["rev-parse", "HEAD"]) |> elem(0) |> String.rstrip
+  end
+
+  def valid_semver_metadata(nil), do: ""
   def valid_semver_metadata(string) do
     IO.chardata_to_string(for <<c <- string>>, (c >= ?a and c <= ?z) or (c >= ?A and c <= ?Z) or (c >= ?0 and c <= ?9) or c == ?-, do: c)
   end
