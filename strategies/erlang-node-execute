@@ -159,14 +159,13 @@ __format_response() {
       echo -e "${txtylw}$_response${txtrst}"
       local _branch="$(git branch -a --contains "$_revision" 2>/dev/null | head -n 1 | cut -b3-)"
       [[ -n "$_branch" ]] && echo -e "  branch  : ${_branch}"
-      echo "  revision: $_revision"
       local _commit_date="$(git show -s --format=%ci "$_revision" 2>/dev/null)"
       [[ -n "$_commit_date" ]] && echo -e "  date    : $_commit_date (git commit)"
       local _last_commits=${VERSION_INFO_LAST_COMMITS:-5}
       (IFS='
 '
       for _line in $(git log "$_revision" -"$_last_commits" --pretty=oneline 2>/dev/null | cut -d" " -f2-); do
-        _line="$(xargs <<< "$_line")"
+        _line="$(trim_string "$_line")"
         [[ "$_is_first_line" = "true" ]] && echo -n "  commits : " || echo -n "            "
         echo -e "$_line"
         _is_first_line="false"

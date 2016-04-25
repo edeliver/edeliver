@@ -133,9 +133,7 @@ erlang_get_and_update_deps() {
 
 # joins the arguments by the first argument
 __join_string() {
-  local IFS="$1"
-  shift
-  echo "$@" | xargs # xargs removes the whitespaces at the beginning and at the end
+  trim_string $(local IFS="$1"; shift; echo -ne "$*");
 }
 
 # gets the arguments from the --auto-version=, --increment-version and --set-version
@@ -827,6 +825,11 @@ git_checkout_remote() {
     cd $DELIVER_TO
     git checkout $_revision
   "
+}
+
+# removes the leading and trailing whitespaces for the arg
+trim_string() {
+  sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <<< "$@"
 }
 
 # cleans the build directory on the remote build host.
