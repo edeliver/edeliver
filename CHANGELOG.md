@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.2.2__
+
+Fix detecting branch name on build host for `--autoversion=branch[-unless-master]` option.
+
 __1.2.1__
 
 - Fix syntax on migrate task with down operation

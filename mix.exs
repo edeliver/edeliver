@@ -4,7 +4,7 @@ defmodule Edeliver.Mixfile do
   def project do
     [
       app: :edeliver,
-      version: "1.2.1",
+      version: "1.2.2",
       description:  "Build and Deploy Elixir Applications and perform Hot-Code Upgrades and Schema Migrations",
       package: [
         licenses: ["MIT"],
