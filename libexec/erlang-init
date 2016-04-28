@@ -441,7 +441,7 @@ do
       elif [[ "${arg}" =~ ^--host= ]]; then
         HOST=${arg##--host=}
       elif [[ "${arg}" =~ ^--mix-env= ]]; then
-        TARGET_MIX_ENV=${arg##--relup-mod=}
+        TARGET_MIX_ENV=${arg##--mix-env=}
       elif [[ "${arg}" =~ ^--relup-mod= ]]; then
         RELUP_MODIFICATION_MODULE=${arg##--relup-mod=}
       elif [[ "${arg}" =~ ^--auto-version= ]]; then
