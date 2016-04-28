@@ -48,14 +48,14 @@ defmodule Edeliver do
   def ecto_repository! do
     case System.get_env "ECTO_REPOSITORY" do
       ecto_repository = <<_,_::binary>> ->
-        ecto_repository_module = List.to_atom ecto_repository
-        unless :erlang.module_loaded(ecto_repository_module) && (ecto_repository_module.module_info(:exports) |> Dict.get(:__repo__, nil)) do
-          error! "Module '#{ecto_repository_module}' is not an ecto repository.\n    Please set the correct repository module in the edeliver config as ECTO_REPOSITORY env\n    or remove that value to use autodetection of that module."
-        else
+        ecto_repository_module = ecto_repository |> to_char_list |> List.to_atom
+        if maybe_ecto_repo?(ecto_repository_module) do
           ecto_repository_module
+        else
+          error! "Module '#{ecto_repository_module}' is not an ecto repository.\n    Please set the correct repository module in the edeliver config as ECTO_REPOSITORY env\n    or remove that value to use autodetection of that module."
         end
       _ ->
-        case Enum.filter(:erlang.loaded |> Enum.reverse, fn(module) -> :erlang.module_loaded(module) && (module.module_info(:exports) |> Dict.get(:__repo__, nil)) end) do
+        case Enum.filter(:erlang.loaded |> Enum.reverse, &maybe_ecto_repo?/1) do
           [ecto_repository_module] -> ecto_repository_module
           [] -> error! "No ecto repository module found.\n    Please specify the repository in the edeliver config as ECTO_REPOSITORY env."
           modules =[_|_] -> error! "Found several ecto repository modules (#{inspect modules}).\n    Please specify the repository to use in the edeliver config as ECTO_REPOSITORY env."
@@ -63,6 +63,9 @@ defmodule Edeliver do
     end
   end
 
+  defp maybe_ecto_repo?(module) do
+    :erlang.module_loaded(module) && (module.module_info(:exports) |> Dict.get(:__adapter__, nil))
+  end
 
   # taken from https://github.com/elixir-lang/ecto/blob/master/lib/ecto/migrator.ex#L183
   defp migrations_for(directory) do
