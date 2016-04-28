@@ -64,7 +64,13 @@ defmodule Edeliver do
   end
 
   defp maybe_ecto_repo?(module) do
-    :erlang.module_loaded(module) && (module.module_info(:exports) |> Dict.get(:__adapter__, nil))
+    if :erlang.module_loaded(module) do
+      exports = module.module_info(:exports)
+      # :__adapter__ for ecto versions >= 2.0, :__repo__ for ecto versions < 2.0
+      Dict.get(exports, :__adapter__, nil) || Dict.get(exports, :__repo__, nil)
+    else
+      false
+    end
   end
 
   # taken from https://github.com/elixir-lang/ecto/blob/master/lib/ecto/migrator.ex#L183
