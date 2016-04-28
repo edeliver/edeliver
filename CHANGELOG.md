@@ -1,6 +1,10 @@
 eDeliver Versions
 =================
 
+__1.2.4__
+
+- Support migrations for ecto version >= 2.0
+
 __1.2.3__
 
 - Improve displaying of revisions contained in the running release.
