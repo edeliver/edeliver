@@ -48,7 +48,7 @@ defmodule Edeliver do
   def ecto_repository! do
     case System.get_env "ECTO_REPOSITORY" do
       ecto_repository = <<_,_::binary>> ->
-        ecto_repository_module = List.to_atom ecto_repository
+        ecto_repository_module = ecto_repository |> to_char_list |> List.to_atom
         if maybe_ecto_repo?(ecto_repository_module) do
           ecto_repository_module
         else
