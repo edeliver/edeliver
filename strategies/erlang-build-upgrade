@@ -97,10 +97,18 @@ run() {
     git_checkout_remote $FROM
     # build old release
     erlang_get_and_update_deps
+    # ... but don't change version of old release
+    local _increment_release_version_option="$INCREMENT_RELEASE_VERSION"
+    local _set_release_version_option="$SET_RELEASE_VERSION"
+    INCREMENT_RELEASE_VERSION=""
+    SET_RELEASE_VERSION=""
     erlang_clean_compile
     erlang_generate_release
     [[ "$RELEASE_CMD" = "rebar" ]] && rename_release_add_version
     [[ "$RELEASE_CMD" = "mix" ]] && __detect_remote_release_dir && __detect_remote_release_version
+    # reset the option to auto-increment or setting the version for building the curent release for the upgrade
+    INCREMENT_RELEASE_VERSION="$_increment_release_version_option"
+    SET_RELEASE_VERSION="$_set_release_version_option"
     OLD_RELEASE_VERSION=${RELEASE_VERSION}
   else
     error_message "no old version specified"; exit 2
