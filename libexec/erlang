@@ -167,16 +167,16 @@ erlang_clean_compile() {
       $REBAR_CMD compile
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do${_set_auto_version} compile
       else
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do clean,${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do clean,${_set_auto_version} compile
       fi
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do deps.compile,${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do deps.compile,${_set_auto_version} compile
       else
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD do clean, deps.compile,${_set_auto_version} compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do clean, deps.compile,${_set_auto_version} compile
       fi
     fi
   "
@@ -221,7 +221,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" $MIX_CMD $_set_auto_version release $_force_no_interaction --verbosity=$_mix_release_verbosity
+      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD $_set_auto_version release $_force_no_interaction --verbosity=$_mix_release_verbosity
     fi
   "
 
