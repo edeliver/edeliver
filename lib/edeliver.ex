@@ -59,7 +59,7 @@ defmodule Edeliver do
           [ecto_repository_module] -> ecto_repository_module
           modules =[_|_] -> error! "Found several ecto repository modules (#{inspect modules}).\n    Please specify the repository to use in the edeliver config as ECTO_REPOSITORY env."
           :error ->
-            case Enum.filter(:erlang.loaded |> Enum.reverse, &maybe_ecto_repo?/1) do
+            case Enum.filter(:erlang.loaded |> Enum.reverse, &ecto_1_0_repo?/1) do
               [ecto_repository_module] -> ecto_repository_module
               [] -> error! "No ecto repository module found.\n    Please specify the repository in the edeliver config as ECTO_REPOSITORY env."
               modules =[_|_] -> error! "Found several ecto repository modules (#{inspect modules}).\n    Please specify the repository to use in the edeliver config as ECTO_REPOSITORY env."
@@ -76,7 +76,16 @@ defmodule Edeliver do
     if :erlang.module_loaded(module) do
       exports = module.module_info(:exports)
       # :__adapter__ for ecto versions >= 2.0, :__repo__ for ecto versions < 2.0
-      Dict.get(exports, :__adapter__, nil) || Dict.get(exports, :__repo__, nil)
+      Dict.get(exports, :__adapter__, nil) || Dict.get(exports, :__repo__, false)
+    else
+      false
+    end
+  end
+
+  defp ecto_1_0_repo?(module) do
+    if :erlang.module_loaded(module) do
+      module.module_info(:exports)
+      |> Dict.get(:__repo__, false)
     else
       false
     end
