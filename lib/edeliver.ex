@@ -56,8 +56,8 @@ defmodule Edeliver do
         end
       _ ->
         case ecto_repos_from_config(application_name) do
-          [ecto_repository_module] -> ecto_repository_module
-          modules =[_|_] -> error! "Found several ecto repository modules (#{inspect modules}).\n    Please specify the repository to use in the edeliver config as ECTO_REPOSITORY env."
+          {:ok, [ecto_repository_module]} -> ecto_repository_module
+          {:ok, modules =[_|_]} -> error! "Found several ecto repository modules (#{inspect modules}).\n    Please specify the repository to use in the edeliver config as ECTO_REPOSITORY env."
           :error ->
             case Enum.filter(:erlang.loaded |> Enum.reverse, &ecto_1_0_repo?/1) do
               [ecto_repository_module] -> ecto_repository_module
