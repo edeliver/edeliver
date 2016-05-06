@@ -142,7 +142,7 @@ There are **four kinds of commands**: **build commands** which compile the sourc
 
 ### Build Commands
 
-The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OPT version](http://www.erlang.org/download.html) (e.g. OTP 17.5) of the remote build system and the elixir runtime is included into the release built and delivered to all production system. It is not required to install the otp runtime nor elixir on the production systems.
+The releases must be built on a system that is similar to the target system. E.g. if you want to deploy to a production system based on linux, the release must also be built on a linux system. Furthermore the [erlang runtime / OTP version](http://www.erlang.org/download.html) (e.g. OTP 17.5) of the remote build system and the elixir runtime is included into the release built and delivered to all production system. It is not required to install the otp runtime nor elixir on the production systems.
 For build commands the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
