@@ -101,16 +101,17 @@ defmodule Edeliver.Relup.Instruction do
       @doc """
         Appends an instruction or a list of instructions to the instruction after the
         "point of no return" but before any instruction which:
-          - loads or unloads new code, which means before any
-              `load_module`, `load`, `add_module`, `delete_module`,
-              `remove`, `purge` instruction and
-          - before any instruction which updates, starts or stops
-            any running processes, which means before any
-              `code_change`, `update`, `start`, `stop` instruction and
-          - before any instruction which (re-)starts or stops
-            any application or the emulator, which means before any
-              `add_application`, `remove_application`, `restart_application`,
-              `restart_emulator` and `restart_new_emulator` instruction.
+
+        - loads or unloads new code, which means before any
+            `load_module`, `load`, `add_module`, `delete_module`,
+            `remove`, `purge` instruction and
+        - before any instruction which updates, starts or stops
+          any running processes, which means before any
+            `code_change`, `update`, `start`, `stop` instruction and
+        - before any instruction which (re-)starts or stops
+          any application or the emulator, which means before any
+            `add_application`, `remove_application`, `restart_application`,
+            `restart_emulator` and `restart_new_emulator` instruction.
 
         It does not consider load-instructions for `Edeliver.Relup.RunnableInstruction`s
         as code loading instructions for the release. They are inserted by the

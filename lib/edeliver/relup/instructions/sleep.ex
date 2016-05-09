@@ -6,7 +6,9 @@ defmodule Edeliver.Relup.Instructions.Sleep do
     at the beginning of the upgrade before the new code is
     installed. Usage:
 
-      `Edeliver.Relup.Instructions.Sleep.modify_relup(config, _seconds = 30)`
+    ```
+    Edeliver.Relup.Instructions.Sleep.modify_relup(config, _seconds = 30)
+    ```
 
     It prints a countown in the upgrade script which was
     started by the `$APP/bin/$APP upgarde $RELEASE` command.

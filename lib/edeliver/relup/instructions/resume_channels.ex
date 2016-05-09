@@ -5,12 +5,12 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
     to continue handling channel events. Use this instruction
     at the end of the upgrade modification if the
 
-      `Edeliver.Relup.Instructions.SuspendChannels`
+    `Edeliver.Relup.Instructions.SuspendChannels`
 
     is used at the beginning. Make sure that it is used before
     the
 
-      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+     `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction to avoid that recently started websockets
     which were not suspendet are tried to be resumed.

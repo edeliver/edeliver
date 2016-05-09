@@ -3,7 +3,7 @@ defmodule Edeliver.Relup.Modification do
     This module can be used to provide custom modification of
     relup instructions. By default the module
 
-      Edeliver.Relup.DefaultModification
+    `Edeliver.Relup.DefaultModification`
 
     is used to modify the relup instructions. There must exists
     only one implementation of that behaviour in your project.

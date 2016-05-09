@@ -8,7 +8,7 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     This instruction should be used in conjunction with and
     after the
 
-      `Edeliver.Relup.Instructions.FinishRunningRequests`
+    `Edeliver.Relup.Instructions.FinishRunningRequests`
 
     instruction which notifies the request processes that
     the code upgrade is started.
@@ -16,7 +16,7 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     To make sure that the http request connections can
     be found on the node, use this instruction after the
 
-      `Edeliver.Relup.Instructions.CheckRanchConnections`
+    `Edeliver.Relup.Instructions.CheckRanchConnections`
 
     instruction which will abort the upgrade if the http
     request connections accepted by ranch cannot be found

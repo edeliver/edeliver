@@ -6,17 +6,21 @@ defmodule Edeliver.Relup.Instructions.Info do
     by the `$APP/bin/$APP upgarde $RELEASE` command.
     Usage:
 
-      `Edeliver.Relup.Instructions.Info.modify_relup(config, _up_message="Synchronizing nodes", _down_message="Desynchronizing nodes", _insert_where = &append_after_point_of_no_return/2)`
+    ```
+    Edeliver.Relup.Instructions.Info.modify_relup(config,
+        _up_message="Synchronizing nodes",
+        _down_message="Desynchronizing nodes",
+        _insert_where = &append_after_point_of_no_return/2)`
+    ```
 
     Available sections are:
 
-      `:check`    -> Checks whether upgrade is possible. Before "point of no return"
-      `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
-      `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
-      `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
-      `:finished` -> The upgrade finished successfully
+    * `:check`    -> Checks whether upgrade is possible. Before "point of no return"
+    * `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
+    * `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
+    * `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
+    * `:finished` -> The upgrade finished successfully
 
-    It uses the
   """
   use Edeliver.Relup.RunnableInstruction
 

@@ -8,11 +8,11 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     If `Phoenix.PubSub.PG2` is used as pubsub backend for phoenix channels,
     running websocket processes will be detected and suspended by the
 
-      `Edeliver.Relup.Instructions.SuspendChannels`
+    `Edeliver.Relup.Instructions.SuspendChannels`
 
     instruction during the upgrade and resumed by the
 
-     `Edeliver.Relup.Instructions.ResumeChannels` instruction
+    `Edeliver.Relup.Instructions.ResumeChannels` instruction
 
     after the upgrade / downgrade of the node.
   """

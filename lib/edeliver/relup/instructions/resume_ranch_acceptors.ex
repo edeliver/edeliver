@@ -3,7 +3,7 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
     This upgrade instruction resumes the ranch acceptors which
     were suspended by the
 
-      `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+    `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
 
     instruction at the beginning of the upgrade.
     Because real suspending of ranch acceptors

@@ -7,7 +7,7 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
     but before any application code is reloaded. It should be
     used in conjunction with and after the
 
-      `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+    `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
 
     instruction which avoids that new websockets processes for
     phoenix channels are started.
@@ -15,13 +15,13 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
     To make sure that the websocket connections can
     be found on the  node, use this instruction after the
 
-      `Edeliver.Relup.Instructions.CheckRanchConnections`
+    `Edeliver.Relup.Instructions.CheckRanchConnections`
 
     instruction which will abort the upgrade if ranch
     (websocket) connections cannot be found in the supervision
     tree. Use the
 
-      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+    `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction at the end of your instructions list to
     resume the websocket processes and reenable handling

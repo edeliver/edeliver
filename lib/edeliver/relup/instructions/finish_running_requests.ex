@@ -9,7 +9,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
     when the code upgrade is done. This instruction should be
     used in conjunction with and after the
 
-      `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+    `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
 
     instruction which avoids that new requets are accepted
     during the upgrade.
@@ -17,7 +17,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
     To make sure that the http request connections can
     be found on the node, use this instruction after the
 
-      `Edeliver.Relup.Instructions.CheckRanchConnections`
+    `Edeliver.Relup.Instructions.CheckRanchConnections`
 
     instruction which will abort the upgrade if the http
     request connections accepted by ranch cannot be found

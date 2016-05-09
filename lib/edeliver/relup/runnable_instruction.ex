@@ -165,7 +165,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
         Assumes that the pattern matches or throws an error with the given
         error message. The error message is logged as error to the logfile
         using the `Logger` and displayed as error output by the
-        `$APP/bin/$APP upgrade $RELEASE task using the
+        `$APP/bin/$APP upgrade $RELEASE` task using the
         `$APP/ebin/install_upgrade.escript` script. If the pattern matches
         the variables from the matching are assigned.
       """

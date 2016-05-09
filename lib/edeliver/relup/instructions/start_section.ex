@@ -5,15 +5,17 @@ defmodule Edeliver.Relup.Instructions.StartSection do
     in the upgrade script started by the
     `$APP/bin/$APP upgarde $RELEASE` command. Usage:
 
-      `Edeliver.Relup.Instructions.StartSection.modify_relup(config, _section = :check)`
+    ```
+    Edeliver.Relup.Instructions.StartSection.modify_relup(config, _section = :check)
+    ```
 
     Available sections are:
 
-      `:check`    -> Checks whether upgrade is possible. Before "point of no return"
-      `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
-      `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
-      `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
-      `:finished` -> The upgrade finished successfully
+    * `:check`    -> Checks whether upgrade is possible. Before "point of no return"
+    * `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
+    * `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
+    * `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
+    * `:finished` -> The upgrade finished successfully
 
     It uses the `Edeliver.Relup.Instructions.Info` instruction to
     display the section information.
