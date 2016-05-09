@@ -21,8 +21,8 @@ defmodule Edeliver do
     end
   end
 
-  def list_pending_migrations(application_name, application_version) do
-    repository = ecto_repository!(application_name)
+  def list_pending_migrations(application_name, application_version, ecto_repository \\ '') do
+    repository = ecto_repository!(application_name, ecto_repository)
     versions = Ecto.Migrator.migrated_versions(repository)
     pending_migrations = migrations_for(migrations_dir(application_name, application_version))
     |> Enum.filter(fn {version, _name, _file} -> not (version in versions) end)
@@ -33,9 +33,9 @@ defmodule Edeliver do
     end)
   end
 
-  def migrate(application_name, application_version, direction, migration_version \\ :all) when is_atom(direction) do
+  def migrate(application_name, application_version, ecto_repository, direction, migration_version \\ :all) when is_atom(direction) do
     options = if migration_version == :all, do: [all: true], else: [to: to_string(migration_version)]
-    Ecto.Migrator.run(ecto_repository!(application_name), migrations_dir(application_name, application_version), direction, options)
+    Ecto.Migrator.run(ecto_repository!(application_name, ecto_repository), migrations_dir(application_name, application_version), direction, options)
   end
 
   def migrations_dir(application_name, application_version) do
@@ -45,8 +45,12 @@ defmodule Edeliver do
     Path.join([lib_dir, application_with_version, "priv", "repo", "migrations"])
   end
 
-  defp ecto_repository!(application_name) do
-    case System.get_env "ECTO_REPOSITORY" do
+  defp ecto_repository!(_application_name, ecto_repository = [_|_] ) do
+    # repository name was passed as ECTO_REPOSITORY env by the erlang-node-execute rpc call
+    List.to_atom ecto_repository
+  end
+  defp ecto_repository!(application_name, _ecto_repository) do
+    case System.get_env "ECTO_REPOSITORY" do # ECTO_REPOSITORY env was set when the node was started
       ecto_repository = <<_,_::binary>> ->
         ecto_repository_module = ecto_repository |> to_char_list |> List.to_atom
         if maybe_ecto_repo?(ecto_repository_module) do
