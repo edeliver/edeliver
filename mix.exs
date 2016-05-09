@@ -21,6 +21,7 @@ defmodule Edeliver.Mixfile do
         links: %{"GitHub" => "https://github.com/boldpoker/edeliver"},
       ],
       deps: deps,
+      docs: docs,
     ]
   end
 
@@ -29,6 +30,10 @@ defmodule Edeliver.Mixfile do
     {:meck, "~> 0.8.4", only: :test},
     {:earmark, "~> 0.1", only: :dev},
     {:ex_doc, "~> 0.11.5", only: :dev},
+  ]
+
+  defp docs, do: [
+    logo: "docs/logo.png",
   ]
 
 end
