@@ -1,6 +1,15 @@
 eDeliver Versions
 =================
 
+__1.2.5__
+
+- Fix error on automatic phoenix upgrades by not suspending the ranch acceptors supervisor
+- Fix passing `ECTO_REPOSITORY` env to ecto migration tasks
+- Ecto 2.0 support: read ecto_repos from application env
+- Fix skipping automatic relup modifications for upgrades
+- Fix changing the version of an old release which is build for an upgrade
+- Fix `--mix-env` option
+
 __1.2.4__
 
 - Support migrations for ecto version >= 2.0
