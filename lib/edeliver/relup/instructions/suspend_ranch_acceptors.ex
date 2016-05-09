@@ -16,9 +16,12 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
     instruction which will abort the upgrade if the acceptors
     cannot be found. Because real suspending of ranch acceptors
     is not possible because ranch acceptors do not handle sys
-    messages, they are actually terminated. In addition the ranch
-    acceptor supervisor is suspended to avoid starting new acceptors.
-    Use the
+    messages, they are actually terminated. Unfortunately the ranch
+    acceptor supervisor cannot be suspended in adition to avoid
+    starting new acceptors, because supervisors can't be suspended
+    because the supervision tree is used to find processes which
+    uses callback modules. Since no acceptors are started dynamically
+    this can be ignored. Use the
 
       `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
@@ -77,8 +80,6 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
       Supervisor.terminate_child(ranch_acceptors_sup, acceptor) == :ok
     end), "Failed to suspend ranch socket acceptors."
     info "Suspended #{inspect acceptors_count} ranch acceptors."
-    info "Suspending ranch socket acceptor supervisor..."
-    assume :ok = :sys.suspend(ranch_acceptors_sup), "Failed to suspend ranch socket acceptor supervisor."
   end
 
 

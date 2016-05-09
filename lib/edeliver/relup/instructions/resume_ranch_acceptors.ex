@@ -9,8 +9,7 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
     Because real suspending of ranch acceptors
     is not possible because ranch acceptors do not handle sys
     messages, they were actually terminated and are restarted
-    by this relup instruction. Before starting them
-    the ranch acceptor supervisor is resumed.
+    by this relup instruction.
   """
   use Edeliver.Relup.RunnableInstruction
   alias Edeliver.Relup.Instructions.CheckRanchAcceptors
@@ -45,8 +44,6 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
     assume true = is_pid(ranch_listener_sup), "Failed to resume ranch socket acceptors. Ranch listener supervisor not found."
     ranch_acceptors_sup = CheckRanchAcceptors.ranch_acceptors_sup(ranch_listener_sup)
     assume true = is_pid(ranch_acceptors_sup), "Failed to resume ranch socket acceptors. Ranch acceptors supervisor not found."
-    info "Resuming ranch socket acceptor supervisor..."
-    assume :ok = :sys.resume(ranch_acceptors_sup), "Failed to resume ranch socket acceptor supervisor."
     assume [_|_] = acceptors = CheckRanchAcceptors.ranch_acceptors(ranch_acceptors_sup), "Failed to suspend ranch socket acceptors. No acceptor processes found."
     acceptors_count = Enum.count(acceptors)
     info "Starting #{inspect acceptors_count} ranch socket acceptors..."
