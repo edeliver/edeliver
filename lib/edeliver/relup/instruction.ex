@@ -1,8 +1,9 @@
 defmodule Edeliver.Relup.Instruction do
   @moduledoc """
-    This module can be used to provide custom instructions
-    to modify the relup. They can be used the the implementation
-    of the Edeliver.Relup.Modifcation module.
+    This behaviour can be used to provide custom instructions to modify the relup.
+
+    They can be used in the implementations of
+    of the `Edeliver.Relup.Modifcation` behaviour.
 
     Example:
 
@@ -25,6 +26,27 @@ defmodule Edeliver.Relup.Instruction do
                        |> Acme.Relup.LogUpgradeInstruction.modify_relup(Config) # apply also custom instructions
         end
       end
+
+    edeliver already provides a set of relup instructions:
+
+    * `Edeliver.Relup.Instructions.CheckProcessesRunningOldCode`
+    * `Edeliver.Relup.Instructions.CheckRanchAcceptors`
+    * `Edeliver.Relup.Instructions.CheckRanchConnections`
+    * `Edeliver.Relup.Instructions.CodeChangeOnAppProcesses`
+    * `Edeliver.Relup.Instructions.FinishRunningRequests`
+    * `Edeliver.Relup.Instructions.Info`
+    * `Edeliver.Relup.Instructions.ReloadModules`
+    * `Edeliver.Relup.Instructions.RerunFailedRequests`
+    * `Edeliver.Relup.Instructions.ResumeAppProcesses`
+    * `Edeliver.Relup.Instructions.ResumeChannels`
+    * `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+    * `Edeliver.Relup.Instructions.Sleep`
+    * `Edeliver.Relup.Instructions.SoftPurge`
+    * `Edeliver.Relup.Instructions.StartSection`
+    * `Edeliver.Relup.Instructions.SuspendAppProcesses`
+    * `Edeliver.Relup.Instructions.SuspendChannels`
+    * `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+
 
   """
   use Behaviour

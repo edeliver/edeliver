@@ -1,7 +1,8 @@
 defmodule Edeliver.Relup.InsertInstruction do
   @moduledoc """
-    Provides functions which can be used in `Edeliver.Relup.Instruction`
-    behaviour implementations to insert relup instructions at a given position
+    Provides functions to insert relup instructions at a given position
+
+    which can be used in `Edeliver.Relup.Instruction` behaviour implementations
     in the relup file.
   """
 

@@ -1,9 +1,9 @@
 defmodule Edeliver.Relup.RunnableInstruction do
   @moduledoc """
-    This module can be used to provide custom instructions
-    to modify the relup. They can be used the the implementation
-    of the Edeliver.Relup.Modifcation module. A runnable instruction
-    must implement a `run/1` function which will be executed
+    This module can be used to provide custom instructions executed during the upgrade.
+
+    They can be used in implementations of the `Edeliver.Relup.Modifcation` behaviours.
+    A runnable instruction  must implement a `run/1` function which will be executed
     during the upgrade on the nodes.
 
     Example:
@@ -49,6 +49,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
   @doc """
     The function to run during hot code upgrade on nodes.
+
     If it throws an error before the `point_of_no_return` the
     upgrade is aborted. If it throws an error and was executed
     after that point, the release is restarted
@@ -56,22 +57,25 @@ defmodule Edeliver.Relup.RunnableInstruction do
   @callback run(options::[term]) :: :ok
 
   @doc """
-    Returns a function which inserts the relup instruction that calls
-    the `run/1` fuction of this module. Default is inserting it at the
-    end of the instructions
+    Returns a function which inserts the relup instruction
+
+    that calls the `run/1` fuction of this module.
+    Default is inserting it at the end of the instructions
   """
   @callback insert_where() :: ((%Edeliver.Relup.Instructions{}, Edeliver.Relup.Instruction.instruction) -> %Edeliver.Relup.Instructions{})
 
   @doc """
     Returns the arguments which will be passed the `run/1` function during the upgrade.
+
     Default is an empty list.
   """
   @callback arguments(instructions::%Edeliver.Relup.Instructions{}, config::%ReleaseManager.Config{}) :: [term]
 
   @doc """
-    Returns a list of module names which implement the behaviour `Edeliver.Relup.RunnableInstruction` and
-    are used / referenced by this runnable instruction. These modules must be loaded before this instruction
-    is executed for upgrades and unload after this instruction for downgrades. Default is an empty list.
+    Returns a list of module names which implement the behaviour `Edeliver.Relup.RunnableInstruction`
+
+    and are used / referenced by this runnable instruction. These modules must be loaded before this instruction
+    is executed for upgrades and unloaded after this instruction for downgrades. Default is an empty list.
   """
   @callback dependencies() :: [instruction_module::atom]
 
@@ -106,8 +110,9 @@ defmodule Edeliver.Relup.RunnableInstruction do
       defoverridable [modify_relup: 2, insert_where: 0, arguments: 2, dependencies: 0]
 
       @doc """
-        Calls the `run/1` function of this module from the
-        relup file during hot code upgrade
+        Calls the `run/1` function of this module
+
+        from the  relup file during hot code upgrade
       """
       @spec call_this(arguments::[term]) :: instruction|instructions
       def call_this(arguments \\ []) do
@@ -116,6 +121,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
       @doc """
         Logs an error using the `Logger` on the running node which is upgraded.
+
         In addition the same error message is logged on the node which executes
         the upgrade and is displayed as output of the
         `$APP/bin/$APP upgarde $RELEASE` command.
@@ -128,6 +134,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
       @doc """
         Logs a warning using the `Logger` on the running node which is upgraded.
+
         In addition the same warning message is logged on the node which executes
         the upgrade and is displayed as output of the
         `$APP/bin/$APP upgarde $RELEASE` command.
@@ -140,6 +147,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
       @doc """
         Logs an info message using the `Logger` on the running node which is upgraded.
+
         In addition the same info message is logged on the node which executes
         the upgrade and is displayed as output of the
         `$APP/bin/$APP upgarde $RELEASE` command.
@@ -152,6 +160,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
        @doc """
         Logs a debug message using the `Logger` on the running node which is upgraded.
+
         In addition the same debug message is logged on the node which executes
         the upgrade and is displayed as output of the
         `$APP/bin/$APP upgarde $RELEASE` command.
@@ -162,10 +171,10 @@ defmodule Edeliver.Relup.RunnableInstruction do
         log_in_upgrade_script(:debug, message)
       end
 
-
       @doc """
-        Assumes that the pattern matches or throws an error with the given
-        error message. The error message is logged as error to the logfile
+        Assumes that the pattern matches or throws an error with the given error message.
+
+        The error message is logged as error to the logfile
         using the `Logger` and displayed as error output by the
         `$APP/bin/$APP upgrade $RELEASE` task using the
         `$APP/ebin/install_upgrade.escript` script. If the pattern matches
@@ -214,10 +223,11 @@ defmodule Edeliver.Relup.RunnableInstruction do
       end
 
       @doc """
-        Logs the message of the given type on the node which executes
-        the upgrade and displays it as output of the
-        `$APP/bin/$APP upgrade $RELEASE` command. The message is prefixed
-        with a string derived from the message type.
+        Logs the message of the given type on the node
+
+        which executes the upgrade and displays it as output of
+        the `$APP/bin/$APP upgrade $RELEASE` command. The message is
+        prefixed with a string derived from the message type.
       """
       @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
       def log_in_upgrade_script(type, message) do
@@ -233,8 +243,9 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
 
       @doc """
-        Formats and prints the message on the node running the
-        upgrade script which was started by the
+        Formats and prints the message on the node
+
+        running the upgrade script which was started by the
         `$APP/bin/$APP upgrade $RELEASE` command.
       """
       @spec format_in_upgrade_script(format::char_list, arguments::[term]) :: no_return

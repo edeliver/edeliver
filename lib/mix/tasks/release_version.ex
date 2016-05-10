@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Release.Version do
 
   @moduledoc """
   Displays the release version or modifies it before building the release.
+
   This task can be used in conjunction with the `release` task to modify
   the version for the release / upgrade. The compiled files must be cleaned
   before and the release task must be executed after. Increasing version

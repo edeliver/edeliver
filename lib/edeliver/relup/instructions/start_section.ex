@@ -1,7 +1,8 @@
 defmodule Edeliver.Relup.Instructions.StartSection do
   @moduledoc """
-    This upgrade instruction starts a new section and
-    logs that info on the node which runs the upgrade and
+    This upgrade instruction starts a new section
+
+    and logs that info on the node which runs the upgrade and
     in the upgrade script started by the
     `$APP/bin/$APP upgarde $RELEASE` command. Usage:
 

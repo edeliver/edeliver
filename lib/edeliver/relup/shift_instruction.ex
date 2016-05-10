@@ -1,7 +1,8 @@
 defmodule Edeliver.Relup.ShiftInstruction do
   @moduledoc """
-    Provides functions which can be used in `Edeliver.Relup.Instruction`
-    behaviour implementations to move relup instructions to a given position
+    Provides functions to move relup instructions to a given position
+
+    which can be used in `Edeliver.Relup.Instruction` behaviour implementations
     in the relup file to fulfill some requirements.
   """
 
@@ -16,6 +17,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
 
   @doc """
     Ensures that the given module is loaded before the given instruction (if it needs to be loaded).
+
     If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the instruction for the down instructions.
     Use this function only, if the instruction should be used only once in a `Relup.Modification` for
@@ -59,6 +61,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
 
   @doc """
     Ensures that the given module is loaded before the first occurrence of the runnable instruction (if it needs to be loaded).
+
     If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the last occurrence of the runnable down instruction. Use this function instead of the
     `ensure_module_loaded_before_instruction/3` function if the `RunnableInstruction` can be used several times
@@ -120,6 +123,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
 
   @doc """
     Ensures that the given module is (un)loaded after the given instruction (if it needs to be (un)loaded).
+
     If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
     is (un)loaded before the instruction for the down instructions.
     Use this function only, if the instruction should be used only once in a `Relup.Modification` for
@@ -168,6 +172,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
 
   @doc """
     Ensures that the given module is (un)loaded after the last occurrenct of the given runnable instruction (if it needs to be (un)loaded).
+
     If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
     is loaded before the first occurrence of the runnable instruction for the down instructions.
     Use this function instead of the `ensure_module_unloaded_after_instruction/3` function if the `RunnableInstruction`

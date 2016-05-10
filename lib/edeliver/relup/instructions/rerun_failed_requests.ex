@@ -1,5 +1,7 @@
 defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
 @moduledoc """
+    Runs phoenix requests again which failed during hot code upgrade.
+
     This upgrade instruction notifies request processes
     which were handling requests while new code was loaded
     that they can be rerun if they failed during the upgrade.

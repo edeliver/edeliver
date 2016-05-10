@@ -1,7 +1,8 @@
 defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
   @moduledoc """
-    This upgrade instruction suspends the ranch acceptors to
-    avoid that new connections will be accepted. It will be
+    This upgrade instruction suspends the ranch acceptors
+
+    to avoid that new connections will be accepted. It will be
     inserted right after the "point of no return". When the
     upgrade is done, the
 

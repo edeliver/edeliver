@@ -1,6 +1,7 @@
 defmodule Edeliver.Relup.Instructions.SoftPurge do
   @moduledoc """
     Upgrade instruction which replaces `:brutal_purge` with `:soft_purge`
+
     for `:load_module`, `:load`, `:update` and `:remove` relup instructions.
 
     If `:brutal_purge` is used, processes running old code are killed.

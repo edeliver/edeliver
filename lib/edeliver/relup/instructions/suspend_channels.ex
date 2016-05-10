@@ -1,6 +1,7 @@
 defmodule Edeliver.Relup.Instructions.SuspendChannels do
   @moduledoc """
     This upgrade instruction suspends the websocket processes
+
     connected to phoenix channels to avoid that  new channel
     events will be processed  during the code upgrade / downgrade
     process. It will be appended to the instructions after the "point of no return"

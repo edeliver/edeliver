@@ -1,12 +1,20 @@
 defmodule Edeliver.Relup.Modification do
   @moduledoc """
-    This module can be used to provide custom modification of
-    relup instructions. By default the module
+    This behaviour can be used to provide custom modifications of
+    relup instructions
 
-    `Edeliver.Relup.DefaultModification`
+    when a release upgrade is built by edeliver.
 
-    is used to modify the relup instructions. There must exists
-    only one implementation of that behaviour in your project.
+    By default the implementation from `Edeliver.Relup.PhoenixModification` is used
+    for phoenix applications and for all others the implementation from
+    `Edeliver.Relup.DefaultModification`.
+
+    Implementations can modify the relup instructions step by step by using
+    modules implementing the `Edeliver.Relup.Instruction` behaviour.
+
+    The implementation returning the highest `priority/0` or which is passed by the
+    `--relup-mod=` command line option will be used unless the `--skip-relup-mod`
+    option is set.
 
     Example:
 
@@ -74,6 +82,7 @@ defmodule Edeliver.Relup.Modification do
 
       @doc """
         Returns true if this relup modification is usable for the project or not.
+
         E.g. the `Edeliver.Relup.PhoenixModifcation` returns true only if the
         project is a phoenix project. This function returns `true` by default
         can be overridden in a custom `Edeliver.Relup.Modification` behaviour

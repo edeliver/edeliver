@@ -1,8 +1,10 @@
 defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 @moduledoc """
+    Notify request processes that a release upgrade starts.
+
     This upgrade instruction waits a short time until current
     requests finished and notifies the remaining, that a
-    code upgrade will appear. If a `phoenix` version is used
+    code upgrade will appear.  If a `phoenix` version is used
     which supports the upgrade notification feature, the
     remaining requests that did not finish but failed durining
     the upgrade will be replayed with the original request
@@ -29,7 +31,9 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
   @doc """
     Appends this instruction to the instructions after the
-    "point of no return" but before any instruction which
+    "point of no return"
+
+    but before any instruction which
     loads or unloads new code, (re-)starts or stops
     any running processes, or (re-)starts or stops any
     application or the emulator.
@@ -38,8 +42,9 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
   @doc """
     Returns name of the application and the timeout in ms to wait
-    until running requests finish. These values taken as argument
-    for the `run/1` function
+    until running requests finish.
+
+    These values taken as argument for the `run/1` function
   """
   def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
     {name |> String.to_atom, 500}
@@ -47,8 +52,10 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
   @doc """
     This module depends on the `Edeliver.Relup.Instructions.CheckRanchAcceptors` and
-    the `Edeliver.Relup.Instructions.CheckRanchConnections` module which must be loaded
-    before this instruction for upgrades and unload after this instruction for downgrades.
+    the `Edeliver.Relup.Instructions.CheckRanchConnections` module
+
+    which must be loaded before this instruction for upgrades and unload after this instruction
+    for downgrades.
   """
   @spec dependencies() :: [Edeliver.Relup.Instructions.CheckRanchAcceptors]
   def dependencies do
@@ -56,8 +63,9 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
   end
 
   @doc """
-    Waits until the list of processes terminated. Waits up to `timeout` ms and the returns the
-    process ids of the processes which are still running
+    Waits until the list of processes terminated.
+
+    Waits up to `timeout` ms and the returns the process ids of the processes which are still running
   """
   @spec bulk_wait_for_termination(processes::[pid], timeout::non_neg_integer) :: [pid::pid]
   def bulk_wait_for_termination(_processes = [], _timeout), do: []
@@ -99,6 +107,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
   @doc """
     Waits `timeout` milliseconds until current http requests finished
+
     and notifies remaining request processes that a code upgrad is running
     and new code will be loaded. This enables phoenix to rerun requests
     which failed during code loading.

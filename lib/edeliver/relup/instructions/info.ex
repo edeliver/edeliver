@@ -1,8 +1,9 @@
 defmodule Edeliver.Relup.Instructions.Info do
   @moduledoc """
     This upgrade instruction logs the given info
-    message on the node which runs the upgrade and
-    in the running upgrade script which was started
+    message on the node which runs the upgrade
+
+    and in the running upgrade script which was started
     by the `$APP/bin/$APP upgarde $RELEASE` command.
     Usage:
 
@@ -38,8 +39,9 @@ defmodule Edeliver.Relup.Instructions.Info do
 
 
   @doc """
-    Logs the message on the node which is upgraded and
-    in the upgrade script which was started by the
+    Logs the message on the node which is upgraded
+
+    and in the upgrade script which was started by the
     `$APP/bin/$APP upgarde $RELEASE` command.
   """
   @spec run(message::String.t) :: :ok
