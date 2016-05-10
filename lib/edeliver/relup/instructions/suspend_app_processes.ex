@@ -7,7 +7,11 @@ defmodule Edeliver.Relup.Instructions.SuspendAppProcesses do
     See also `Edeliver.Relup.Instructions.ResumeAppProcesses`.
 
     In a future step it might remove `suspend` instructions from
-    modules which does not change exported functions.
+    modules which does not change exported functions and / or
+    group the suspending of the processes in that way, that
+    first all processes are suspended, then all code-changed
+    and in the end resumed instead of performing this steps
+    per module.
   """
   use Edeliver.Relup.Instruction
 
