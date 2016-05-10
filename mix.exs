@@ -37,6 +37,7 @@ defmodule Edeliver.Mixfile do
     extras: [
       "README.md": [title: "Usage"],
       "docs/auto-versioning.md": [title: "Auto-Versioning"],
+      "docs/relup-patching.md": [title: "Relup-Patching"],
     ]
   ]
 
