@@ -1,5 +1,13 @@
 defmodule Edeliver do
+  @moduledoc """
+    Execute edeliver tasks on the production / staging nodes.
 
+    This internal module provides functions on the nodes which are
+    used by some edeliver tasks e.g. to get the running release version
+    (`edeliver version`), show the pending migrations
+    (`edeliver show migrations`) or install pending migrations
+    (`edeliver migrate`).
+  """
 
   def run_command([command_name, application_name = [_|_] | arguments]) when is_atom(command_name) do
     application_name = to_string(application_name)

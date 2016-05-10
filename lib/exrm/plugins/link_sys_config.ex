@@ -1,4 +1,7 @@
 defmodule ReleaseManager.Plugin.LinkSysConfig do
+  @moduledoc """
+    Exrm plugin to link the `sys.config` file on deploy hosts.
+  """
   use ReleaseManager.Plugin
   alias  ReleaseManager.Utils
 
