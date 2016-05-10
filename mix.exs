@@ -34,6 +34,10 @@ defmodule Edeliver.Mixfile do
 
   defp docs, do: [
     logo: "docs/logo.png",
+    extras: [
+      "README.md": [title: "Usage"],
+      "docs/auto-versioning.md": [title: "Auto-Versioning"],
+    ]
   ]
 
 end
