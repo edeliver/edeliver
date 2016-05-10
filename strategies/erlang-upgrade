@@ -67,6 +67,7 @@ ${bldylw}Info:${txtrst}
 }
 
 
+require_deploy_config
 set_deploy_hosts
 
 
