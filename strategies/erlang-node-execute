@@ -204,8 +204,24 @@ __execute_node_command() {
     set -e
     cd ${_path}/${APP} $SILENCE
     if [[ \"${_node_command}\" = restart* ]]; then
-      ${_node_env}bin/${APP} stop ${_config_arg} && ${_node_env}bin/${APP} start ${_config_arg}
-    else
+      # use stop / start instead of restart command to
+      # not just restart the applications but also the erlang vm
+      # with the most recent release
+      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
+      else
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+      fi
+      if [[ \$? -ne 0 ]]; then
+        cat \"\$STOP_OUTPUT\"
+        exit 1
+      fi
+      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+        ${_node_env}bin/${APP} start ${_config_arg} | tail -n+2
+      else
+        ${_node_env}bin/${APP} start ${_config_arg}
+      fi
+    else # no restart command
       ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
     fi
   "
