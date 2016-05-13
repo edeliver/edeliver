@@ -203,7 +203,7 @@ __execute_node_command() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_path}/${APP} $SILENCE
-    if [[ \"${_node_command}\" = \"restart\" ]]; then
+    if [[ \"${_node_command}\" = restart* ]]; then
       ${_node_env}bin/${APP} stop ${_config_arg} && ${_node_env}bin/${APP} start ${_config_arg}
     else
       ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
