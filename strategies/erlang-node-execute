@@ -20,7 +20,7 @@ ${txtbld}Options:${txtrst}
     case "$NODE_ACTION" in
         (start)    echo -e "\n${bldylw}Info:${txtrst} Starts the node(s) on the deploy hosts.\n" ;;
         (stop)     echo -e "\n${bldylw}Info:${txtrst} Stops the node(s) on the deploy hosts.\n" ;;
-        (restart)  echo -e "\n${bldylw}Info:${txtrst} Restarts the application on the deploy host(s) (not the emulator).\n" ;;
+        (restart)  echo -e "\n${bldylw}Info:${txtrst} Restarts the application on the deploy host(s) with the most recent version.\n" ;;
         (ping)     echo -e "\n${bldylw}Info:${txtrst} Checks whether the node(s) on the deploy host(s)\n      are running.\n" ;;
         (version)  echo -e "\n${bldylw}Info:${txtrst} Displays the running version(s) on the deploy host(s).\n" ;;
     esac
@@ -203,7 +203,11 @@ __execute_node_command() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_path}/${APP} $SILENCE
-    ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
+    if [[ \"${_node_command}\" = \"restart\" ]]; then
+      ${_node_env}bin/${APP} stop ${_config_arg} && ${_node_env}bin/${APP} start ${_config_arg}
+    else
+      ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
+    fi
   "
 
   [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
