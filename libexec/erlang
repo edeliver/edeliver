@@ -801,13 +801,35 @@ force_start_release() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${DELIVER_TO}/${APP} $SILENCE
-    ping_result=\$(bin/${APP} ping || :)
-    if [[ \"\$ping_result\" = \"pong\" ]]; then
+    __edeliver_node_running() {
+      bin/${APP} ping 2>/dev/null >/dev/null
+    }
+    __edeliver_synchronous_start() {
+      bin/${APP} start | tail -n+2
+      for i in {1..10}; do
+        __edeliver_node_running && break || :
+        sleep 1
+      done
+      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2
+    }
+    if __edeliver_node_running; then
       echo \"stopping node\" $SILENCE
-      bin/${APP} stop $SILENCE
+      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
+      else
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+      fi
+      if [[ \$? -ne 0 ]]; then
+        cat \"\$STOP_OUTPUT\"
+        exit 1
+      fi
     fi
     echo \"starting node\" $SILENCE
-    bin/${APP} start $SILENCE
+    if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+      __edeliver_synchronous_start $SILENCE
+    else
+      ${_node_env}bin/${APP} start ${_config_arg} $SILENCE
+    fi
   "
 }
 
