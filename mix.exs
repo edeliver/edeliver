@@ -24,6 +24,13 @@ defmodule Edeliver.Mixfile do
     ]
   end
 
+  def application, do:
+    [applications: [],
+     mod: {Edeliver, []},
+     registered: [Edeliver.Supervisor, Edeliver],
+     env: []
+   ]
+
   defp deps, do: [
     {:exrm, ">= 0.16.0"},
     {:meck, "~> 0.8.4", only: :test},
