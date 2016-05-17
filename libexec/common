@@ -130,8 +130,7 @@ init_app_remotely() {
       git remote add "$_host" "$_remote_url"
     fi
   done
-
-  __remote "
+  __sync_remote "
     set -e
     if [ ! -d $DELIVER_TO ]
     then
