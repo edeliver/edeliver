@@ -148,6 +148,7 @@ __execute_node_command_synchronously() {
     __execute_node_command "single_node" "$_node" "$_node_command"
     echo -e "${txtrst}"
   else
+    echo -n "  response: "
     local _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
     __format_response "$_response"
   fi
