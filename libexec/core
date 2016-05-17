@@ -236,6 +236,8 @@ __monitor_background_jobs() {
     if [[ "$_exit_status" != 0 ]]
     then
       local _host="${background_jobs_hosts[$i]}"
+      local _remote_command="${background_jobs[$i]}"
+
       error "\nA remote command failed on:
 
   $_host
@@ -244,7 +246,7 @@ Output of the command is shown above if the --verbose option
 was used and the commands executed on that remote host are
 printed below for debugging purposes:
 
-FAILED with exit status $_exit_status:\n\n${background_jobs[$i]}\n"
+FAILED with exit status $_exit_status:\n\n${_remote_command}\n"
     fi
   done
 
@@ -285,6 +287,11 @@ __parallelize() {
 __remote() {
   local _remote_job="$1"
   local _hosts="${2:-"$HOSTS_APP_USER"}"
+  # some remote jobs are too confusing to print in the error message,
+  # e.g. the aws up/download job that contains the contents from the
+  # libexec/aws file, so the remote job to print in the error description
+  # can be passed as third parameter
+  local _error_info_for_remote_job="${3:-"$_remote_job"}"
   background_jobs_pids=()
   background_jobs_hosts=()
   background_jobs=()
@@ -296,7 +303,7 @@ __remote() {
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
     background_jobs_pids+=("$!")
     local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
-    background_jobs+=("$_background_job")
+    background_jobs+=("ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_error_info_for_remote_job $SILENCE")
     background_jobs_hosts+=("$_host")
   done
 
