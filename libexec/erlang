@@ -810,7 +810,7 @@ force_start_release() {
         __edeliver_node_running && break || :
         sleep 1
       done
-      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2
+      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2 | grep -e 'Started\\|^ok' || :
     }
     if __edeliver_node_running; then
       echo \"stopping node\" $SILENCE
