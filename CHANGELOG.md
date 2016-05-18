@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.2.6__
+
+- Restart whole vm with most recent release for the `restart` command or `--start-deploy` option
+- (Re-)start node(s) synchronously and print start progress for `--verbose` option
+- Fix `upgrade` command for production deploy environments
+- Improved error output
+
 __1.2.5__
 
 - Fix error on automatic phoenix upgrades by not suspending the ranch acceptors supervisor

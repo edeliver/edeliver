@@ -8,13 +8,52 @@ defmodule Edeliver do
     (`edeliver show migrations`) or install pending migrations
     (`edeliver migrate`).
   """
+  use Application
+  use GenServer
 
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+    children = [worker(__MODULE__, [], [name: __MODULE__])]
+    options = [strategy: :one_for_one, name: Edeliver.Supervisor]
+    Supervisor.start_link(children, options)
+  end
+
+
+  def start_link(), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+
+  def run_command([:monitor_startup_progress, application_name = [_|_], :verbose]) do
+    :error_logger.add_report_handler Edeliver.StartupProgress
+    monitor_startup_progress(application_name)
+    :error_logger.delete_report_handler Edeliver.StartupProgress
+  end
+  def run_command([:monitor_startup_progress, application_name = [_|_] | _]) do
+    monitor_startup_progress(application_name)
+  end
   def run_command([command_name, application_name = [_|_] | arguments]) when is_atom(command_name) do
     application_name = to_string(application_name)
     application_name = String.to_atom(to_string(application_name))
     {^application_name, _description, application_version} = :application.which_applications |> List.keyfind(application_name, 0)
     application_version = to_string application_version
     apply __MODULE__, command_name, [application_name, application_version | arguments]
+  end
+
+  @doc """
+    Waits until the edeliver application is started.
+
+    If the edeliver application is added as last application in the `:applications` section of
+    the `application/0` fun in the `mix.exs` this waits until all applications are started.
+    This can be used as rpc call after running the asynchronous `bin/$APP start` command to
+    wait until all applications started and then return `ok`.
+  """
+  @spec monitor_startup_progress(application_name::atom) :: :ok
+  def monitor_startup_progress(application_name) do
+    edeliver_pid = Process.whereis __MODULE__
+    if is_pid(edeliver_pid) do
+      :ok
+    else
+      receive do after 500 -> :ok end
+      monitor_startup_progress(application_name)
+    end
   end
 
   def release_version(application_name, _application_version \\ nil) do

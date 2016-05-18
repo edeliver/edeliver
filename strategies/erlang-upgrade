@@ -67,6 +67,7 @@ ${bldylw}Info:${txtrst}
 }
 
 
+require_deploy_config
 set_deploy_hosts
 
 
@@ -108,6 +109,9 @@ run() {
   [[ "${#_online_upgrade_hosts[@]}" -gt 0 && "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online and ${#_offline_deploy_hosts[@]} releases to offline hosts"
   [[ "${#_online_upgrade_hosts[@]}" -gt 0 ]] && status "Deploying upgrades to ${#_online_upgrade_hosts[@]} online hosts"
   [[ "${#_offline_deploy_hosts[@]}" -gt 0 ]] && status "Deploying ${#_offline_deploy_hosts[@]} releases to offline hosts"
+  # we need to store the actual DELIVER_TO directory here, because while building
+  # is is set to the BUILD_AT directory in set_build_hosts
+  local _deliver_to_directory="$DELIVER_TO"
   # build upgrade  <---------------------------------------------------------------------------------------------------
   local _built_upgrade=false _upgrade_version_to_install
   if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts[@]}" -gt 0 ]]; then
@@ -146,6 +150,7 @@ run() {
       _upgrade_version_to_install="$RELEASE_VERSION"
     fi # building upgrade finished
     # deploy upgrade to online hosts running the same version <--------------------------------------------------------
+    DELIVER_TO="$_deliver_to_directory"
     status "Upgrading $DEPLOY_ENVIRONMENT hosts to version $_upgrade_version_to_install"
     HOSTS="${_online_upgrade_hosts[@]}"
     update_hosts_app_user
@@ -155,6 +160,7 @@ run() {
   fi
 
   # deploy clean release to offline hosts and start it <---------------------------------------------------------------
+  DELIVER_TO="$_deliver_to_directory"
   if [[  "${#_offline_deploy_hosts[@]}" -gt 0 ]]; then
     local _release_version_to_install="$_upgrade_version_to_install"
     if [[ "$_built_upgrade" != "true" ]]; then

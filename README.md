@@ -79,12 +79,12 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEAS
 __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package](https://hex.pm/packages/edeliver) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, ">= 1.2.5"}]
+        [{:edeliver, ">= 1.2.6"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
 
-For __additional edeliver commands__ `version`, `migrate` and `show migrations` __add edeliver as application for your relase__ in the `mix.exs` file:
+For __additional edeliver commands__ `version`, `migrate` and `show migrations` __add edeliver as application for your release__ in the `mix.exs` file (should be the last application):
 
 	  def application, do: [
 	    applications: [
@@ -98,7 +98,7 @@ __When using rebar__, edeliver can be added as [rebar](https://github.com/basho/
 
     {deps, [
       % ...
-      {edeliver, "1.2.5",
+      {edeliver, "1.2.6",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 

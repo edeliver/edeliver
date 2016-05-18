@@ -294,7 +294,15 @@ copy_release_to_release_store() {
       [ -f ~/.profile ] && source ~/.profile
       set -e
       cd $(dirname ${_release_file}) $SILENCE
-      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;"
+      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'${_aws_script_content}EOF ;" "$HOSTS_APP_USER" "
+
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      cd $(dirname ${_release_file}) $SILENCE
+      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" \\
+      AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'
+        content from libexec/aws file
+      EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
@@ -667,7 +675,16 @@ upload_release_archive() {
       set -e
       mkdir -p ${_destination_directory} $SILENCE
       cd ${_destination_directory} $SILENCE
-      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;"
+      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;" "$HOSTS_APP_USER" "
+
+      [ -f ~/.profile ] && source ~/.profile
+      set -e
+      mkdir -p ${_destination_directory} $SILENCE
+      cd ${_destination_directory} $SILENCE
+      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" \\
+      AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'
+        content from libexec/aws file
+      EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     __remote "
       [ -f ~/.profile ] && source ~/.profile
@@ -784,13 +801,34 @@ force_start_release() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${DELIVER_TO}/${APP} $SILENCE
-    ping_result=\$(bin/${APP} ping || :)
-    if [[ \"\$ping_result\" = \"pong\" ]]; then
-      echo \"restarting node\" $SILENCE
-      bin/${APP} restart $SILENCE
+    __edeliver_node_running() {
+      bin/${APP} ping 2>/dev/null >/dev/null
+    }
+    __edeliver_synchronous_start() {
+      bin/${APP} start | tail -n+2
+      for i in {1..10}; do
+        __edeliver_node_running && break || :
+        sleep 1
+      done
+      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2 | grep -e 'Started\\|^ok' || :
+    }
+    if __edeliver_node_running; then
+      echo \"stopping node\" $SILENCE
+      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
+      else
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+      fi
+      if [[ \$? -ne 0 ]]; then
+        cat \"\$STOP_OUTPUT\"
+        exit 1
+      fi
+    fi
+    echo \"starting node\" $SILENCE
+    if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+      __edeliver_synchronous_start $SILENCE
     else
-      echo \"starting node\" $SILENCE
-      bin/${APP} start $SILENCE
+      ${_node_env}bin/${APP} start ${_config_arg} $SILENCE
     fi
   "
 }
