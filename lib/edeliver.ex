@@ -7,10 +7,24 @@ defmodule Edeliver do
     (`edeliver version`), show the pending migrations
     (`edeliver show migrations`) or install pending migrations
     (`edeliver migrate`).
+
+    In addition it represents the edeliver application callback module
+    and starts a process registered locally as `Edeliver` whichs onliest
+    purpose is to be able to detect whether the release was successfully
+    started. This requires to start edeliver as last application in the
+    release.
+
   """
   use Application
   use GenServer
 
+  @doc """
+    Starts the edeliver application
+
+    including the `Edeliver.Supervisor` process supervising the
+    `Edeliver` generic server.
+  """
+  @spec start(term, term) :: {:ok, pid}
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
     children = [worker(__MODULE__, [], [name: __MODULE__])]
@@ -18,9 +32,23 @@ defmodule Edeliver do
     Supervisor.start_link(children, options)
   end
 
-
+  @doc "Starts this gen-server registered locally as `Edeliver`"
+  @spec start_link() :: {:ok, pid}
   def start_link(), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
 
+  @doc """
+    Runs the edeliver command on the erlang node
+
+    started as:
+    ```
+    bin/$APP rpc Elixir.Edeliver run_command '[[command_name, \"$APP\", arguments...]].'
+    ```
+
+    The first argument must be the name of the command, the second argument the
+    name  of the main application and all further arguments are passed to the
+    function thats name is equal to the command name.
+  """
+  @spec run_command(args::[term]) :: no_return
   def run_command([:monitor_startup_progress, application_name = [_|_], :verbose]) do
     :error_logger.add_report_handler Edeliver.StartupProgress
     monitor_startup_progress(application_name)
@@ -56,6 +84,12 @@ defmodule Edeliver do
     end
   end
 
+  @doc """
+    Returns the running release version
+
+    which is either the `:current` version or the `:permanent` version.
+  """
+  @spec release_version(application_name::atom, application_version::String.t) :: String.t
   def release_version(application_name, _application_version \\ nil) do
     releases = :release_handler.which_releases
     application_name = Atom.to_char_list application_name
@@ -68,6 +102,9 @@ defmodule Edeliver do
     end
   end
 
+  @doc """
+    Prints the pending ecto migrations
+  """
   def list_pending_migrations(application_name, application_version, ecto_repository \\ '') do
     repository = ecto_repository!(application_name, ecto_repository)
     versions = Ecto.Migrator.migrated_versions(repository)
@@ -80,11 +117,17 @@ defmodule Edeliver do
     end)
   end
 
+  @doc """
+    Runs the pending ecto migrations
+  """
   def migrate(application_name, application_version, ecto_repository, direction, migration_version \\ :all) when is_atom(direction) do
     options = if migration_version == :all, do: [all: true], else: [to: to_string(migration_version)]
     Ecto.Migrator.run(ecto_repository!(application_name, ecto_repository), migrations_dir(application_name, application_version), direction, options)
   end
 
+  @doc """
+    Returns the current directory containing the ecto migrations.
+  """
   def migrations_dir(application_name, application_version) do
     # use priv dir from installed version
     lib_dir = :code.priv_dir(application_name) |> to_string |> Path.dirname |> Path.dirname
