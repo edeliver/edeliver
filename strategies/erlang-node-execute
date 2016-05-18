@@ -18,9 +18,9 @@ ${txtbld}Options:${txtrst}
   --host=[u@]vwx.yz Run command only on that host,
                     even if different hosts are configured"
     case "$NODE_ACTION" in
-        (start)    echo -e "\n${bldylw}Info:${txtrst} Starts the node(s) on the deploy hosts.\n" ;;
+        (start)    echo -e "  --verbose Displays progress of started applications\n            if the startup progress takes some time.\n\n${bldylw}Info:${txtrst} Starts the node(s) on the deploy hosts.\n" ;;
         (stop)     echo -e "\n${bldylw}Info:${txtrst} Stops the node(s) on the deploy hosts.\n" ;;
-        (restart)  echo -e "\n${bldylw}Info:${txtrst} Restarts the application on the deploy host(s) with the most recent version.\n" ;;
+        (restart)  echo -e "  --verbose Displays progress of started applications\n            if the startup progress takes some time.\n\n${bldylw}Info:${txtrst} Restarts the application on the deploy host(s) with the most recent version.\n" ;;
         (ping)     echo -e "\n${bldylw}Info:${txtrst} Checks whether the node(s) on the deploy host(s)\n      are running.\n" ;;
         (version)  echo -e "\n${bldylw}Info:${txtrst} Displays the running version(s) on the deploy host(s).\n" ;;
     esac
@@ -142,9 +142,16 @@ __execute_node_command_synchronously() {
   local _node_command=$1
   local _node=${NODES# *}
   __print_node_command_result "single_node" "0" "$_node" ""
-  echo -n "  response: "
-  local _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
-  __format_response "$_response"
+  if [[ "$MODE" = "verbose" ]] &&  [[ "${_node_command}" = start* || "${_node_command}" = restart* ]]; then
+    # display (re)start progress (= started applications)
+    echo -en "  response: ${txtylw}"
+    __execute_node_command "single_node" "$_node" "$_node_command"
+    echo -e "${txtrst}"
+  else
+    echo -n "  response: "
+    local _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
+    __format_response "$_response"
+  fi
 }
 
 # formats the response when node command is executed
@@ -203,21 +210,41 @@ __execute_node_command() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_path}/${APP} $SILENCE
-    if [[ \"${_node_command}\" = restart* ]]; then
+    __edeliver_node_running() {
+      bin/${APP} ping 2>/dev/null >/dev/null
+    }
+    __edeliver_synchronous_start() {
+      bin/${APP} start | tail -n+2
+      for i in {1..10}; do
+        __edeliver_node_running && break || :
+        sleep 1
+      done
+      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2 | grep -e 'Started\\|^ok' || :
+    }
+    if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
+      ping_result=\$(bin/${APP} ping | tail -n+2 || :)
+      if __edeliver_node_running; then
+        echo \"${txtred}already running${txtrst}\" && exit 1
+      else
+        __edeliver_synchronous_start
+      fi
+    elif [[ \"${_node_command}\" = restart* ]]; then
       # use stop / start instead of restart command to
       # not just restart the applications but also the erlang vm
       # with the most recent release
-      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
-      else
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+      if __edeliver_node_running; then
+        if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+          STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
+        else
+          STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+        fi
+        if [[ \$? -ne 0 ]]; then
+          cat \"\$STOP_OUTPUT\"
+          exit 1
+        fi
       fi
-      if [[ \$? -ne 0 ]]; then
-        cat \"\$STOP_OUTPUT\"
-        exit 1
-      fi
       if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-        ${_node_env}bin/${APP} start ${_config_arg} | tail -n+2
+        __edeliver_synchronous_start
       else
         ${_node_env}bin/${APP} start ${_config_arg}
       fi

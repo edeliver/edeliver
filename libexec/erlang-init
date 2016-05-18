@@ -89,6 +89,7 @@ __deploy_help() {
   echo -e "
 ${bldwht}Usage:${txtrst}
   edeliver deploy release [[to] staging|production] [Options]
+  edeliver deploy upgrade [[to] staging|production] [Options]
 
 ${bldylw}Info:${txtrst}
   Deploys either a release or an upgrade on all staging (default)
