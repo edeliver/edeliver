@@ -21,6 +21,7 @@ defmodule Mix.Tasks.Edeliver do
 
     * mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
     * mix edeliver upgrade [staging|production] [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+    * mix edeliver update  [staging|production] [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
 
   ## Node Commands:
 
