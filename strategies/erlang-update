@@ -66,6 +66,8 @@ set_deploy_hosts
 
 
 run() {
+  __exec_if_defined "pre_erlang_update"
+
   [[ "$MODE" = "verbose" ]] && local _verbose="--verbose"
   [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production" || export DEPLOY_ENVIRONMENT="staging"
   # detect revision to install on build host
@@ -96,6 +98,8 @@ run() {
   # TODO: restart only nodes that don't run the current version already
   source $(dirname ${BASH_SOURCE[0]})/erlang-deploy-release
   run
+  __exec_if_defined "post_erlang_deployed_update"
+
   # validate that all hosts run the new version and are still alive <-----------------------------------------------
   if [[ "$START_DEPLOY" = "true" ]]; then
     set_deploy_hosts
@@ -118,6 +122,7 @@ run() {
     done
     [[ -n "$_validate_upgrade_error_message" ]] && error "$_validate_upgrade_error_message\n" || :
   fi
+  __exec_if_defined "post_erlang_update"
 }
 
 
