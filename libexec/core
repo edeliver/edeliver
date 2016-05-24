@@ -320,7 +320,7 @@ __sync_remote() {
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
   local _host="$_hosts"
   if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
+    ssh -t -A -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
 
   $_host
 
