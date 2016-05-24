@@ -1,6 +1,11 @@
 eDeliver Versions
 =================
 
+__1.2.7__
+
+- Allow to use umbrella projects also for the `upgrade` or `build upgrade` task
+- Use ssh agent forwarding on build host to allow to use private git repositories as dependencies
+
 __1.2.6__
 
 - Restart whole vm with most recent release for the `restart` command or `--start-deploy` option
