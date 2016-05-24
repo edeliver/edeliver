@@ -793,44 +793,70 @@ remote_clean_release_dir() {
       "
 }
 
-# starts the deployed release. if release is already running,
-# it is restarted.
-force_start_release() {
-  status "Starting deployed release"
-  __remote "
+__get_node_command() {
+  local _node_command="$1"
+  local _app_path="$2"
+  local _config_arg="$3"
+
+  echo "
     [ -f ~/.profile ] && source ~/.profile
     set -e
-    cd ${DELIVER_TO}/${APP} $SILENCE
+    cd ${_app_path}/${APP} $SILENCE
+    output_lines=\"\$(bin/${APP} ping | wc -l)\"
+    if [[ \"output_lines\" -gt 1 ]]; then
+      output_filter_command='tail'
+      output_filter_command_options=\"-n+\$output_lines\"
+    else
+      output_filter_command='cat'
+      output_filter_command_options=''
+    fi
     __edeliver_node_running() {
       bin/${APP} ping 2>/dev/null >/dev/null
     }
     __edeliver_synchronous_start() {
-      bin/${APP} start | tail -n+2
+      bin/${APP} start | \$output_filter_command \$output_filter_command_options
       for i in {1..10}; do
         __edeliver_node_running && break || :
         sleep 1
       done
-      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2 | grep -e 'Started\\|^ok' || :
+      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
     }
-    if __edeliver_node_running; then
-      echo \"stopping node\" $SILENCE
-      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
+    if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
+      ping_result=\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)
+      if __edeliver_node_running; then
+        echo \"${txtred}already running${txtrst}\" && exit 1
       else
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
+        __edeliver_synchronous_start
       fi
-      if [[ \$? -ne 0 ]]; then
-        cat \"\$STOP_OUTPUT\"
-        exit 1
+    elif [[ \"${_node_command}\" = restart* ]]; then
+      # use stop / start instead of restart command to
+      # not just restart the applications but also the erlang vm
+      # with the most recent release
+      if __edeliver_node_running; then
+        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)
+        if [[ \$? -ne 0 ]]; then
+          cat \"\$STOP_OUTPUT\"
+          exit 1
+        fi
       fi
-    fi
-    echo \"starting node\" $SILENCE
-    if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-      __edeliver_synchronous_start $SILENCE
-    else
-      ${_node_env}bin/${APP} start ${_config_arg} $SILENCE
+      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+        __edeliver_synchronous_start
+      else
+        ${_node_env}bin/${APP} start ${_config_arg} | \$output_filter_command \$output_filter_command_options
+      fi
+    else # no restart command
+      ${_node_env}bin/${APP} ${_node_command} ${_config_arg} | \$output_filter_command \$output_filter_command_options
     fi
   "
+}
+
+# starts the deployed release. if release is already running,
+# it is restarted.
+force_start_release() {
+  status "Starting deployed release"
+  __remote "{
+    $(__get_node_command "restart" "$DELIVER_TO" "")
+  }"
 }
 
 # installs a release at all production hosts
