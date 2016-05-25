@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.2.8__
+
+- Add `update` command to build and deploy in a single step
+- Allow to append mix env as metadata to version
+- Exrm `1.0.5` compatibility for node commands
+- Allow to link sys.config and vm.args for each mix env
+
 __1.2.7__
 
 - Allow to use umbrella projects also for the `upgrade` or `build upgrade` task
