@@ -64,22 +64,22 @@ run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -n+2 | tr -d \\\""
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\""
   elif [[ "$NODE_ACTION" = ping ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="ping | tail -n+2"
+    NODE_ACTION="ping"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\", \"$ECTO_REPOSITORY\"]].' | tail -n+2"
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[list_pending_migrations, \"$APP\", \"$ECTO_REPOSITORY\"]].'"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Showing migrations is only supported when using mix as release command."
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     local __up_or_down="up"
     for arg in $ARGS; do [[ "$arg" = "down" ]] && local __up_or_down="down"; done
     [[ -n "$VERSION" ]] && local __to_version=", \"$VERSION\"" || local __to_version=""
-    NODE_ACTION="rpc Elixir.Edeliver run_command '[[migrate, \"$APP\", \"$ECTO_REPOSITORY\", ${__up_or_down}${__to_version}]].' | tail -n+2"
+    NODE_ACTION="rpc Elixir.Edeliver run_command '[[migrate, \"$APP\", \"$ECTO_REPOSITORY\", ${__up_or_down}${__to_version}]].'"
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Executing migrations is only supported when using mix as release command."
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="$NODE_ACTION | tail -n+2"
+    NODE_ACTION="$NODE_ACTION"
   fi
   __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
 }
@@ -187,6 +187,7 @@ __format_response() {
 }
 
 
+
 # executes a node command on a given node.
 __execute_node_command() {
   local _node_index=$1
@@ -206,52 +207,7 @@ __execute_node_command() {
 
   [[ -n "$ECTO_REPOSITORY" ]] && local _node_env="ECTO_REPOSITORY='$ECTO_REPOSITORY' "
 
-  _remote_job="
-    [ -f ~/.profile ] && source ~/.profile
-    set -e
-    cd ${_path}/${APP} $SILENCE
-    __edeliver_node_running() {
-      bin/${APP} ping 2>/dev/null >/dev/null
-    }
-    __edeliver_synchronous_start() {
-      bin/${APP} start | tail -n+2
-      for i in {1..10}; do
-        __edeliver_node_running && break || :
-        sleep 1
-      done
-      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | tail -n+2 | grep -e 'Started\\|^ok' || :
-    }
-    if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
-      ping_result=\$(bin/${APP} ping | tail -n+2 || :)
-      if __edeliver_node_running; then
-        echo \"${txtred}already running${txtrst}\" && exit 1
-      else
-        __edeliver_synchronous_start
-      fi
-    elif [[ \"${_node_command}\" = restart* ]]; then
-      # use stop / start instead of restart command to
-      # not just restart the applications but also the erlang vm
-      # with the most recent release
-      if __edeliver_node_running; then
-        if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-          STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | tail -n+2)
-        else
-          STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg})
-        fi
-        if [[ \$? -ne 0 ]]; then
-          cat \"\$STOP_OUTPUT\"
-          exit 1
-        fi
-      fi
-      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
-        __edeliver_synchronous_start
-      else
-        ${_node_env}bin/${APP} start ${_config_arg}
-      fi
-    else # no restart command
-      ${_node_env}bin/${APP} ${_node_command} ${_config_arg}
-    fi
-  "
+  _remote_job="$(__get_node_command "$_node_command" "$_path" "$_config_arg")"
 
   [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
   ssh $_terminal_option -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
