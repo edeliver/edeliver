@@ -28,6 +28,7 @@ defmodule Mix.Tasks.Release.Version do
       `-unless-master` is used, the branch is only appended unless it is the master branch.
     * `[append-][build-]date` Appends the build date as YYYYMMDD
     * `[append-][git-]commit-count[-all[-branches]|-branch]` Appends the number of commits
+    * `[append-]mix-env` Appends the mix environment used while building the release
       from the current branch or across all branches (default).  Appending the commit count
       from the current branch makes more sense, if the branch name is also appended as metadata
       to avoid conflicts from different branches.
@@ -154,7 +155,7 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec parse_args(OptionParser.argv) :: :show | {:error, message::String.t} | {:modify, [modification_fun]}
   def parse_args(args) do
-    append_metadata_options = ["commit_count", "commit_count_branch", "revision", "date", "branch", "branch_unless_master"]
+    append_metadata_options = ["commit_count", "commit_count_branch", "revision", "date", "branch", "branch_unless_master", "mix_env"]
     update_version_options  = ["major", "minor", "patch", "set"]
 
     args = normalize_args(args)
@@ -227,6 +228,7 @@ defmodule Mix.Tasks.Release.Version do
     end) |> Enum.map(fn(arg) ->
       case arg do
         "commit-count" -> "commit_count"
+        "mix-env" -> "mix_env"
         "commit-count-branch" -> "commit_count_branch"
         "branch-unless-master" -> "branch_unless_master"
         command -> command
@@ -259,6 +261,7 @@ defmodule Mix.Tasks.Release.Version do
   def modify_version_major({version, has_metadata}), do: {update_version(version, :major), has_metadata}
   def modify_version_minor({version, has_metadata}), do: {update_version(version, :minor), has_metadata}
   def modify_version_patch({version, has_metadata}), do: {update_version(version, :patch), has_metadata}
+  def modify_version_mix_env({version, has_metadata}),             do: {add_metadata(version, Atom.to_string(Mix.env),     has_metadata),        _has_metadata = true}
   def modify_version_commit_count({version, has_metadata}),        do: {add_metadata(version, __MODULE__.get_commit_count, has_metadata),        _has_metadata = true}
   def modify_version_commit_count_branch({version, has_metadata}), do: {add_metadata(version, __MODULE__.get_commit_count_branch, has_metadata), _has_metadata = true}
   def modify_version_revision({version, has_metadata}),            do: {add_metadata(version, __MODULE__.get_git_revision, has_metadata),        _has_metadata = true}

@@ -31,8 +31,8 @@ ${txtbld}Options:${txtrst}
              if there are several modules. The module must implement
              the Behaviour Edeliver.Relup.Modification.
   --auto-version=[git-]revision|[git-]commit-count[-all[-branches]|-branch]
-             |[git-]branch[-unless-master]|[build-]date ${txtgrn}Appends${txtrst} the git sha1
-             revision, the current commit count either across all branches
+             |[git-]branch[-unless-master]|[build-]date|mix-env ${txtgrn}Appends${txtrst} the git
+             sha1 revision, the current commit count either across all branches
              (default) or for the current branch, the current branch name
              (optionally only unless it is the master branch) and/or the
              build date as ${txtgrn}metadata to the current upgrade version${txtrst}. To append
