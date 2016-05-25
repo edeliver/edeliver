@@ -14,12 +14,13 @@ __help() {
 
   ${txtbld}Build Commands:${txtrst}
   edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>] [Options]
-  edeliver build appups|upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                               [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+  edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
+                        [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
 
   ${txtbld}Deploy Commands:${txtrst}
   edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
   edeliver upgrade [staging|production] [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
+  edeliver update  [staging|production] [--to=<git-tag-or-revision>] [--branch=<git-branch>] [Options]
 
   ${txtbld}Node Commands:${txtrst}
   edeliver start|stop|restart|ping|version [staging|production] [Options]

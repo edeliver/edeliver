@@ -20,6 +20,12 @@ mix edeliver deploy release to production
 mix edeliver start production
 ```
 
+Or execute the three steps by a single command:
+
+```sh
+mix edeliver update production --branch=feature --start-deploy
+```
+
 Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
 ```sh
