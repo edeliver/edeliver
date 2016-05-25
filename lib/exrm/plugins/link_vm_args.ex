@@ -5,7 +5,7 @@ defmodule ReleaseManager.Plugin.LinkVMARgs do
 
   def before_release(_), do: nil
 
-  def after_release(%Config{env: :prod, version: version, name: name}) do
+  def after_release(%Config{version: version, name: name}) do
     case System.get_env "LINK_VM_ARGS" do
       vm_args_link_destination = <<_,_::binary>> ->
         debug "Linking vm.args file"

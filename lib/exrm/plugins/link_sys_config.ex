@@ -5,7 +5,7 @@ defmodule ReleaseManager.Plugin.LinkSysConfig do
 
   def before_release(_), do: nil
 
-  def after_release(%Config{env: :prod, version: version, name: name}) do
+  def after_release(%Config{version: version, name: name}) do
     case System.get_env "LINK_SYS_CONFIG" do
       sys_config_link_destination = <<_,_::binary>> ->
         debug "Linking sys.config file"
