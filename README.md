@@ -20,6 +20,12 @@ mix edeliver deploy release to production
 mix edeliver start production
 ```
 
+Or execute the three steps by a single command:
+
+```sh
+mix edeliver update production --branch=feature --start-deploy
+```
+
 Build a **live upgrade** from v1.0 to v2.0 for an erlang/elixir release and deploy it to your production hosts:
 
 ```sh
@@ -79,7 +85,7 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEAS
 __If using [mix](http://elixir-lang.org/getting_started/mix/1.html)__, add it as [hex package](https://hex.pm/packages/edeliver) to you `mix.exs` config:
 
     defp deps do
-        [{:edeliver, ">= 1.2.7"}]
+        [{:edeliver, ">= 1.2.8"}]
     end
 
 And run `mix do deps.get, deps.compile`. Edeliver is then available as __mix task__: `mix edeliver`.
@@ -98,7 +104,7 @@ __When using rebar__, edeliver can be added as [rebar](https://github.com/basho/
 
     {deps, [
       % ...
-      {edeliver, "1.2.7",
+      {edeliver, "1.2.8",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
