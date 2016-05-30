@@ -165,12 +165,6 @@ erlang_clean_compile() {
       echo \"using rebar to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
       $REBAR_CMD compile
-    elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do${_set_auto_version} compile
-      else
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do clean,${_set_auto_version} compile
-      fi
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to compile files\"
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
