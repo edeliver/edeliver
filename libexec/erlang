@@ -120,7 +120,7 @@ erlang_get_and_update_deps() {
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
       echo \"using mix to fetch and update deps\"
       if [ ! -f ~/.mix/rebar ]; then
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD local.rebar
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD local.rebar --force
       else
         echo \"rebar for mix was built already\"
       fi
