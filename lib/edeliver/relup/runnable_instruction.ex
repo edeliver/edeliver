@@ -44,7 +44,12 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
   """
   use Behaviour
-
+  require Logger
+  import Edeliver.Relup.ShiftInstruction, only: [
+    ensure_module_loaded_before_first_runnable_instructions: 3,
+    ensure_module_unloaded_after_last_runnable_instruction: 3,
+  ]
+  alias Edeliver.Relup.Instructions
 
 
   @doc """
@@ -79,10 +84,172 @@ defmodule Edeliver.Relup.RunnableInstruction do
   """
   @callback dependencies() :: [instruction_module::atom]
 
+  @doc """
+    Logs the message of the given type on the node
+
+    which executes the upgrade and displays it as output of
+    the `$APP/bin/$APP upgrade $RELEASE` command. The message is
+    prefixed with a string derived from the message type.
+  """
+  @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
+  def log_in_upgrade_script(type, message) do
+    message = String.to_char_list(message)
+    prefix = case type do
+      :error   -> '---> X '
+      :warning -> '---> ! '
+      :info    -> '---> '
+      _        -> '----> ' # debug
+    end
+    format_in_upgrade_script('~s~s~n', [prefix, message])
+  end
+
+  @doc """
+    Formats and prints the message on the node
+
+    running the upgrade script which was started by the
+    `$APP/bin/$APP upgrade $RELEASE` command.
+  """
+  @spec format_in_upgrade_script(format::char_list, arguments::[term]) :: no_return
+  def format_in_upgrade_script(format, arguments) do
+    :erlang.nodes |> Enum.filter(fn node ->
+      Regex.match?(~r/upgrader_\d+/, Atom.to_string(node))
+    end) |> Enum.each(fn node ->
+      :rpc.cast(node, :io, :format, [:user, format, arguments])
+    end)
+  end
+
+  @doc """
+    Logs an error using the `Logger` on the running node which is upgraded.
+
+    In addition the same error message is logged on the node which executes
+    the upgrade and is displayed as output of the
+    `$APP/bin/$APP upgarde $RELEASE` command.
+  """
+  @spec error(message::String.t) :: no_return
+  def error(message) do
+    Logger.error message
+    log_in_upgrade_script(:error, message)
+  end
+
+  @doc """
+    Logs a warning using the `Logger` on the running node which is upgraded.
+
+    In addition the same warning message is logged on the node which executes
+    the upgrade and is displayed as output of the
+    `$APP/bin/$APP upgarde $RELEASE` command.
+  """
+  @spec warn(message::String.t) :: no_return
+  def warn(message) do
+    Logger.warn message
+    log_in_upgrade_script(:warning, message)
+  end
+
+  @doc """
+    Logs an info message using the `Logger` on the running node which is upgraded.
+
+    In addition the same info message is logged on the node which executes
+    the upgrade and is displayed as output of the
+    `$APP/bin/$APP upgarde $RELEASE` command.
+  """
+  @spec info(message::String.t) :: no_return
+  def info(message) do
+    Logger.info message
+    log_in_upgrade_script(:info, message)
+  end
+
+  @doc """
+    Logs a debug message using the `Logger` on the running node which is upgraded.
+
+    In addition the same debug message is logged on the node which executes
+    the upgrade and is displayed as output of the
+    `$APP/bin/$APP upgarde $RELEASE` command.
+  """
+  @spec debug(message::String.t) :: no_return
+  def debug(message) do
+    Logger.debug message
+    log_in_upgrade_script(:debug, message)
+  end
+
+  @doc """
+    Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
+    and returned by the `c:Edeliver.Relup.RunnableInstruction.dependencies/0` callback are loaded before this instruction is executed
+    during the upgrade.
+  """
+  @spec ensure_dependencies_loaded_before_instruction_for_upgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+  def ensure_dependencies_loaded_before_instruction_for_upgrade(instructions = %Instructions{}, call_this_instruction, dependencies) do
+    dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{up_instructions: up_instructions}) ->
+      %{instructions_acc| up_instructions: ensure_module_loaded_before_first_runnable_instructions(up_instructions, call_this_instruction, dependency)}
+    end)
+  end
+
+  @doc """
+    Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
+    and returned by the `c:Edeliver.Relup.RunnableInstruction.dependencies/0` callback are unloaded after this instruction is executed
+    during the downgrade.
+  """
+  @spec ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+  def ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions = %Instructions{}, call_this_instruction, dependencies) do
+    dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{down_instructions: down_instructions}) ->
+      %{instructions_acc| down_instructions: ensure_module_unloaded_after_last_runnable_instruction(down_instructions, call_this_instruction, dependency)}
+    end)
+  end
+
+  @doc """
+    Assumes that the pattern matches or throws an error with the given error message.
+
+    The error message is logged as error to the logfile
+    using the `Logger` and displayed as error output by the
+    `$APP/bin/$APP upgrade $RELEASE` task using the
+    `$APP/ebin/install_upgrade.escript` script. If the pattern matches
+    the variables from the matching are assigned.
+  """
+  defmacro assume({:=, _, [left, right]} = assertion, error_message) do
+    code = Macro.escape(assertion)
+
+    left = Macro.expand(left, __CALLER__)
+    vars = collect_vars_from_pattern(left)
+
+    quote do
+      right = unquote(right)
+      expr  = unquote(code)
+      unquote(vars) =
+        case right do
+          unquote(left) ->
+            unquote(vars)
+          _ ->
+            error unquote(error_message)
+            # error is shown as erlang term in the upgrade script
+            # `$APP/ebin/install_upgrade.escript`. so use an erlang
+            # string as error message
+            throw {:error, String.to_char_list(unquote(error_message))}
+        end
+      right
+    end
+  end
+
+  @privdoc "Used by the assume macro for pattern assignment"
+  defp collect_vars_from_pattern(expr) do
+    {_, vars} =
+      Macro.prewalk(expr, [], fn
+        {:::, _, [left, _]}, acc ->
+          {[left], acc}
+        {skip, _, [_]}, acc when skip in [:^, :@] ->
+          {:ok, acc}
+        {:_, _, context}, acc when is_atom(context) ->
+          {:ok, acc}
+        {name, _, context}, acc when is_atom(name) and is_atom(context) ->
+          {:ok, [{name, [generated: true], context}|acc]}
+        node, acc ->
+          {node, acc}
+      end)
+    Enum.uniq(vars)
+  end
+
   @doc false
   defmacro __using__(_opts) do
     quote do
       use Edeliver.Relup.Instruction
+      import Edeliver.Relup.RunnableInstruction
       @behaviour Edeliver.Relup.RunnableInstruction
       alias Edeliver.Relup.Instructions
       alias ReleaseManager.Config
@@ -93,8 +260,8 @@ defmodule Edeliver.Relup.RunnableInstruction do
         insert_where_fun = insert_where
         instructions |> insert_where_fun.(call_this_instruction)
                      |> ensure_module_loaded_before_instruction(call_this_instruction)
-                     |> ensure_dependencies_loaded_before_instruction_for_upgrade(call_this_instruction)
-                     |> ensure_dependencies_unloaded_after_instruction_for_downgrade(call_this_instruction)
+                     |> ensure_dependencies_loaded_before_instruction_for_upgrade(call_this_instruction, dependencies())
+                     |> ensure_dependencies_unloaded_after_instruction_for_downgrade(call_this_instruction, dependencies())
       end
 
       @spec arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}) :: term
@@ -118,169 +285,6 @@ defmodule Edeliver.Relup.RunnableInstruction do
       def call_this(arguments \\ []) do
         {:apply, {__MODULE__, :run, [arguments]}}
       end
-
-      @doc """
-        Logs an error using the `Logger` on the running node which is upgraded.
-
-        In addition the same error message is logged on the node which executes
-        the upgrade and is displayed as output of the
-        `$APP/bin/$APP upgarde $RELEASE` command.
-      """
-      @spec error(message::String.t) :: no_return
-      def error(message) do
-        Logger.error message
-        log_in_upgrade_script(:error, message)
-      end
-
-      @doc """
-        Logs a warning using the `Logger` on the running node which is upgraded.
-
-        In addition the same warning message is logged on the node which executes
-        the upgrade and is displayed as output of the
-        `$APP/bin/$APP upgarde $RELEASE` command.
-      """
-      @spec warn(message::String.t) :: no_return
-      def warn(message) do
-        Logger.warn message
-        log_in_upgrade_script(:warning, message)
-      end
-
-      @doc """
-        Logs an info message using the `Logger` on the running node which is upgraded.
-
-        In addition the same info message is logged on the node which executes
-        the upgrade and is displayed as output of the
-        `$APP/bin/$APP upgarde $RELEASE` command.
-      """
-      @spec info(message::String.t) :: no_return
-      def info(message) do
-        Logger.info message
-        log_in_upgrade_script(:info, message)
-      end
-
-       @doc """
-        Logs a debug message using the `Logger` on the running node which is upgraded.
-
-        In addition the same debug message is logged on the node which executes
-        the upgrade and is displayed as output of the
-        `$APP/bin/$APP upgarde $RELEASE` command.
-      """
-      @spec debug(message::String.t) :: no_return
-      def debug(message) do
-        Logger.debug message
-        log_in_upgrade_script(:debug, message)
-      end
-
-      @doc """
-        Assumes that the pattern matches or throws an error with the given error message.
-
-        The error message is logged as error to the logfile
-        using the `Logger` and displayed as error output by the
-        `$APP/bin/$APP upgrade $RELEASE` task using the
-        `$APP/ebin/install_upgrade.escript` script. If the pattern matches
-        the variables from the matching are assigned.
-      """
-      defmacro assume({:=, _, [left, right]} = assertion, error_message) do
-        code = Macro.escape(assertion)
-
-        left = Macro.expand(left, __CALLER__)
-        vars = collect_vars_from_pattern(left)
-
-        quote do
-          right = unquote(right)
-          expr  = unquote(code)
-          unquote(vars) =
-            case right do
-              unquote(left) ->
-                unquote(vars)
-              _ ->
-                error unquote(error_message)
-                # error is shown as erlang term in the upgrade script
-                # `$APP/ebin/install_upgrade.escript`. so use an erlang
-                # string as error message
-                throw {:error, String.to_char_list(unquote(error_message))}
-            end
-          right
-        end
-      end
-
-      @privdoc "Used by the assume macro for pattern assignment"
-      defp collect_vars_from_pattern(expr) do
-        {_, vars} =
-          Macro.prewalk(expr, [], fn
-            {:::, _, [left, _]}, acc ->
-              {[left], acc}
-            {skip, _, [_]}, acc when skip in [:^, :@] ->
-              {:ok, acc}
-            {:_, _, context}, acc when is_atom(context) ->
-              {:ok, acc}
-            {name, _, context}, acc when is_atom(name) and is_atom(context) ->
-              {:ok, [{name, [generated: true], context}|acc]}
-            node, acc ->
-              {node, acc}
-          end)
-        Enum.uniq(vars)
-      end
-
-      @doc """
-        Logs the message of the given type on the node
-
-        which executes the upgrade and displays it as output of
-        the `$APP/bin/$APP upgrade $RELEASE` command. The message is
-        prefixed with a string derived from the message type.
-      """
-      @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
-      def log_in_upgrade_script(type, message) do
-        message = String.to_char_list(message)
-        prefix = case type do
-          :error   -> '---> X '
-          :warning -> '---> ! '
-          :info    -> '---> '
-          _        -> '----> ' # debug
-        end
-        format_in_upgrade_script('~s~s~n', [prefix, message])
-      end
-
-
-      @doc """
-        Formats and prints the message on the node
-
-        running the upgrade script which was started by the
-        `$APP/bin/$APP upgrade $RELEASE` command.
-      """
-      @spec format_in_upgrade_script(format::char_list, arguments::[term]) :: no_return
-      def format_in_upgrade_script(format, arguments) do
-        :erlang.nodes |> Enum.filter(fn node ->
-          Regex.match?(~r/upgrader_\d+/, Atom.to_string(node))
-        end) |> Enum.each(fn node ->
-          :rpc.cast(node, :io, :format, [:user, format, arguments])
-        end)
-      end
-
-      @doc """
-        Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
-        and returned by the `dependencies/0` callback are loaded before this instruction is executed
-        during the upgrade.
-      """
-      @spec ensure_dependencies_loaded_before_instruction_for_upgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
-      def ensure_dependencies_loaded_before_instruction_for_upgrade(instructions = %Instructions{}, call_this_instruction, dependencies \\ dependencies()) do
-        dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{up_instructions: up_instructions}) ->
-          %{instructions_acc| up_instructions: ensure_module_loaded_before_first_runnable_instructions(up_instructions, call_this_instruction, dependency)}
-        end)
-      end
-
-      @doc """
-        Ensures that all `Edeliver.Relup.RunnableInstruction` modules used / referenced by this instruction
-        and returned by the `dependencies/0` callback are unloaded after this instruction is executed
-        during the downgrade.
-      """
-      @spec ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
-      def ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions = %Instructions{}, call_this_instruction, dependencies \\ dependencies()) do
-        dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{down_instructions: down_instructions}) ->
-          %{instructions_acc| down_instructions: ensure_module_unloaded_after_last_runnable_instruction(down_instructions, call_this_instruction, dependency)}
-        end)
-      end
-
 
     end # quote
 
