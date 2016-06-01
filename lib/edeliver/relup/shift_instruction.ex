@@ -28,7 +28,6 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_loaded_before_instruction(up_instructions, instruction, module) when is_list(up_instructions) do
     ensure_module_loaded_before_instruction(up_instructions, instruction, module, _found_instruction = false, [])
   end
-  def ensure_module_loaded_before_instruction(instructions, instruction), do: ensure_module_loaded_before_instruction(instructions, instruction, __MODULE__)
 
   defp ensure_module_loaded_before_instruction(_instructions = [instruction|rest], instruction, module, _found_instruction = false, checked_instructions) do
     ensure_module_loaded_before_instruction(rest, instruction, module, _found_instruction = true, [instruction|checked_instructions])
@@ -58,8 +57,8 @@ defmodule Edeliver.Relup.ShiftInstruction do
 
     If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the last occurrence of the runnable down instruction. Use this function instead of the
-    `ensure_module_loaded_before_instruction/3` function if the `RunnableInstruction` can be used several times
-    in a `Relup.Modification`.
+    `ensure_module_loaded_before_instruction/3` function if the `Edeliver.Relup.RunnableInstruction` can be used several times
+    in a `Edeliver.Relup.Modification`.
   """
   @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}, module::module) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction, module) do
@@ -134,8 +133,6 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_unloaded_after_instruction(up_instructions, instruction, module) when is_list(up_instructions) do
     ensure_module_unloaded_after_instruction(up_instructions, instruction, module, [])
   end
-  def ensure_module_unloaded_after_instruction(instructions, instruction), do: ensure_module_unloaded_after_instruction(instructions, instruction, __MODULE__)
-
   defp ensure_module_unloaded_after_instruction(instructions = [instruction|_rest], instruction, _module, checked_instructions) do
     Enum.reverse(checked_instructions) ++ instructions # don't need to check instructions after instruction
   end

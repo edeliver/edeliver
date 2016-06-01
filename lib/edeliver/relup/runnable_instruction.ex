@@ -259,7 +259,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
         call_this_instruction = call_this(arguments(instructions, config))
         insert_where_fun = insert_where
         instructions |> insert_where_fun.(call_this_instruction)
-                     |> ensure_module_loaded_before_instruction(call_this_instruction)
+                     |> ensure_module_loaded_before_instruction(call_this_instruction, __MODULE__)
                      |> ensure_dependencies_loaded_before_instruction_for_upgrade(call_this_instruction, dependencies())
                      |> ensure_dependencies_unloaded_after_instruction_for_downgrade(call_this_instruction, dependencies())
       end

@@ -81,7 +81,7 @@ defmodule Edeliver.Relup.InsertInstruction do
     It does not consider load-instructions for `Edeliver.Relup.RunnableInstruction`s
     as code loading instructions for the release. They are inserted by the
     `RunnableInstruction` itself to ensure that the code of the runnable instruction
-    is loaded before the instruction is executed. See `ensure_module_loaded_before_instruction/2`.
+    is loaded before the instruction is executed. See `Edeliver.Relup.ShiftInstruction.ensure_module_loaded_before_instruction/3`.
   """
   @spec append_after_point_of_no_return(Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions) :: updated_instructions::Instructions.t|Instructions.instructions
   def append_after_point_of_no_return(instructions = %Instructions{}, new_instructions) do
@@ -104,7 +104,7 @@ defmodule Edeliver.Relup.InsertInstruction do
     append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [instruction|instructions_before_instruction])
   end
   # skip instructions which loads code and are inserted before a runnable instruction. see `Edeliver.Relup.RunnableInstruction`
-  # and `Edeliver.Relup.Instruction.ensure_module_loaded_before_instruction/2`. That load instructions are inserted by the
+  # and `Edeliver.Relup.Instruction.ensure_module_loaded_before_instruction/3`. That load instructions are inserted by the
   # `RunnableInstruction` itself and are not considered to be a 'real' code loading instruction for the running application.
   defp append_after_point_of_no_return(_existing_instructions = [load_runnable_instruction = {:load_module, module}, runnable_instruction = {:apply, {module, :run, _args}}|rest], new_instructions, after_point_of_no_return = true, instructions_before_instruction) do
     append_after_point_of_no_return(rest, new_instructions, after_point_of_no_return, [runnable_instruction, load_runnable_instruction|instructions_before_instruction])
