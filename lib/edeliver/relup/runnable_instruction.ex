@@ -267,7 +267,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
       @spec arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}) :: term
       def arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}), do: []
 
-      @spec insert_where::insert_fun
+      @spec insert_where()::Instruction.insert_fun
       def insert_where, do: &append/2
 
       @spec dependencies() :: [instruction_module::atom]
@@ -281,7 +281,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
         from the  relup file during hot code upgrade
       """
-      @spec call_this(arguments::[term]) :: instruction|instructions
+      @spec call_this(arguments::[term]) :: Instruction.instruction|Instruction.instructions
       def call_this(arguments \\ []) do
         {:apply, {__MODULE__, :run, [arguments]}}
       end
