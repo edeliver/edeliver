@@ -9,12 +9,6 @@ defmodule Edeliver.Relup.ShiftInstruction do
   alias Edeliver.Relup.Instructions
   alias Edeliver.Relup.InsertInstruction
 
-  @type instruction :: :relup.instruction
-  @type instructions :: [instruction]
-
-  @type insert_fun :: ((Instructions.t|instructions, new_instructions::instruction|instructions) -> updated_instructions::Instructions.t|instructions)
-
-
   @doc """
     Ensures that the given module is loaded before the given instruction (if it needs to be loaded).
 
@@ -24,7 +18,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
     the up or down instructions. Use the `ensure_module_loaded_before_first_runnable_instructions/2` function
     instead if the `RunnableInstruction` can be used several times in a `Relup.Modification`.
   """
-  @spec ensure_module_loaded_before_instruction(Instructions.t|instructions, instruction::instruction, module::atom) :: updated_instructions::Instructions.t|instructions
+  @spec ensure_module_loaded_before_instruction(Instructions.t|Instructions.instructions, instruction::Instructions.instruction, module::module) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_instruction(instructions = %Instructions{}, instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_loaded_before_instruction(instructions.up_instructions, instruction, module),
@@ -67,7 +61,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
     `ensure_module_loaded_before_instruction/3` function if the `RunnableInstruction` can be used several times
     in a `Relup.Modification`.
   """
-  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::Instructions.t|instructions
+  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}, module::module) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_loaded_before_first_runnable_instructions(instructions.up_instructions, runnable_instruction, module),
@@ -77,7 +71,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
     ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, module, [])
   end
-  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::Instructions.t|instructions
+  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
     ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction, module)
   end
@@ -112,7 +106,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
   @doc """
     Returns the first occurence of a `RunnableInstruction` implemented by the given module.
   """
-  @spec first_runnable_instruction(instructions::instructions, module::atom) :: runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}} | :not_found
+  @spec first_runnable_instruction(instructions::Instructions.instructions, module::module) :: runnable_instruction::{:apply, {module::module, :run, arguments::[term]}} | :not_found
   def first_runnable_instruction(_instructions = [], _module), do: :not_found
   def first_runnable_instruction(_instructions = [runnable_instruction = {:apply, {module, :run, _arguments}}|_], module) do
     runnable_instruction
@@ -130,7 +124,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
     the up or down instructions. Use the `ensure_module_unloaded_after_last_runnable_instruction/2` function
     instead if the `RunnableInstruction` can be used several times in a `Relup.Modification`.
   """
-  @spec ensure_module_unloaded_after_instruction(Instructions.t|instructions, instruction::instruction, module::atom) :: updated_instructions::Instructions.t|instructions
+  @spec ensure_module_unloaded_after_instruction(Instructions.t|Instructions.instructions, instruction::Instructions.instruction, module::module) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_unloaded_after_instruction(instructions = %Instructions{}, instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_unloaded_after_instruction(instructions.up_instructions, instruction, module),
@@ -178,7 +172,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
     Use this function instead of the `ensure_module_unloaded_after_instruction/3` function if the `RunnableInstruction`
     can be used several times  in a `Relup.Modification`.
   """
-  @spec ensure_module_unloaded_after_last_runnable_instruction(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::Instructions.t|instructions
+  @spec ensure_module_unloaded_after_last_runnable_instruction(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}, module::module) :: updated_instructions::Instructions.t|Instruction.instructions
   def ensure_module_unloaded_after_last_runnable_instruction(instructions = %Instructions{}, runnable_instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_unloaded_after_last_runnable_instruction(instructions.up_instructions, runnable_instruction, module),
