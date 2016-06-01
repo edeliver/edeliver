@@ -65,7 +65,15 @@ defmodule Edeliver.Relup.Instruction do
   """
   @type insert_fun :: ((%Instructions{}|instructions, new_instructions::instruction|instructions) -> updated_instructions::%Instructions{}|instructions)
 
+  @doc """
+    Modifies the relup file.
 
+    Modifies the `relup` file which will be used to upgrade (or downgrade) from one version to another
+    by inserting, removing, or shifting [appup instructions](http://erlang.org/doc/man/appup.html).
+    See `Edeliver.Relup.InsertInstruction` and `Edeliver.Relup.ShiftInstruction` for useful helpers to
+    insert / position the instructions and `Edeliver.Relup.RunnableInstruction` to execute custom code
+    during the upgrade.
+  """
   @callback modify_relup(Edeliver.Relup.Instructions.t, ReleaseManager.Config.t) :: Edeliver.Relup.Instructions.t
 
   @doc false
