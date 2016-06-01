@@ -9,9 +9,11 @@ defmodule Edeliver.Relup.InsertInstruction do
   alias Edeliver.Relup.Instructions
 
   @doc """
-    Inserts an instruction or a list of instructions before the point of no return. All instructions
-    running before that point of no return which fail will cause the upgrade to fail, while
-    failing instructions running after that point will cause the node to restart the release.
+    Inserts instruction(s) before the point of no return.
+
+    All instructions running before that point of no return which fail will cause the
+    upgrade to fail, while failing instructions running after that point will cause the
+    node to restart the release.
   """
   @spec insert_before_point_of_no_return(Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions) :: updated_instructions::Instructions.t|Instructions.instructions
   def insert_before_point_of_no_return(instructions = %Instructions{}, new_instructions) do
@@ -25,7 +27,8 @@ defmodule Edeliver.Relup.InsertInstruction do
   end
 
   @doc """
-    Inserts an instruction or a list of instructions right after the point of no return.
+    Inserts instruction(s) right after the point of no return.
+
     This means that it is the first instruction which should not fail, because the release
     handler will restart the release if any instruction fails after the point
     of no return.
@@ -42,8 +45,9 @@ defmodule Edeliver.Relup.InsertInstruction do
   end
 
   @doc """
-    Inserts an instruction or a list of instructions right after the last `load_object_code`
-    instruction which is usually before the "point of no return" and one of the first instructions.
+    Inserts instruction(s) right after the last `load_object_code` instruction
+
+    which is usually before the "point of no return" and one of the first instructions.
     This means that it is the first custom instruction which is executed. It is executed twice,
     once when checking whether the upgrade can be installed and once when the upgrade is installed.
   """
@@ -64,8 +68,9 @@ defmodule Edeliver.Relup.InsertInstruction do
   end
 
   @doc """
-    Appends an instruction or a list of instructions to the instruction after the
-    "point of no return" but before any instruction which:
+    Appends instruction(s) to the instruction after the "point of no return" but before any instruction
+
+    which:
 
     - loads or unloads new code, which means before any
         `load_module`, `load`, `add_module`, `delete_module`,
@@ -137,7 +142,7 @@ defmodule Edeliver.Relup.InsertInstruction do
   end
 
   @doc """
-    Appends an instruction or a list of instructions to the list of other instructions.
+    Appends instruction(s) to the list of other instructions.
   """
   @spec append(Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions) :: updated_instructions::Instructions.t|Instructions.instructions
   def append(instructions = %Instructions{}, new_instructions) do
@@ -155,7 +160,7 @@ defmodule Edeliver.Relup.InsertInstruction do
 
 
   @doc """
-    Inserts an instruction or a list of instructions before the given instruction.
+    Inserts instruction(s) before the given instruction.
   """
   @spec insert_before_instruction(Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions, before_instruction::Instructions.instruction) :: updated_instructions::Instructions.t|Instructions.instructions
   def insert_before_instruction(instructions = %Instructions{}, new_instructions, before_instruction) do
@@ -183,7 +188,7 @@ defmodule Edeliver.Relup.InsertInstruction do
 
 
   @doc """
-    Inserts an instruction or a list of instructions after the given instruction.
+    Inserts instruction(s) after the given instruction.
   """
   @spec insert_after_instruction(Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions, after_instruction::Instructions.instruction) :: updated_instructions::Instructions.t|Instructions.instructions
   def insert_after_instruction(instructions = %Instructions{}, new_instructions, after_instruction) do
@@ -211,7 +216,8 @@ defmodule Edeliver.Relup.InsertInstruction do
 
   @doc """
     Returns true if the given instruction is an instruction which modifies an application
-    bei either (re-)starting or stopping it or by restarting the emulator. It returns
+
+    by either (re-)starting or stopping it or by restarting the emulator. It returns
     `true` for the `add_application`, `remove_application`, `restart_new_emulator`
     and the `restart_emulator`, relup instructions.
   """
@@ -225,8 +231,9 @@ defmodule Edeliver.Relup.InsertInstruction do
   def modifies_applications?(_), do: false
 
   @doc """
-    Returns true if the given instruction is an instruction which modifies code by
-    loading, unloading or purging it. It returns `true` for the `load_module`, `add_module`
+    Returns true if the given instruction is an instruction which modifies code
+
+    by loading, unloading or purging it. It returns `true` for the `load_module`, `add_module`
     `delete_module`, `load`, `remove` and `purge` relup instructions.
   """
   @spec modifies_code?(Instructions.instruction) :: boolean
@@ -244,6 +251,7 @@ defmodule Edeliver.Relup.InsertInstruction do
 
   @doc """
     Returns true if the given instruction is an instruction which modifies any process
+
     by either by sending the  `code_change` sys event or by starting or stopping any
     process. It returns `true` for the `code_change`, `start`, `stop` and `update`
     relup instructions.

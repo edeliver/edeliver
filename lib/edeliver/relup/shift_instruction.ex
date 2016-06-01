@@ -53,12 +53,13 @@ defmodule Edeliver.Relup.ShiftInstruction do
   end
 
   @doc """
-    Ensures that the given module is loaded before the first occurrence of the runnable instruction (if it needs to be loaded).
+    Ensures that the given module is loaded before the first occurrence of the runnable instruction.
 
     If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the last occurrence of the runnable down instruction. Use this function instead of the
     `ensure_module_loaded_before_instruction/3` function if the `Edeliver.Relup.RunnableInstruction` can be used several times
-    in a `Edeliver.Relup.Modification`.
+    in a `Edeliver.Relup.Modification`. If the module did not change and was already included into the old release this function
+    has no effect.
   """
   @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}, module::module) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction, module) do
@@ -70,6 +71,19 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
     ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, module, [])
   end
+
+  @doc """
+    Ensures that the module of `Edeliver.Relup.RunnableInstruction` is loaded before it is executed.
+
+    E.g. if an `Edeliver.Relup.Instructions.Info` instruction implements the behaviour
+    `Edeliver.Relup.RunnableInstruction` it creates and inserts a:
+    ```elixir
+    {:apply, {Elixir.Edeliver.Relup.Instructions.Info, :run, ["hello"]}}
+    ```
+    [relup](http://www.erlang.org/doc/man/relup.html) instruction. This function ensures that the instruction which loads
+    that module is placed before that instruction. This is essential if the `Edeliver.Relup.RunnableInstruction` is new
+    and was not included into the old version of the release or has changed in the new version.
+  """
   @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|Instructions.instructions, runnable_instruction::{:apply, {module::module, :run, arguments::[term]}}) :: updated_instructions::Instructions.t|Instructions.instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
     ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction, module)
@@ -162,7 +176,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
   end
 
   @doc """
-    Ensures that the given module is (un)loaded after the last occurrenct of the given runnable instruction (if it needs to be (un)loaded).
+    Ensures that the given module is (un)loaded after the last occurrenct of the given runnable instruction.
 
     If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is loaded before the first occurrence of the runnable instruction for the down instructions.
@@ -179,6 +193,19 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
     ensure_module_unloaded_after_last_runnable_instruction(up_instructions, runnable_instruction, module, [])
   end
+
+  @doc """
+    Ensures that the module of `Edeliver.Relup.RunnableInstruction` is unloaded after it was executed.
+
+    E.g. if an `Edeliver.Relup.Instructions.Info` instruction implements the behaviour `Edeliver.Relup.RunnableInstruction`
+    it creates and inserts a
+    ```elixir
+    {:apply, {Elixir.Edeliver.Relup.Instructions.Info, :run, ["hello"]}}
+    ```
+    [relup](http://www.erlang.org/doc/man/relup.html)  instruction. This function ensures that the instruction
+    which unloads that module is placed after that instruction. This is essential if the `Edeliver.Relup.RunnableInstruction`
+    was changed and the new version is unloaded in the downgrade instructions.
+  """
   def ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
     ensure_module_unloaded_after_last_runnable_instruction(instructions, runnable_instruction, module)
   end
