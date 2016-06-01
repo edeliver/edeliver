@@ -2,8 +2,8 @@ defmodule Edeliver.Relup.RunnableInstruction do
   @moduledoc """
     This module can be used to provide custom instructions executed during the upgrade.
 
-    They can be used in implementations of the `Edeliver.Relup.Modifcation` behaviours.
-    A runnable instruction  must implement a `run/1` function which will be executed
+    They can be used in implementations of the `Edeliver.Relup.Modification` behaviours.
+    A runnable instruction  must implement a `c:Edeliver.Relup.RunnableInstruction.run/1` function which will be executed
     during the upgrade on the nodes.
 
     Example:
@@ -59,13 +59,13 @@ defmodule Edeliver.Relup.RunnableInstruction do
   @doc """
     Returns a function which inserts the relup instruction
 
-    that calls the `run/1` fuction of this module.
+    that calls the `c:Edeliver.Relup.RunnableInstruction.run/1` fuction of this module.
     Default is inserting it at the end of the instructions
   """
   @callback insert_where() :: ((%Edeliver.Relup.Instructions{}, Edeliver.Relup.Instruction.instruction) -> %Edeliver.Relup.Instructions{})
 
   @doc """
-    Returns the arguments which will be passed the `run/1` function during the upgrade.
+    Returns the arguments which will be passed the `c:Edeliver.Relup.RunnableInstruction.run/1` function during the upgrade.
 
     Default is an empty list.
   """
