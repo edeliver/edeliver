@@ -12,19 +12,19 @@ defmodule Edeliver.Relup.ShiftInstruction do
   @type instruction :: :relup.instruction
   @type instructions :: [instruction]
 
-  @type insert_fun :: ((%Instructions{}|instructions, new_instructions::instruction|instructions) -> updated_instructions::%Instructions{}|instructions)
+  @type insert_fun :: ((Instructions.t|instructions, new_instructions::instruction|instructions) -> updated_instructions::Instructions.t|instructions)
 
 
   @doc """
     Ensures that the given module is loaded before the given instruction (if it needs to be loaded).
 
-    If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
+    If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the instruction for the down instructions.
     Use this function only, if the instruction should be used only once in a `Relup.Modification` for
     the up or down instructions. Use the `ensure_module_loaded_before_first_runnable_instructions/2` function
     instead if the `RunnableInstruction` can be used several times in a `Relup.Modification`.
   """
-  @spec ensure_module_loaded_before_instruction(%Instructions{}|instructions, instruction::instruction, module::atom) :: updated_instructions::%Instructions{}|instructions
+  @spec ensure_module_loaded_before_instruction(Instructions.t|instructions, instruction::instruction, module::atom) :: updated_instructions::Instructions.t|instructions
   def ensure_module_loaded_before_instruction(instructions = %Instructions{}, instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_loaded_before_instruction(instructions.up_instructions, instruction, module),
@@ -62,12 +62,12 @@ defmodule Edeliver.Relup.ShiftInstruction do
   @doc """
     Ensures that the given module is loaded before the first occurrence of the runnable instruction (if it needs to be loaded).
 
-    If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
+    If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is unloaded after the last occurrence of the runnable down instruction. Use this function instead of the
     `ensure_module_loaded_before_instruction/3` function if the `RunnableInstruction` can be used several times
     in a `Relup.Modification`.
   """
-  @spec ensure_module_loaded_before_first_runnable_instructions(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::%Instructions{}|instructions
+  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::Instructions.t|instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions = %Instructions{}, runnable_instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_loaded_before_first_runnable_instructions(instructions.up_instructions, runnable_instruction, module),
@@ -77,7 +77,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
   def ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, module) when is_list(up_instructions) do
     ensure_module_loaded_before_first_runnable_instructions(up_instructions, runnable_instruction, _found_instruction = false, module, [])
   end
-  @spec ensure_module_loaded_before_first_runnable_instructions(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::%Instructions{}|instructions
+  @spec ensure_module_loaded_before_first_runnable_instructions(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}) :: updated_instructions::Instructions.t|instructions
   def ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction = {:apply, {module, :run, _arguments}}) do
     ensure_module_loaded_before_first_runnable_instructions(instructions, runnable_instruction, module)
   end
@@ -124,13 +124,13 @@ defmodule Edeliver.Relup.ShiftInstruction do
   @doc """
     Ensures that the given module is (un)loaded after the given instruction (if it needs to be (un)loaded).
 
-    If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
+    If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is (un)loaded before the instruction for the down instructions.
     Use this function only, if the instruction should be used only once in a `Relup.Modification` for
     the up or down instructions. Use the `ensure_module_unloaded_after_last_runnable_instruction/2` function
     instead if the `RunnableInstruction` can be used several times in a `Relup.Modification`.
   """
-  @spec ensure_module_unloaded_after_instruction(%Instructions{}|instructions, instruction::instruction, module::atom) :: updated_instructions::%Instructions{}|instructions
+  @spec ensure_module_unloaded_after_instruction(Instructions.t|instructions, instruction::instruction, module::atom) :: updated_instructions::Instructions.t|instructions
   def ensure_module_unloaded_after_instruction(instructions = %Instructions{}, instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_unloaded_after_instruction(instructions.up_instructions, instruction, module),
@@ -173,12 +173,12 @@ defmodule Edeliver.Relup.ShiftInstruction do
   @doc """
     Ensures that the given module is (un)loaded after the last occurrenct of the given runnable instruction (if it needs to be (un)loaded).
 
-    If an `%Instructions{}` is given containing also the down instructions, it ensures that the module
+    If an `%Edeliver.Relup.Instructions{}` is given containing also the down instructions, it ensures that the module
     is loaded before the first occurrence of the runnable instruction for the down instructions.
     Use this function instead of the `ensure_module_unloaded_after_instruction/3` function if the `RunnableInstruction`
     can be used several times  in a `Relup.Modification`.
   """
-  @spec ensure_module_unloaded_after_last_runnable_instruction(%Instructions{}|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::%Instructions{}|instructions
+  @spec ensure_module_unloaded_after_last_runnable_instruction(Instructions.t|instructions, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, module::atom) :: updated_instructions::Instructions.t|instructions
   def ensure_module_unloaded_after_last_runnable_instruction(instructions = %Instructions{}, runnable_instruction, module) do
     %{instructions|
       up_instructions:   ensure_module_unloaded_after_last_runnable_instruction(instructions.up_instructions, runnable_instruction, module),

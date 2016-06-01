@@ -27,7 +27,7 @@ defmodule Edeliver.Relup.Instructions.StartSection do
   @type section :: :check | :suspend | :upgrade | :resume | :finished
 
 
-  @spec modify_relup(instructions::%Instructions{}, config::%Config{}, section_or_message::section|String.t) :: %Instructions{}
+  @spec modify_relup(instructions::Instructions.t, config::%Config{}, section_or_message::section|String.t) :: Instructions.t
   def modify_relup(instructions = %Instructions{}, config = %Config{}, section \\ :default) do
     case section do
       :check    -> Info.modify_relup(instructions, config,

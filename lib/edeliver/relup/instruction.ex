@@ -52,18 +52,13 @@ defmodule Edeliver.Relup.Instruction do
   use Behaviour
   alias Edeliver.Relup.Instructions
 
-
-  @typedoc "An [appup instruction](http://erlang.org/doc/man/appup.html) from the `relup` file"
-  @type instruction :: :relup.instruction()
-  @typedoc "A list of [appup instructions](http://erlang.org/doc/man/appup.html) from the `relup` file"
-  @type instructions :: [instruction]
   @typedoc """
     A function that inserts a new instruction or a set of new instructions
     at a given place in the list of existing instructions. For most
     [appup instructions](http://erlang.org/doc/man/appup.html) from the `relup` file
     it matters when they will be executed, e.g before or after some other instructions.
   """
-  @type insert_fun :: ((%Instructions{}|instructions, new_instructions::instruction|instructions) -> updated_instructions::%Instructions{}|instructions)
+  @type insert_fun :: ((Instructions.t|Instructions.instructions, new_instructions::Instructions.instruction|Instructions.instructions) -> updated_instructions::Instructions.t|Instructinos.instructions)
 
   @doc """
     Modifies the relup file.

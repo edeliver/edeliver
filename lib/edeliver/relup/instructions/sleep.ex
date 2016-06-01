@@ -16,7 +16,7 @@ defmodule Edeliver.Relup.Instructions.Sleep do
   """
   use Edeliver.Relup.RunnableInstruction
 
-  @spec modify_relup(instructions::%Instructions{}, config::%Config{}, seconds::integer) :: %Instructions{}
+  @spec modify_relup(instructions::Instructions.t, config::%Config{}, seconds::integer) :: Instructions.t
   def modify_relup(instructions = %Instructions{}, _config = %Config{}, seconds \\ 30) do
     call_this_instruction = call_this(max(0, seconds))
     insert_where_fun = insert_where

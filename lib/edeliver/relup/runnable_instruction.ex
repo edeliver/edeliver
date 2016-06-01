@@ -175,7 +175,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
     and returned by the `c:Edeliver.Relup.RunnableInstruction.dependencies/0` callback are loaded before this instruction is executed
     during the upgrade.
   """
-  @spec ensure_dependencies_loaded_before_instruction_for_upgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+  @spec ensure_dependencies_loaded_before_instruction_for_upgrade(instructions::Instructions.t, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: Instructions.t
   def ensure_dependencies_loaded_before_instruction_for_upgrade(instructions = %Instructions{}, call_this_instruction, dependencies) do
     dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{up_instructions: up_instructions}) ->
       %{instructions_acc| up_instructions: ensure_module_loaded_before_first_runnable_instructions(up_instructions, call_this_instruction, dependency)}
@@ -187,7 +187,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
     and returned by the `c:Edeliver.Relup.RunnableInstruction.dependencies/0` callback are unloaded after this instruction is executed
     during the downgrade.
   """
-  @spec ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions::%Instructions{}, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: %Instructions{}
+  @spec ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions::Instructions.t, runnable_instruction::{:apply, {module::atom, :run, arguments::[term]}}, dependencies::[instruction_module::atom]) :: Instructions.t
   def ensure_dependencies_unloaded_after_instruction_for_downgrade(instructions = %Instructions{}, call_this_instruction, dependencies) do
     dependencies |> Enum.reduce(instructions, fn(dependency, instructions_acc = %Instructions{down_instructions: down_instructions}) ->
       %{instructions_acc| down_instructions: ensure_module_unloaded_after_last_runnable_instruction(down_instructions, call_this_instruction, dependency)}
