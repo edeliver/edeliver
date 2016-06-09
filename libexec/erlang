@@ -535,8 +535,7 @@ select_release_from_store() {
     local _release_files=( $(__get_releases_in_store "$_release_type" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
-      VERSION=${RELEASE_FILE/${APP}_/}
-      VERSION=${VERSION/.${_release_type}.tar.gz/}
+      VERSION=$(__release_version_from_archive_name "$RELEASE_FILE" "$_release_type")
     elif [ ${#_release_files[@]} -eq 0 ]; then
       error_message "No $_release_type(s) found in ${RELEASE_STORE_TYPE} release store."
       hint_message "You can build one with the ./edeliver build $_release_type task."
