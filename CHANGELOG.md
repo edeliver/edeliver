@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.2.9__
+
+- Fix detecting version of single release file
+- Improve branch detection for auto-versioning
+- Warn if `--auto-version` is used with `--skip-mix-clean`
+- Avoid user interaction for `mix local.rebar` command
+
 __1.2.8__
 
 - Add `update` command to build and deploy in a single step

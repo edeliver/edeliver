@@ -339,7 +339,7 @@ FAILED with exit status $?:\n${_remote_job}\n"
 Output of the command is shown above and the command executed
 on that host is printed below for debugging purposes:
 
-FAILED with texit status $_status:\n${_remote_job}\n"
+FAILED with exit status $_status:\n${_remote_job}\n"
   fi
 }
 

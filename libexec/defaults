@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DELIVER_VERSION="1.2.8"
+DELIVER_VERSION="1.2.9"
 HOMEPAGE="https://github.com/boldpoker/edeliver"
 CREATOR="bharendt"
 

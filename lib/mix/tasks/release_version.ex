@@ -336,14 +336,23 @@ defmodule Mix.Tasks.Release.Version do
 
     Instead
 
-    `git branch --contains <revision>` is used.
+    `git branch --contains <revision>` could be used. But the commit/revision can still
+    be in several branches, e.g. if one branch containing that commit was built before
+    and that branch is later merged and built again. Then the old branch exists still
+    on the build host and the commit exists in both branches. So whenever possible we
+    will pass the branch which is built as `BRANCH` env, but as fallback we try to
+    autodetect the branch which contains the current commit that is built.
   """
   @spec get_branch() :: String.t
   def get_branch() do
-    System.cmd( "git", ["branch", "--contains", get_revision]) |> elem(0)
-    |> String.split("\n", trim: true)
-    |> Enum.filter(&(!String.contains?(&1, "detached") && !String.contains?(&1, "head") && !String.contains?(&1, "HEAD")))
-    |> Enum.map(&(String.strip(&1))) |> List.first() |> valid_semver_metadata()
+    case System.get_env("BRANCH") do
+      branch = <<_,_::binary>> -> branch
+      _ -> # try to detect the branch, but commit might be in several branches
+        System.cmd( "git", ["branch", "--contains", get_revision]) |> elem(0)
+        |> String.split("\n", trim: true)
+        |> Enum.filter(&(!String.contains?(&1, "detached") && !String.contains?(&1, "head") && !String.contains?(&1, "HEAD")))
+        |> Enum.map(&(String.strip(&1))) |> List.first() |> valid_semver_metadata()
+    end
   end
 
   @privdoc "Returns the current revision which is checked out and will be built."
