@@ -326,7 +326,7 @@ copy_release_to_release_store() {
       fi
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
+    ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -727,7 +727,7 @@ upload_release_archive() {
       done
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
+    ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
