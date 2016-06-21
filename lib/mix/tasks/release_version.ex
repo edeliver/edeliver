@@ -345,7 +345,7 @@ defmodule Mix.Tasks.Release.Version do
   @spec get_branch() :: String.t
   def get_branch() do
     case System.get_env("BRANCH") do
-      branch = <<_,_::binary>> -> branch
+      branch = <<_,_::binary>> -> valid_semver_metadata(branch)
       _ -> # try to detect the branch, but commit might be in several branches
         System.cmd( "git", ["branch", "--contains", get_revision]) |> elem(0)
         |> String.split("\n", trim: true)
