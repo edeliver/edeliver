@@ -166,6 +166,12 @@ erlang_clean_compile() {
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
       $REBAR_CMD compile
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
+      echo \"Checking whether deps must be compiled for mix version 1.3.0\"
+      # see https://github.com/boldpoker/edeliver/issues/94
+      if $MIX_CMD --version | grep 'Mix 1.3.0' >/dev/null 2>&1 ; then
+        echo \"Compiling deps because mix version 1.3.0 is used\"
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD deps.compile
+      fi
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
         APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD do${_set_auto_version} compile
       else
