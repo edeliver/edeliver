@@ -330,7 +330,7 @@ on that host is printed below for debugging purposes:
 FAILED with exit status $?:\n${_remote_job}\n"
   else
     local _output _status
-    _output=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+    _output=$(ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
     _status=$?
     [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
 

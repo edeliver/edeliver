@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.2.10__
+
+- Install also rebar3 on the build host
+- Compatibility with elixir / mix version `1.3.0`
+- Keep only valid SemVer characters in branch name from auto-versioning
+- Fix ssh forwarding in non-verbose mode
+
 __1.2.9__
 
 - Fix detecting version of single release file
