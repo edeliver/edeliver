@@ -861,10 +861,12 @@ __get_node_command() {
 # starts the deployed release. if release is already running,
 # it is restarted.
 force_start_release() {
+  __exec_if_defined "pre_start_deployed_release"
   status "Starting deployed release"
   __remote "{
     $(__get_node_command "restart" "$DELIVER_TO" "")
   }"
+  __exec_if_defined "post_start_deployed_release"
 }
 
 # installs a release at all production hosts
