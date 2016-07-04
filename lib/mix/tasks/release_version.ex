@@ -87,10 +87,13 @@ defmodule Mix.Tasks.Release.Version do
     {old_version, new_version} = Agent.get_and_update Mix.ProjectStack, fn(state) ->
       [root=%{config: config}|rest] = state.stack
       {old_version, new_version, config} = List.foldr config, {"","", []}, fn({key, value}, {old_version, new_version, config}) ->
-        if key == :version do
+        {old_version, new_version, value} = if key == :version do
           old_version = value
           {:modified, new_version} = modify_version({:modify, modification_functions}, old_version)
           value = new_version
+          {old_version, new_version, value}
+        else
+          {old_version, new_version, value}
         end
         {old_version, new_version, [{key, value}|config]}
       end

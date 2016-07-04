@@ -101,8 +101,8 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
           end
         end)
         |> Enum.reduce({[], nil}, fn {module, priority}, {modules, highest_priority} ->
-          unless highest_priority, do: highest_priority = priority
-          if priority == highest_priority, do: modules = [module|modules]
+          highest_priority = if highest_priority == nil, do: priority, else: highest_priority
+          modules = if priority == highest_priority, do: [module|modules], else: modules
           {modules, highest_priority}
         end)
         |> Tuple.to_list
