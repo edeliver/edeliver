@@ -62,7 +62,8 @@ defmodule Edeliver do
 
   def list_pending_migrations(application_name, application_version, ecto_repository \\ '') do
     repository = ecto_repository!(application_name, ecto_repository)
-    versions = Ecto.Migrator.migrated_versions(repository)
+    migrator = Ecto.Migrator
+    versions = migrator.migrated_versions(repository)
     pending_migrations = migrations_for(migrations_dir(application_name, application_version))
     |> Enum.filter(fn {version, _name, _file} -> not (version in versions) end)
     |> Enum.reverse
@@ -74,7 +75,8 @@ defmodule Edeliver do
 
   def migrate(application_name, application_version, ecto_repository, direction, migration_version \\ :all) when is_atom(direction) do
     options = if migration_version == :all, do: [all: true], else: [to: to_string(migration_version)]
-    Ecto.Migrator.run(ecto_repository!(application_name, ecto_repository), migrations_dir(application_name, application_version), direction, options)
+    migrator = Ecto.Migrator
+    migrator.run(ecto_repository!(application_name, ecto_repository), migrations_dir(application_name, application_version), direction, options)
   end
 
   def migrations_dir(application_name, application_version) do
