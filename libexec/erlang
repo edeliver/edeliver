@@ -114,6 +114,7 @@ erlang_get_and_update_deps() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd $DELIVER_TO
+    [ -f ~/.kiex/bin/kiex ] && [ "$ELIXIR_VERSION" ] && source $HOME/.kiex/elixirs/elixir-$ELIXIR_VERSION.env
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to fetch and update deps\"
       $REBAR_CMD update-deps get-deps
@@ -161,6 +162,7 @@ erlang_clean_compile() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd $DELIVER_TO
+    [ -f ~/.kiex/bin/kiex ] && [ "$ELIXIR_VERSION" ] && source $HOME/.kiex/elixirs/elixir-$ELIXIR_VERSION.env
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
@@ -222,6 +224,7 @@ erlang_generate_release() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd $DELIVER_TO
+    [ -f ~/.kiex/bin/kiex ] && [ "$ELIXIR_VERSION" ] && source $HOME/.kiex/elixirs/elixir-$ELIXIR_VERSION.env
     if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\"
       $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate
