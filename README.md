@@ -124,7 +124,7 @@ Edeliver tries to autodetect which system to use:
 
 This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx` in `.deliver/config`.
 
-Edeliver uses ssh and scp to build and deploy the releases.  Is is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
+Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
 It may be required to install and configure git on your build host.  You may also have to clone the repository initially at the `BUILD_AT` path, although edeliver will try to take care of this for you.  [Erlang](http://www.erlang.org/) and [Elixir](http://elixir-lang.org/) must be installed and available on the `BUILD_HOST`.
 
