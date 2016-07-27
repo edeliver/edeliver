@@ -810,7 +810,7 @@ __get_node_command() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_app_path}/${APP} $SILENCE
-    output_lines=\"\$(bin/${APP} ping | wc -l)\"
+    output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
     if [[ \"\$output_lines\" -gt 1 ]]; then
       output_filter_command='tail'
       output_filter_command_options=\"-n+\$output_lines\"
