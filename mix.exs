@@ -56,15 +56,16 @@ defmodule Edeliver.Mixfile do
   ]
 
   defp elixirc_paths do
+
     if project_uses_distillery? do
-      [
-        Path.join("lib", "edeliver"),
-        Path.join("lib", "mix"),
-        Path.join("lib", "edeliver.ex"),
-      ]
+      [Path.join("lib", "distillery")]
     else
-      ["lib"]
-    end
+      [Path.join("lib", "exrm")]
+    end ++ [
+      Path.join("lib", "edeliver"),
+      Path.join("lib", "mix"),
+      Path.join("lib", "edeliver.ex"),
+    ]
   end
 
   defp project_uses_distillery? do
