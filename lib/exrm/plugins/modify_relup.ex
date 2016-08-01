@@ -1,4 +1,7 @@
 defmodule ReleaseManager.Plugin.ModifyRelup do
+  @moduledoc """
+    Exrm plugin to auto-patch the relup file when building upgrades.
+  """
   use ReleaseManager.Plugin
   alias ReleaseManager.Utils
   alias Edeliver.Relup.Instructions

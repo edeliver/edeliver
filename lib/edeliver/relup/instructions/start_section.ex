@@ -1,19 +1,22 @@
 defmodule Edeliver.Relup.Instructions.StartSection do
   @moduledoc """
-    This upgrade instruction starts a new section and
-    logs that info on the node which runs the upgrade and
+    This upgrade instruction starts a new section
+
+    and logs that info on the node which runs the upgrade and
     in the upgrade script started by the
     `$APP/bin/$APP upgarde $RELEASE` command. Usage:
 
-      `Edeliver.Relup.Instructions.StartSection.modify_relup(config, _section = :check)`
+    ```
+    Edeliver.Relup.Instructions.StartSection.modify_relup(config, _section = :check)
+    ```
 
     Available sections are:
 
-      `:check`    -> Checks whether upgrade is possible. Before "point of no return"
-      `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
-      `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
-      `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
-      `:finished` -> The upgrade finished successfully
+    * `:check`    -> Checks whether upgrade is possible. Before "point of no return"
+    * `:suspend`  -> Suspends processes before the upgrade. Right after the "point of no return"
+    * `:upgrade`  -> Runs the upgrade by (un-)loading new(/old) code and updating processes and applications
+    * `:resume`   -> Resumes processes after the upgrade that were suspended in the `:suspend` section.
+    * `:finished` -> The upgrade finished successfully
 
     It uses the `Edeliver.Relup.Instructions.Info` instruction to
     display the section information.
@@ -24,7 +27,7 @@ defmodule Edeliver.Relup.Instructions.StartSection do
   @type section :: :check | :suspend | :upgrade | :resume | :finished
 
 
-  @spec modify_relup(instructions::%Instructions{}, config::%Config{}, section_or_message::section|String.t) :: %Instructions{}
+  @spec modify_relup(instructions::Instructions.t, config::%Config{}, section_or_message::section|String.t) :: Instructions.t
   def modify_relup(instructions = %Instructions{}, config = %Config{}, section \\ :default) do
     case section do
       :check    -> Info.modify_relup(instructions, config,

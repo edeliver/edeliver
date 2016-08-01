@@ -1,17 +1,18 @@
 defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
   @moduledoc """
-    This upgrade instruction suspends the ranch acceptors to
-    avoid that new connections will be accepted. It will be
+    This upgrade instruction suspends the ranch acceptors
+
+    to avoid that new connections will be accepted. It will be
     inserted right after the "point of no return". When the
     upgrade is done, the
 
-      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+    `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction reenables the acceptors again. To make sure
     that the ranch acceptors are found, use this instruction
     after the
 
-      `Edeliver.Relup.Instructions.CheckRanchAcceptors`
+    `Edeliver.Relup.Instructions.CheckRanchAcceptors`
 
     instruction which will abort the upgrade if the acceptors
     cannot be found. Because real suspending of ranch acceptors
@@ -23,7 +24,7 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
     uses callback modules. Since no acceptors are started dynamically
     this can be ignored. Use the
 
-      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+    `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction at the end of your instructions list to reenable
     accepting tcp connection when the upgrade is done.

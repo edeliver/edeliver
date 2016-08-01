@@ -1,6 +1,7 @@
 defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
   @moduledoc """
     This upgrade instruction checks whether the running ranch connections can be found.
+
     This instruction will cause the upgrade to be canceled if the ranch connections
     cannot be found and because it is insterted before the "point of no return"
     it will run twice, once when checking the relup and once when executing the relup.
@@ -8,11 +9,11 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     If `Phoenix.PubSub.PG2` is used as pubsub backend for phoenix channels,
     running websocket processes will be detected and suspended by the
 
-      `Edeliver.Relup.Instructions.SuspendChannels`
+    `Edeliver.Relup.Instructions.SuspendChannels`
 
     instruction during the upgrade and resumed by the
 
-     `Edeliver.Relup.Instructions.ResumeChannels` instruction
+    `Edeliver.Relup.Instructions.ResumeChannels` instruction
 
     after the upgrade / downgrade of the node.
   """
@@ -21,6 +22,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
 
   @doc """
     Inserts the instruction before the point of no return.
+
     This causes the release handler to abort the upgrade
     already when running `:release_handler.check_install_release/1`
     if this instruction fails.
@@ -28,9 +30,10 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
   def insert_where, do: &insert_before_point_of_no_return/2
 
   @doc """
-    Returns name of the application. This name is taken as argument
-    for the `run/1` function and is required to access the acceptor processes
-    through the supervision tree
+    Returns name of the application.
+
+    This name is taken as argument for the `run/1` function
+    and is required to access the acceptor processes through the supervision tree
   """
   def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
     name |> String.to_atom
@@ -38,6 +41,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
 
   @doc """
     This module requires the `Edeliver.Relup.Instructions.CheckRanchAcceptors` module
+
     which must be loaded before this instruction for upgrades and unload after this
     instruction for downgrades.
   """
@@ -49,6 +53,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
 
   @doc """
     Gets the pid of the supervisor which supervises the ranch connections.
+
     If it cannot be found as child of the given ranch listener supervisor it
     throws and logs an error.
   """
@@ -102,15 +107,16 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
 
 
   @doc """
-    Returns the pids of the connections which are websocket connections for channels. This detection works
-    only if `Phoenix.PubSub.PG2` is used as pubsub backend. If detection fails, it returns `:not_detected`.
-    Knowing which processes of the known connections are websockets is useful because they should be suspended
-    during the hot code upgrade and resumed again afterwards. If detection fails, websocket connections must
-    be treated as "normal" http request connections. Detection of websocket connections is not possible either
-    by the phoenix api nor by the cowboy / ranch api. Thats why this function takes the processes that are
-    monitored by the `Phoenix.PubSub.Local` process and are a subset of the detected connections as websocket
-    connections for channels. The lookup for `Phoenix.PubSub.Local` process is dones by searching the supervision
-    tree of the application for:
+    Returns the pids of the connections which are websocket connections for channels.
+
+    This detection works only if `Phoenix.PubSub.PG2` is used as pubsub backend. If detection fails,
+    it returns `:not_detected`. Knowing which processes of the known connections are websockets is useful
+    because they should be suspended during the hot code upgrade and resumed again afterwards.
+    If detection fails, websocket connections must be treated as "normal" http request connections.
+    Detection of websocket connections is not possible either by the phoenix api nor by the cowboy / ranch api.
+    Thats why this function takes the processes that are monitored by the `Phoenix.PubSub.Local` process
+    and are a subset of the detected connections as websocket connections for channels. The lookup for
+    `Phoenix.PubSub.Local` process is dones by searching the supervision tree of the application for:
 
           `Phoenix.Endpoint` -> `Phoenix.PubSub.PG2` -> `Phoenix.PubSub.LocalSupervisor` -> `Supervisor` -> `Phoenix.PubSub.Local`
   """
@@ -149,8 +155,9 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
   end
 
   @doc """
-    Checks whether the ranch connections can be found. If not the upgrade
-    will be canceled. This function runs twice because it is executed before
+    Checks whether the ranch connections can be found.
+
+    If not the upgrade will be canceled. This function runs twice because it is executed before
     the "point of no return", once when checking the relup and once when executing the relup.
     It also tries to detect the websocket processes if the `Phoenix.PubSub.PG2` pubsub
     backend is used for phoenix websocket channels. It will not fail if that detection

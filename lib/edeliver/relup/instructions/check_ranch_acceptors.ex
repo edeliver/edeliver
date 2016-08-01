@@ -1,6 +1,7 @@
 defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   @moduledoc """
     This upgrade instruction checks whether the ranch acceptors can be found.
+
     This instruction will cause the upgrade to be canceled if the ranch acceptors
     cannot be found and because it is insterted before the "point of no return"
     it will run twice, once when checking the relup and once when executing the relup.
@@ -9,6 +10,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
 
   @doc """
     Inserts the instruction before the point of no return.
+
     This causes the release handler to abort the upgrade
     already when running `:release_handler.check_install_release/1`
     if this instruction fails.
@@ -16,19 +18,21 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   def insert_where, do: &insert_before_point_of_no_return/2
 
   @doc """
-    Returns the name of the application. This name is taken as argument
-    for the `run/1` function and is required to access the acceptor processes
-    through the supervision tree
+    Returns the name of the application.
+
+    This name is taken as argument for the `run/1` function and is required to
+    access the acceptor processes through the supervision tree
   """
   def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
     name |> String.to_atom
   end
 
   @doc """
-    Returns the pid of the phoenix endpoint supervisor or throws and logs an error
-    if it cannot be found. It supervises the `Phoenix.Endpoint.Server` which supervises
-    the connections and acceptors, `Phoenix.Config` and the phoenix pubsub supervisor,
-    e.g. `Phoenix.PubSub.PG2`.
+    Returns the pid of the phoenix endpoint supervisor
+
+    or throws and logs an error if it cannot be found. It supervises the
+    `Phoenix.Endpoint.Server` which supervises the connections and acceptors,
+    `Phoenix.Config` and the phoenix pubsub supervisor, e.g. `Phoenix.PubSub.PG2`.
   """
   @spec endpoint(otp_application_name::atom) :: pid
   def endpoint(otp_application_name) when is_atom(otp_application_name) do
@@ -51,9 +55,11 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   end
 
   @doc """
-    Gets the pid of the ranch listener supervisor (`:ranch_listener_sup`) which supervises the
-    ranch acceptors supervisor (`:ranch_acceptors_sup`) and the connections supervisor
-    (`:ranch_conns_sup`). It throws and logs an error if they cannot be found in the supervison
+    Gets the pid of the ranch listener supervisor
+
+    (`:ranch_listener_sup`) which supervises the ranch acceptors supervisor
+    (`:ranch_acceptors_sup`) and the connections supervisor (`:ranch_conns_sup`).
+    It throws and logs an error if they cannot be found in the supervison
     tree of the application.
   """
   @spec ranch_listener_sup(otp_application_name::atom) :: pid
@@ -79,6 +85,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
 
   @doc """
     Gets the pid of the supervisor which supervises the ranch socket acceptors.
+
     If it cannot be found as child of the given ranch listener supervisor it
     throws and logs an error.
   """
@@ -95,8 +102,10 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   end
 
   @doc """
-    Gets the supervisor child ids of the ranch socket accecptors (`ranch_acceptor`) from the
-    ranch acceptor supervisor or throws and logs an error if the acceptors cannot be found.
+    Gets the supervisor child ids of the ranch socket accecptors
+
+    (`ranch_acceptor`) from the ranch acceptor supervisor or throws
+    and logs an error if the acceptors cannot be found.
   """
   @spec ranch_acceptors(ranch_acceptors_sup::pid) :: [:supervisor.child_id]
   def ranch_acceptors(ranch_acceptors_sup) do
@@ -111,9 +120,11 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
   end
 
   @doc """
-    Checks whether the ranch acceptors can be found. If not the upgrade
-    will be canceled. This function runs twice because it is executed before
-    the "point of no return", once when checking the relup and once when executing the relup.
+    Checks whether the ranch acceptors can be found.
+
+    If not the upgrade will be canceled. This function runs twice because
+    it is executed before the "point of no return", once when checking
+    the relup and once when executing the relup.
   """
   @spec run(otp_application_name::atom) :: :ok
   def run(otp_application_name) do

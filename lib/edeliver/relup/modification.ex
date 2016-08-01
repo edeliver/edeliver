@@ -1,12 +1,20 @@
 defmodule Edeliver.Relup.Modification do
   @moduledoc """
-    This module can be used to provide custom modification of
-    relup instructions. By default the module
+    This behaviour can be used to provide custom modifications of
+    relup instructions
 
-      Edeliver.Relup.DefaultModification
+    when a release upgrade is built by edeliver.
 
-    is used to modify the relup instructions. There must exists
-    only one implementation of that behaviour in your project.
+    By default the implementation from `Edeliver.Relup.PhoenixModification` is used
+    for phoenix applications and for all others the implementation from
+    `Edeliver.Relup.DefaultModification`.
+
+    Implementations can modify the relup instructions step by step by using
+    modules implementing the `Edeliver.Relup.Instruction` behaviour.
+
+    The implementation returning the highest `priority/0` or which is passed by the
+    `--relup-mod=` command line option will be used unless the `--skip-relup-mod`
+    option is set.
 
     Example:
 
@@ -32,12 +40,33 @@ defmodule Edeliver.Relup.Modification do
   """
   @callback modify_relup(Edeliver.Relup.Instructions.t, ReleaseManager.Config.t) :: Edeliver.Relup.Instructions.t
 
+  @doc """
+    Default priority for builtin relup modifications
+  """
+  @spec priority_default :: 1
+  def priority_default, do: 1
+
+  @doc """
+    Default priorty for user defined relup modificaitons
+  """
+  @spec priority_user :: 1000
+  def priority_user, do: 1_000
+
+  @doc """
+    Priority lower as the default priority which can be used temporarily to
+    disable user defined relup modifications and use the defaults
+  """
+  @spec priority_none :: 0
+  def priority_none, do: 0
+
+
   @doc false
   defmacro __using__(_opts) do
     quote do
       @behaviour Edeliver.Relup.Modification
       alias Edeliver.Relup.Instructions
       alias ReleaseManager.Config
+      import Edeliver.Relup.Modification, only: [priority_default: 0, priority_user: 0, priority_none: 0]
 
       Module.register_attribute __MODULE__, :name, accumulate: false, persist: true
       Module.register_attribute __MODULE__, :moduledoc, accumulate: false, persist: true
@@ -53,32 +82,17 @@ defmodule Edeliver.Relup.Modification do
 
       @doc """
         Returns true if this relup modification is usable for the project or not.
+
         E.g. the `Edeliver.Relup.PhoenixModifcation` returns true only if the
-        project is a phoenix project
+        project is a phoenix project. This function returns `true` by default
+        can be overridden in a custom `Edeliver.Relup.Modification` behaviour
+        implementation.
       """
       @spec usable?(ReleaseManager.Config.t) :: boolean
       def usable?(_config = %Config{}), do: true
 
       defoverridable [priority: 0, usable?: 1]
 
-      @doc """
-        Default priority for builtin relup modifications
-      """
-      @spec priority_default :: 1
-      def priority_default, do: 1
-
-      @doc """
-        Default priorty for user defined relup modificaitons
-      """
-      @spec priority_user :: 1000
-      def priority_user, do: 1_000
-
-      @doc """
-        Priority lower as the default priority which can be used temporarily to
-        disable user defined relup modifications and use the defaults
-      """
-      @spec priority_none :: 0
-      def priority_none, do: 0
     end
   end
 

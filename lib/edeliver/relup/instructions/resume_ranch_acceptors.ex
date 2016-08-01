@@ -1,9 +1,10 @@
 defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
  @moduledoc """
-    This upgrade instruction resumes the ranch acceptors which
-    were suspended by the
+    This upgrade instruction resumes the ranch acceptors
 
-      `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
+    which were suspended by the
+
+    `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
 
     instruction at the beginning of the upgrade.
     Because real suspending of ranch acceptors
@@ -15,9 +16,10 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
   alias Edeliver.Relup.Instructions.CheckRanchAcceptors
 
   @doc """
-    Returns name of the application. This name is taken as argument
-    for the `run/1` function and is required to access the acceptor processes
-    through the supervision tree
+    Returns name of the application.
+
+    This name is taken as argument for the `run/1` function and is required
+    to access the acceptor processes through the supervision tree
   """
   def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
     name |> String.to_atom
@@ -25,6 +27,7 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
 
   @doc """
     This module requires the `Edeliver.Relup.Instructions.CheckRanchAcceptors` module
+
     which must be loaded before this instruction for upgrades and unload after this
     instruction for downgrades.
   """
@@ -35,6 +38,7 @@ defmodule Edeliver.Relup.Instructions.ResumeRanchAcceptors do
 
   @doc """
     Resumes the ranch acceptor supervisor and restarts all ranch acceptors
+
     to enable accepting new requests / connections again after the upgrade.
   """
   @spec run(otp_application_name::atom) :: :ok

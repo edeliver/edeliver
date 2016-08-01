@@ -1,16 +1,17 @@
 defmodule Edeliver.Relup.Instructions.ResumeChannels do
 @moduledoc """
     This upgrade instruction resumes the websocket processes
+
     connected to phoenix channels when the upgrade is done
     to continue handling channel events. Use this instruction
     at the end of the upgrade modification if the
 
-      `Edeliver.Relup.Instructions.SuspendChannels`
+    `Edeliver.Relup.Instructions.SuspendChannels`
 
     is used at the beginning. Make sure that it is used before
     the
 
-      `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
+     `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction to avoid that recently started websockets
     which were not suspendet are tried to be resumed.
@@ -27,9 +28,10 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
   alias Edeliver.Relup.Instructions.CheckRanchConnections
 
   @doc """
-    Returns name of the application. This name is taken as argument
-    for the `run/1` function and is required to access the acceptor processes
-    through the supervision tree
+    Returns name of the application.
+
+    This name is taken as argument for the `run/1` function and is required
+    to access the acceptor processes through the supervision tree
   """
   def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
     name |> String.to_atom
@@ -37,8 +39,10 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
 
   @doc """
     This module depends on the `Edeliver.Relup.Instructions.CheckRanchAcceptors` and
-    the `Edeliver.Relup.Instructions.CheckRanchConnections` module which must be loaded
-    before this instruction for upgrades and unload after this instruction for downgrades.
+    the `Edeliver.Relup.Instructions.CheckRanchConnections` module
+
+    which must be loaded before this instruction for upgrades and unloaded
+    after this instruction for downgrades.
   """
   @spec dependencies() :: [Edeliver.Relup.Instructions.CheckRanchAcceptors]
   def dependencies do
@@ -46,7 +50,9 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
   end
 
   @doc """
-    Resumes a list of processes. Because resume a process might take a while depending on the length
+    Resumes a list of processes.
+
+    Because resume a process might take a while depending on the length
     of the message queue or duration of current operation processed by the pid, suspending is done
     asynchronously for each process by spawing a new process which calls `:sys.resume/2` and then waiting
     for all results before returning from this function. Be careful when using `:infinity` as timeout,
@@ -80,10 +86,11 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
 
 
   @doc """
-    Resumes all websocket channels to continue handling channel events
-    after the upgrade. This is possible only in recent phoenix versions
-    since handling sys events is required for resuming. If an older version
-    is used, a warning is printed that suspending is not supported.
+    Resumes all websocket channels
+
+    to continue handling channel events after the upgrade. This is possible
+    only in recent phoenix versions since handling sys events is required for resuming.
+    If an older version is used, a warning is printed that suspending is not supported.
   """
   @spec run(otp_application_name::atom) :: :ok
   def run(otp_application_name) do
