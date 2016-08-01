@@ -25,8 +25,8 @@ defmodule Edeliver.Relup.Instructions.Info do
   """
   use Edeliver.Relup.RunnableInstruction
 
-  @spec modify_relup(instructions::Instructions.t, config::%Config{}, up_message::String.t, down_message::String.t, insert_where::Instruction.insert_fun) :: Instructions.t
-  def modify_relup(instructions = %Instructions{}, _config = %Config{}, up_message \\ "", down_message \\ "", insert_where_fun \\ &append_after_point_of_no_return/2) do
+  @spec modify_relup(instructions::Instructions.t, config::Edeliver.Relup.Config.t, up_message::String.t, down_message::String.t, insert_where::Instruction.insert_fun) :: Instructions.t
+  def modify_relup(instructions = %Instructions{}, _config = %{}, up_message \\ "", down_message \\ "", insert_where_fun \\ &append_after_point_of_no_return/2) do
     up_instruction = call_this(up_message)
     down_instruction = call_this(down_message)
     %{instructions |

@@ -69,7 +69,7 @@ defmodule MyApp.Relup.MigrationInstruction do
   def insert_where, do: &append/2
 
   @doc "pass application name and version to the `run/1` function when executing the relup"
-  def arguments(_instructions = %Instructions{up_version: up_version}, _config = %Config{name: name}) do
+  def arguments(_instructions = %Instructions{up_version: up_version}, _config = %{name: name}) do
     {name |> String.to_atom, up_version}
   end
 
@@ -97,7 +97,7 @@ defmodule MyApp.Relup.MigrationModification
   """
   use Edeliver.Relup.Modification
 
-  def modify_relup(instructions = %Instructions{}, config = %Config{}) do
+  def modify_relup(instructions = %Instructions{}, config = %{}) do
     instructions
     # check whether upgrade is possible
     |> Edeliver.Relup.Instructions.StartSection.modify_relup(config, :check)
@@ -114,7 +114,7 @@ defmodule MyApp.Relup.MigrationModification
   end
 
   @doc "usable if ecto is a dependency"
-  def usable?(_config = %Config{}) do
+  def usable?(_config = %{}) do
     deps = Mix.Project.config[:deps]
     List.keymember?(deps, :ecto, 0)
   end

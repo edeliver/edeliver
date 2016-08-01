@@ -13,7 +13,7 @@ defmodule Edeliver.Relup.DefaultModification do
   """
   use Edeliver.Relup.Modification
 
-  def modify_relup(instructions = %Instructions{}, config = %Config{}) do
+  def modify_relup(instructions = %Instructions{}, config = %{}) do
     instructions |> Edeliver.Relup.Instructions.SoftPurge.modify_relup(config)
   end
 

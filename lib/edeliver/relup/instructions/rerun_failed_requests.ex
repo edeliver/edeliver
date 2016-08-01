@@ -35,7 +35,7 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     for the `run/1` function and is required to access the acceptor processes
     through the supervision tree
   """
-  def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
+  def arguments(_instructions = %Instructions{}, _config = %{name: name}) do
     name |> String.to_atom
   end
 

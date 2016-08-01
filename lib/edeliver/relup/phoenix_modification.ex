@@ -34,7 +34,7 @@ defmodule Edeliver.Relup.PhoenixModification do
   """
   use Edeliver.Relup.Modification
 
-  def modify_relup(instructions = %Instructions{}, config = %Config{}) do
+  def modify_relup(instructions = %Instructions{}, config = %{}) do
     instructions
     # check whether upgrade is possible
     |> Edeliver.Relup.Instructions.StartSection.modify_relup(config, :check)
@@ -64,8 +64,8 @@ defmodule Edeliver.Relup.PhoenixModification do
   @doc """
     Returns true if the current project is a phoenix project
   """
-  @spec usable?(ReleaseManager.Config.t) :: boolean
-  def usable?(_config = %Config{}) do
+  @spec usable?(Edeliver.Relup.Config.t) :: boolean
+  def usable?(_config = %{}) do
     deps = Mix.Project.config[:deps]
     List.keymember?(deps, :phoenix, 0) && List.keymember?(deps, :phoenix_html, 0)
   end

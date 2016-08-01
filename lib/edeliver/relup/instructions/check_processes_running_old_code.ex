@@ -29,7 +29,7 @@ defmodule Edeliver.Relup.Instructions.CheckProcessesRunningOldCode do
     process even if they run old code. The modules to check are take from
     the `load_object_code` instructions.
   """
-  def arguments(instructions = %Instructions{}, _config = %Config{}) do
+  def arguments(instructions = %Instructions{}, _config = %{}) do
     modules_from_load_object_code_instructions(instructions.up_instructions, [])
   end
 

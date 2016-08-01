@@ -11,7 +11,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
       defmodule Acme.Relup.PingNodeInstruction do
         use Edeliver.Relup.RunnableInstruction
 
-        def modify_relup(instructions = %Instructions{up_instructions: up_instructions}, _config = %Config{}) do
+        def modify_relup(instructions = %Instructions{up_instructions: up_instructions}, _config = %{}) do
           node_name = :"node@host"
           %{instructions|
             up_instructions:   [call_this([node_name]) | instructions.up_instructions],
@@ -36,9 +36,9 @@ defmodule Edeliver.Relup.RunnableInstruction do
       defmodule Acme.Relup.Modification do
         use Edeliver.Relup.Modification
 
-        def modify_relup(instructions = %Instructions{}, _config = %Config{}) do
-          instructions |> Edeliver.Relup.DefaultModification.modify_relup(Config) # use default modifications
-                       |> Acme.Relup.PingNodeInstruction.modify_relup(Config) # apply also custom instructions
+        def modify_relup(instructions = %Instructions{}, config = %{}) do
+          instructions |> Edeliver.Relup.DefaultModification.modify_relup(config) # use default modifications
+                       |> Acme.Relup.PingNodeInstruction.modify_relup(config) # apply also custom instructions
         end
       end
 
@@ -74,7 +74,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
     Default is an empty list.
   """
-  @callback arguments(instructions::%Edeliver.Relup.Instructions{}, config::%ReleaseManager.Config{}) :: [term]
+  @callback arguments(instructions::%Edeliver.Relup.Instructions{}, config::Edeliver.Relup.Config.t) :: [term]
 
   @doc """
     Returns a list of module names which implement the behaviour `Edeliver.Relup.RunnableInstruction`
@@ -252,10 +252,9 @@ defmodule Edeliver.Relup.RunnableInstruction do
       import Edeliver.Relup.RunnableInstruction
       @behaviour Edeliver.Relup.RunnableInstruction
       alias Edeliver.Relup.Instructions
-      alias ReleaseManager.Config
       require Logger
 
-      def modify_relup(instructions = %Instructions{}, config = %Config{}) do
+      def modify_relup(instructions = %Instructions{}, config = %{}) do
         call_this_instruction = call_this(arguments(instructions, config))
         insert_where_fun = insert_where
         instructions |> insert_where_fun.(call_this_instruction)
@@ -264,8 +263,8 @@ defmodule Edeliver.Relup.RunnableInstruction do
                      |> ensure_dependencies_unloaded_after_instruction_for_downgrade(call_this_instruction, dependencies())
       end
 
-      @spec arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}) :: term
-      def arguments(%Edeliver.Relup.Instructions{}, %ReleaseManager.Config{}), do: []
+      @spec arguments(%Edeliver.Relup.Instructions{}, Edeliver.Relup.Config.t) :: term
+      def arguments(%Edeliver.Relup.Instructions{}, %{}), do: []
 
       @spec insert_where()::Instruction.insert_fun
       def insert_where, do: &append/2

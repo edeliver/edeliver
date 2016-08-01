@@ -10,7 +10,7 @@ defmodule Edeliver.Relup.Instruction do
       defmodule Acme.Relup.LogUpgradeInstruction do
         use Edeliver.Relup.Instruction
 
-        def modify_relup(instructions = %Instructions{up_instructions: up_instructions}, _config = %Config{}) do
+        def modify_relup(instructions = %Instructions{up_instructions: up_instructions}, _config = %{}) do
           log_instruction = {:apply, {:"Elixir.Logger", :info, [<<"Upgraded successfully">>]}}
           %{instructions| up_instructions: [log_instruction|up_instructions]}
         end
@@ -21,9 +21,9 @@ defmodule Edeliver.Relup.Instruction do
       defmodule Acme.Relup.Modification do
         use Edeliver.Relup.Modification
 
-        def modify_relup(instructions = %Instructions{}, _config = %Config{}) do
-          instructions |> Edeliver.Relup.DefaultModification.modify_relup(Config) # use default modifications
-                       |> Acme.Relup.LogUpgradeInstruction.modify_relup(Config) # apply also custom instructions
+        def modify_relup(instructions = %Instructions{}, config = %{}) do
+          instructions |> Edeliver.Relup.DefaultModification.modify_relup(config) # use default modifications
+                       |> Acme.Relup.LogUpgradeInstruction.modify_relup(config) # apply also custom instructions
         end
       end
 
@@ -69,14 +69,13 @@ defmodule Edeliver.Relup.Instruction do
     insert / position the instructions and `Edeliver.Relup.RunnableInstruction` to execute custom code
     during the upgrade.
   """
-  @callback modify_relup(Edeliver.Relup.Instructions.t, ReleaseManager.Config.t) :: Edeliver.Relup.Instructions.t
+  @callback modify_relup(Edeliver.Relup.Instructions.t, Edeliver.Relup.Config.t) :: Edeliver.Relup.Instructions.t
 
   @doc false
   defmacro __using__(_opts) do
     quote do
       @behaviour Edeliver.Relup.Instruction
       alias Edeliver.Relup.Instructions
-      alias ReleaseManager.Config
       import Edeliver.Relup.InsertInstruction
       import Edeliver.Relup.ShiftInstruction
     end

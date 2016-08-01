@@ -10,7 +10,7 @@ defmodule Edeliver.Relup.Instructions.SoftPurge do
   """
   use Edeliver.Relup.Instruction
 
-  def modify_relup(instructions = %Instructions{}, _config = %Config{}) do
+  def modify_relup(instructions = %Instructions{}, _config = %{}) do
     %{instructions|
       up_instructions:   replace_brutal_purge_with_soft_purge(instructions.up_instructions, []),
       down_instructions: replace_brutal_purge_with_soft_purge(instructions.down_instructions, [])
