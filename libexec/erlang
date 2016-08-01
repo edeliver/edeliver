@@ -295,9 +295,13 @@ copy_release_to_release_store() {
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
-    [[ "$USING_DISTILLERY" != "true" ]] && __detect_exrm_version
-    local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
-    [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "17" ]] && _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
+    if [[ "$USING_DISTILLERY" = "true" ]]; then
+      local _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
+    else
+      __detect_exrm_version
+      local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
+      [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "17" ]] && _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
+    fi
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
