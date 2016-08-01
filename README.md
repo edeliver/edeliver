@@ -112,9 +112,10 @@ Because it is based on [deliver](https://github.com/gerhard/deliver), is uses on
 
 It can be used with any one of these build systems:
 
-  * [rebar](https://github.com/basho/rebar) for pure erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [exrm](https://github.com/bitwalker/exrm) for elixir/erlang releases
+  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
+  * [rebar](https://github.com/basho/rebar) for pure erlang releases
 
 Edeliver tries to autodetect which system to use:
 
