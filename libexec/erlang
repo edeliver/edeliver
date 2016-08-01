@@ -201,7 +201,7 @@ erlang_generate_release() {
   __exec_if_defined "pre_erlang_generate_release"
 
   if [ "$RELEASE_CMD" = "mix" ]; then
-    __detect_exrm_version
+    [[ "$USING_DISTILLERY" != "true" ]] && __detect_exrm_version
     [[ "$USING_DISTILLERY" != "true" ]] && [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "19" \
        || "${EXRM_VERSION_MAJOR}.${EXRM_VERSION_MINOR}.${EXRM_VERSION_PATCH}" = "0.19.9" ]] \
     && local _force_no_interaction=" --no-confirm-missing"
@@ -295,7 +295,7 @@ copy_release_to_release_store() {
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
-    __detect_exrm_version
+    [[ "$USING_DISTILLERY" != "true" ]] && __detect_exrm_version
     local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
     [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "17" ]] && _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
   else # used rebar to generate release
