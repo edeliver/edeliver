@@ -19,26 +19,6 @@ defmodule Releases.Plugin.LinkConfig do
 
   def before_assembly(_), do: nil
 
-  def after_assembly(%Release{version: version, output_dir: output_dir}) do
-    # link files in release dir
-    case System.get_env "LINK_VM_ARGS" do
-      vm_args_link_destination = <<_,_::binary>> ->
-        info "Linking vm.args file"
-        vmargs_path = Path.join([output_dir, "releases", version, "vm.args"])
-        if vmargs_path |> File.exists?, do: vmargs_path |> File.rm
-        File.ln_s(vm_args_link_destination, vmargs_path)
-      _ -> nil
-    end
-    case System.get_env "LINK_SYS_CONFIG" do
-      sys_config_link_destination = <<_,_::binary>> ->
-        info "Linking sys.config file"
-        sysconfig_path = Path.join([output_dir, "releases", version, "sys.config"])
-        if sysconfig_path |> File.exists?, do: sysconfig_path |> File.rm
-        File.ln_s(sys_config_link_destination, sysconfig_path)
-      _ -> nil
-    end
-    nil
-  end
   def after_assembly(_), do: nil
 
   def before_package(_), do: nil
@@ -59,7 +39,7 @@ defmodule Releases.Plugin.LinkConfig do
       end
     end)
     if Enum.count(files_to_link) > 0 do
-      info "Repackaging release with config links"
+      info "Repackaging release with links to config files"
       try do
         tar_file = Path.join [output_dir, "releases", version, "#{name}.tar.gz"]
         true = File.exists? tar_file
