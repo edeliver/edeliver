@@ -10,7 +10,7 @@ defmodule Releases.Plugin.LinkVMARgs do
   def after_assembly(%Release{version: version, output_dir: output_dir}) do
     case System.get_env "LINK_VM_ARGS" do
       vm_args_link_destination = <<_,_::binary>> ->
-        debug "Linking vm.args file"
+        info "Linking vm.args file"
         vmargs_path = Path.join([output_dir, "releases", version, "vm.args"])
         if vmargs_path |> File.exists?, do: vmargs_path |> File.rm
         File.ln_s(vm_args_link_destination, vmargs_path)
