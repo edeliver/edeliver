@@ -47,13 +47,14 @@ defmodule Releases.Plugin.LinkConfig do
         tar_binary = <<_,_::binary>> = System.find_executable "tar"
         ln_binary = <<_,_::binary>>  = System.find_executable "ln"
         debug "Extracting release tar to #{tmp_dir}"
-        {_, 0} = System.cmd tar_binary, ["-xzvf", tar_file, "-C", tmp_path], stderr_to_stdout: true
+        :ok = :erl_tar.extract(tar_file, [{:cwd, to_char_list(tmp_path)}, :compressed])
+        directories_to_include = for dir <- File.ls!(tmp_path), do: {to_char_list(dir), to_char_list(Path.join(tmp_path, dir))}
         for {source, destination} <- files_to_link do
           debug "Linking #{source} to #{destination}"
           {_, 0} = System.cmd ln_binary,  ["-sf", source, destination], stderr_to_stdout: true
         end
         debug "Recreating release tar including links"
-        {_, 0} = System.cmd tar_binary, ["-czvf", tar_file, "-C", tmp_path, "."], stderr_to_stdout: true
+        :ok = :erl_tar.create(tar_file, directories_to_include, [:compressed])
       after
         tmp_path_exists? = File.exists?(tmp_path) && File.dir?(tmp_path)
         tmp_path_empty? = tmp_path_exists? && File.ls!(tmp_path) == []
