@@ -82,7 +82,7 @@ if [ -z "$BUILD_CMD" ]; then
 fi
 
 # command to generate the release on the remote build host
-# rebar | relx
+# mix | rebar | relx
 if [ -z "$RELEASE_CMD" ]; then
   if [[ -f "./relx.config" ]]; then
     RELEASE_CMD=${RELEASE_CMD:=relx}
@@ -93,4 +93,7 @@ if [ -z "$RELEASE_CMD" ]; then
   fi
 fi
 
+if [ "$RELEASE_CMD" = "mix" ]; then
+    [[ -f "./rel/config.exs" ]] && USING_DISTILLERY="true"
+fi
 

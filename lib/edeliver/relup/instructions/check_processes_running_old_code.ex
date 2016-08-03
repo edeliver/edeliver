@@ -1,9 +1,11 @@
 defmodule Edeliver.Relup.Instructions.CheckProcessesRunningOldCode do
   @moduledoc """
-    This upgrade instruction checks whether any of the modules that will
-    be (re)loaded during upgrade has old code. If any of them has old code
-    it will throw an error and abort the release upgrade. This prevents
-    crashing and restarting the node during the live upgrade. This instruction
+    Cancels the upgrade if there are processes running old code
+
+    from previous upgrades. This upgrade instruction checks whether any of the
+    modules that will be (re)loaded during upgrade has old code.
+    If any of them has old code it will throw an error and abort the release upgrade.
+    This prevents  crashing and restarting the node during the live upgrade. This instruction
     is insterted before the "point of no return" which causes it to run twice,
     once when checking the relup and once when executing the relup.
   """
@@ -11,6 +13,7 @@ defmodule Edeliver.Relup.Instructions.CheckProcessesRunningOldCode do
 
   @doc """
     Inserts the instruction before the point of no return.
+
     This causes the release handler to abort the upgrade
     already when running `:release_handler.check_install_release/1`
     if this instruction fails.
@@ -18,21 +21,23 @@ defmodule Edeliver.Relup.Instructions.CheckProcessesRunningOldCode do
   def insert_where, do: &insert_before_point_of_no_return/2
 
   @doc """
-    Returns the modules which will be loaded during the upgrade. These
-    modules are taken as argument for the `run/1` function and only
+    Returns the modules which will be loaded during the upgrade.
+
+    These modules are taken as argument for the `run/1` function and only
     these modules are checked whether they run old code. Modules which
     will not be updated during the upgrade does not affect the upgrade
     process even if they run old code. The modules to check are take from
     the `load_object_code` instructions.
   """
-  def arguments(instructions = %Instructions{}, _config = %Config{}) do
+  def arguments(instructions = %Instructions{}, _config = %{}) do
     modules_from_load_object_code_instructions(instructions.up_instructions, [])
   end
 
   @doc """
-    Checks whether the modules passed as argument have old code. These modules
-    are the modules which will be upgraded. This function runs twice because
-    it is executed before the "point of no return", once when checking the
+    Checks whether the modules passed as argument have old code.
+
+    These modules are the modules which will be upgraded. This function runs
+    twice because it is executed before the "point of no return", once when checking the
     relup and once when executing the relup.
   """
   def run(modules) do

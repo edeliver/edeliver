@@ -1,15 +1,16 @@
 defmodule Edeliver.Relup.Instructions.SoftPurge do
   @moduledoc """
-    Upgrade instruction which replaces :brutal_purge with :soft_purge
-    for :load_module, :load, :update and :remove relup instructions.
+    Upgrade instruction which replaces `:brutal_purge` with `:soft_purge`
 
-    If :brutal_purge is used, processes running old code are killed.
-    If :soft_purge is used the release handler will refuse to start
+    for `:load_module`, `:load`, `:update` and `:remove` relup instructions.
+
+    If `:brutal_purge` is used, processes running old code are killed.
+    If `:soft_purge` is used the release handler will refuse to start
     the upgrade.
   """
   use Edeliver.Relup.Instruction
 
-  def modify_relup(instructions = %Instructions{}, _config = %Config{}) do
+  def modify_relup(instructions = %Instructions{}, _config = %{}) do
     %{instructions|
       up_instructions:   replace_brutal_purge_with_soft_purge(instructions.up_instructions, []),
       down_instructions: replace_brutal_purge_with_soft_purge(instructions.down_instructions, [])

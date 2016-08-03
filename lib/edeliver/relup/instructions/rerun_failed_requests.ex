@@ -1,5 +1,7 @@
 defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
 @moduledoc """
+    Runs phoenix requests again which failed during hot code upgrade.
+
     This upgrade instruction notifies request processes
     which were handling requests while new code was loaded
     that they can be rerun if they failed during the upgrade.
@@ -8,7 +10,7 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     This instruction should be used in conjunction with and
     after the
 
-      `Edeliver.Relup.Instructions.FinishRunningRequests`
+    `Edeliver.Relup.Instructions.FinishRunningRequests`
 
     instruction which notifies the request processes that
     the code upgrade is started.
@@ -16,7 +18,7 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     To make sure that the http request connections can
     be found on the node, use this instruction after the
 
-      `Edeliver.Relup.Instructions.CheckRanchConnections`
+    `Edeliver.Relup.Instructions.CheckRanchConnections`
 
     instruction which will abort the upgrade if the http
     request connections accepted by ranch cannot be found
@@ -33,7 +35,10 @@ defmodule Edeliver.Relup.Instructions.RerunFailedRequests do
     for the `run/1` function and is required to access the acceptor processes
     through the supervision tree
   """
-  def arguments(_instructions = %Instructions{}, _config = %Config{name: name}) do
+  def arguments(_instructions = %Instructions{}, _config = %{name: name}) when is_atom(name) do
+    name
+  end
+  def arguments(_instructions = %Instructions{}, _config = %{name: name}) when is_binary(name)do
     name |> String.to_atom
   end
 

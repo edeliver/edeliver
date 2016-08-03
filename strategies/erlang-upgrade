@@ -234,7 +234,11 @@ __is_node_offline() {
 # on the deploy host passed as first argument.
 __get_installed_version_on_host() {
  local _deploy_host="$1"
- local _node_command="$(__get_node_command "rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\"" "$DELIVER_TO" "")"
+ if [[ "$USING_DISTILLERY" = "true" ]]; then
+   local _node_command="$(__get_node_command "rpcterms Elixir.Edeliver run_command '[release_version, \"$APP\"].' | tr -d \\\"" "$DELIVER_TO" "")"
+ else
+   local _node_command="$(__get_node_command "rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tr -d \\\"" "$DELIVER_TO" "")"
+ fi
  __execute_on_deploy_host "$_deploy_host" "$_node_command"
 }
 

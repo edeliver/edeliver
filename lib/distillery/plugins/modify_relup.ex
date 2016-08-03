@@ -1,28 +1,26 @@
-defmodule ReleaseManager.Plugin.ModifyRelup do
+defmodule Releases.Plugin.ModifyRelup do
   @moduledoc """
     Exrm plugin to auto-patch the relup file when building upgrades.
   """
-  use ReleaseManager.Plugin
-  alias ReleaseManager.Utils
+  use Mix.Releases.Plugin
   alias Edeliver.Relup.Instructions
 
-  def before_release(_), do: nil
+  def before_assembly(_), do: nil
 
-  def after_release(config = %Config{env: :prod, upgrade?: true, version: version, name: name}) do
+  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, output_dir: output_dir}) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
       "true" -> nil
       _ ->
         info "Modifying relup file..."
-        relup_file = Utils.rel_dest_path(Path.join([name, "releases", version, "relup"]))
-        exrm_relup_file = Utils.rel_dest_path(Path.join([name, "relup"]))
-        relup_modification_module = case get_relup_modification_module(config) do
+        relup_file = Path.join([output_dir, "releases", version, "relup"])
+        relup_modification_module = case get_relup_modification_module(release) do
           [module] -> module
           modules = [_|_] ->
             Mix.raise "Found multiple modules implementing behaviour Edeliver.Relup.DefaultModification:\n#{inspect modules}\nPlease use the --relup-mod=<module-name> option."
         end
         debug "Using #{inspect relup_modification_module} module for relup modification."
         if File.exists?(relup_file) do
-          case :file.consult(relup_file) do
+          case :file.consult(to_char_list(relup_file)) do
             {:ok, [{up_version,
                     [{down_version, up_description, up_instructions}],
                     [{down_version, down_description, down_instructions}]
@@ -32,30 +30,32 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
                 down_instructions: down_instructions,
                 up_version: List.to_string(up_version),
                 down_version: List.to_string(down_version),
-                changed_modules: changed_modules(up_instructions, String.to_atom(name), String.to_char_list(version))
+                changed_modules: changed_modules(up_instructions, name, String.to_char_list(version))
               }
               %Instructions{
                 up_instructions: up_instructions,
                 down_instructions: down_instructions,
-              } = relup_modification_module.modify_relup(instructions, config)
+              } = relup_modification_module.modify_relup(instructions, release)
               relup = {up_version,
                 [{down_version, up_description, up_instructions}],
                 [{down_version, down_description, down_instructions}]
               }
-              write_relup(relup, relup_file)
-              if File.exists?(exrm_relup_file), do: write_relup(relup, exrm_relup_file)
+              res = write_relup(relup, relup_file)
             error ->
               debug "Error when loading relup file: #{:io_lib.format('~p~n', [error])}"
               Mix.raise "Failed to load relup file from #{relup_file}\nYou can skip this step using the --skip-relup-mod option."
           end
         end
     end
+    nil
   end
-  def after_release(_), do: nil
+  def after_assembly(_), do: nil
 
-  def after_cleanup(_), do: nil
+  def before_package(_), do: nil
 
   def after_package(_), do: nil
+
+  def after_cleanup(_), do: nil
 
   defp changed_modules([{:load_object_code, {name, version, modules}}|_], name, version), do: modules
   defp changed_modules([_|rest], name, version), do: changed_modules(rest, name, version)
@@ -71,7 +71,7 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
     end
   end
 
-  defp get_relup_modification_module(config = %Config{}) do
+  defp get_relup_modification_module(release = %Release{}) do
     case System.get_env "RELUP_MODIFICATION_MODULE" do
       module = <<_,_::binary>> ->
         module = String.to_atom(module)
@@ -90,7 +90,7 @@ defmodule ReleaseManager.Plugin.ModifyRelup do
           is_list(behaviours) &&
           Edeliver.Relup.Modification in behaviours &&
           Code.ensure_loaded?(module) &&
-          module.usable?(config)
+          module.usable?(release)
         end, fn {module, _} ->
           {module, module.priority}
         end)

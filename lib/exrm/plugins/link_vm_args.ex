@@ -1,4 +1,7 @@
 defmodule ReleaseManager.Plugin.LinkVMARgs do
+  @moduledoc """
+    Exrm plugin to link the `vm.args` file on deploy hosts.
+  """
   use ReleaseManager.Plugin
   alias  ReleaseManager.Utils
 
