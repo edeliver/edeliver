@@ -153,7 +153,11 @@ __is_node_offline() {
 # on the deploy host passed as first argument.
 __get_installed_version_on_host() {
  local _deploy_host="$1"
- __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
+ if [[ "$USING_DISTILLERY" = "true" ]]; then
+   __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpcterms Elixir.Edeliver run_command '[release_version, \"$APP\"].' | tail -1 | tr -d \\\""
+ else
+   __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
+ fi
 }
 
 # prints an erlang script which detects the current
