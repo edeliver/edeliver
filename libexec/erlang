@@ -213,6 +213,14 @@ erlang_generate_release() {
       local _mix_release_verbose_flag=" --verbose"
       local _env_flag=" --env=\"$TARGET_MIX_ENV\""
       local _app_flag=" --name=\"$APP\""
+      if [[ -n "$WITH" ]] || [[ -n "$FROM" ]]; then
+        local _upgrade_flag=" --upgrade"
+        if [[ -n "$WITH" ]]; then
+          _upgrade_flag="${_upgrade_flag} --upfrom=\"$WITH\""
+        elif [[ -n "$OLD_RELEASE_VERSION" ]]; then
+          _upgrade_flag="${_upgrade_flag} --upfrom=\"$OLD_RELEASE_VERSION\""
+        fi
+      fi
     else
       [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbosity=normal" || local _mix_release_verbose_flag=" --verbosity=verbose"
     fi
@@ -236,7 +244,7 @@ erlang_generate_release() {
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD $_set_auto_version release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}
+      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" $MIX_CMD $_set_auto_version release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
     fi
   "
 
