@@ -46,7 +46,10 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
     These values taken as argument for the `run/1` function
   """
-  def arguments(_instructions = %Instructions{}, _config = %{name: name}) do
+  def arguments(_instructions = %Instructions{}, _config = %{name: name}) when is_atom(name) do
+    {name, 500}
+  end
+  def arguments(_instructions = %Instructions{}, _config = %{name: name}) when is_binary(name) do
     {name |> String.to_atom, 500}
   end
 

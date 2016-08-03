@@ -13,7 +13,6 @@ defmodule Releases.Plugin.ModifyRelup do
       _ ->
         info "Modifying relup file..."
         relup_file = Path.join([output_dir, "releases", version, "relup"])
-        exrm_relup_file = Path.join([output_dir, "relup"])
         relup_modification_module = case get_relup_modification_module(release) do
           [module] -> module
           modules = [_|_] ->
@@ -21,7 +20,7 @@ defmodule Releases.Plugin.ModifyRelup do
         end
         debug "Using #{inspect relup_modification_module} module for relup modification."
         if File.exists?(relup_file) do
-          case :file.consult(relup_file) do
+          case :file.consult(to_char_list(relup_file)) do
             {:ok, [{up_version,
                     [{down_version, up_description, up_instructions}],
                     [{down_version, down_description, down_instructions}]
@@ -31,7 +30,7 @@ defmodule Releases.Plugin.ModifyRelup do
                 down_instructions: down_instructions,
                 up_version: List.to_string(up_version),
                 down_version: List.to_string(down_version),
-                changed_modules: changed_modules(up_instructions, String.to_atom(name), String.to_char_list(version))
+                changed_modules: changed_modules(up_instructions, name, String.to_char_list(version))
               }
               %Instructions{
                 up_instructions: up_instructions,
@@ -41,8 +40,7 @@ defmodule Releases.Plugin.ModifyRelup do
                 [{down_version, up_description, up_instructions}],
                 [{down_version, down_description, down_instructions}]
               }
-              write_relup(relup, relup_file)
-              if File.exists?(exrm_relup_file), do: write_relup(relup, exrm_relup_file)
+              res = write_relup(relup, relup_file)
             error ->
               debug "Error when loading relup file: #{:io_lib.format('~p~n', [error])}"
               Mix.raise "Failed to load relup file from #{relup_file}\nYou can skip this step using the --skip-relup-mod option."
