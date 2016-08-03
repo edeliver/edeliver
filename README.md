@@ -120,10 +120,11 @@ It can be used with any one of these build systems:
 Edeliver tries to autodetect which system to use:
 
   * If a `./mix.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [exrm](https://github.com/bitwalker/exrm) is used to generate the releases / upgrades.
+  * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
   * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
 
-This can be overridden by the config variables `BUILD_CMD=rebar|mix` and `RELEASE_CMD=rebar|mix|relx` in `.deliver/config`.
+This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_CMD=rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
@@ -204,7 +205,7 @@ PRODUCTION_USER="production" # local user at deploy hosts
 DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
 ```
 
-To use different configurations on different hosts, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and/or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) to build the releases.
+To use different configurations on different hosts, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and/or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) or [distillery](https://github.com/bitwalker/distillery) to build the releases.
 
 
 ## Build Commands
@@ -235,7 +236,7 @@ Builds an initial release that can be deployed to the production hosts. If you w
     mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
                               [--to=<git-tag-or-revision>] [--branch=<git-branch>]
 
-Builds an _upgrade_ package that can be deployed to production hosts with running nodes _without restarting_ them. To build an upgrade package you need the release or upgrade package (when using [exrm](https://github.com/bitwalker/exrm)) of the running release. If it is available (in the release store), you can build the upgrade to the new version by passing the old  version to the `--with=<old-version>` option. If not, you can build the old release and the live upgrade from it in a single step by using the `--from=<git-tag-or-revision>` option. If you don't want to build an upgrade to the current head of the given branch (`master` is the default), you can use the `--to=<git-tag-or-revision>` option. If the upgrade package is built, you might want to _modify_ the generated upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html)) as described in the next section or (more advanced) automatically patch the relup file by implementing your own [`Edeliver.Relup.Modification`](https://github.com/boldpoker/edeliver/blob/master/lib/edeliver/relup/modification.ex)behaviour to automate this step.
+Builds an _upgrade_ package that can be deployed to production hosts with running nodes _without restarting_ them. To build an upgrade package you need the release or upgrade package (when using [exrm](https://github.com/bitwalker/exrm) or [distillery](https://github.com/bitwalker/distillery)) of the running release. If it is available (in the release store), you can build the upgrade to the new version by passing the old  version to the `--with=<old-version>` option. If not, you can build the old release and the live upgrade from it in a single step by using the `--from=<git-tag-or-revision>` option. If you don't want to build an upgrade to the current head of the given branch (`master` is the default), you can use the `--to=<git-tag-or-revision>` option. If the upgrade package is built, you might want to _modify_ the generated upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html)) as described in the next section or (more advanced) automatically patch the relup file by implementing your own [`Edeliver.Relup.Modification`](https://github.com/boldpoker/edeliver/blob/master/lib/edeliver/relup/modification.ex)behaviour to automate this step.
 
 
 ### Edit upgrade instructions (relup)
@@ -296,7 +297,7 @@ Deploys an upgrade at the production hosts and upgrades the running nodes to the
 
 Release archives in your release store that were created by the `build release` command **cannot be used to deploy an upgrade**.
 
-This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands. Releases generated with [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) always contain the `upgrade` command.
+This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands. Releases generated with [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) or [distillery](https://github.com/bitwalker/distillery) always contain the `upgrade` command.
 
 If using rebar, make sure that the [install_upgrade.escript](https://github.com/basho/rebar/blob/master/priv/templates/simplenode.install_upgrade.escript) file which was generated by rebar is included in your release. So ensure, that the following line is in your `reltool.config`:
 
