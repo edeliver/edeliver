@@ -141,7 +141,7 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver 
 
 ```exs
 defp deps do
-  [{:edeliver, ">= 1.2.10"}]
+  [{:edeliver, ">= 1.3.0"}]
 end
 ```
 
@@ -171,7 +171,7 @@ When using rebar, edeliver can be added as [rebar](https://github.com/basho/reba
 
     {deps, [
       % ...
-      {edeliver, "1.2.10",
+      {edeliver, "1.3.0",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 

@@ -1,6 +1,14 @@
 eDeliver Versions
 =================
 
+__1.3.0__
+
+- Support distillery as release tool
+- Add pre/post hook which is executed when deployed release is (re)started.
+- Improve default automatic relup modifications and their api docs
+- Fix compile warnings when compiling with elixir version >= `1.3.0`
+- Fix problem with node command output
+
 __1.2.10__
 
 - Install also rebar3 on the build host
