@@ -65,7 +65,9 @@ update_version() {
   local _new_version="$1"
   # libexec/defaults:3:DELIVER_VERSION="$_current_version"
   sed -i -e "s/DELIVER_VERSION\s*=\s*\"[^\"]\{1,\}\"/DELIVER_VERSION=\"$_new_version\"/" "${BASE_PATH}/libexec/defaults" # | grep DELIVER_VER
-  # ./README.md:63:        [{:edeliver, ">= $_current_version"}]
+  # ./README.md:56:        {:edeliver, "~> $_current_version"}
+  sed -i -e "s/^\([[:space:]]*{:edeliver,[[:space:]]*\"[[:space:]]*~>\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '{:edeliver'
+  # ./README.md:144:        [{:edeliver, ">= $_current_version"}]
   sed -i -e "s/^\([[:space:]]*\[{:edeliver,[[:space:]]*\"[[:space:]]*>=\)[^\"]\{1,\}\"/\1 $_new_version\"/" "${BASE_PATH}/README.md" # | grep '\[{:edeliver'
   # README.md:82:      {edeliver, "1.0",
   sed -i -e "s/^\([[:space:]]*{edeliver,[[:space:]]*\"\)[^\"]\{1,\}\"/\1$_new_version\"/" "${BASE_PATH}/README.md" # | grep '{edeliver'
