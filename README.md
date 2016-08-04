@@ -51,7 +51,7 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 1.2.9"}
+    {:edeliver, "~> 1.3.0"}
   ]
 end
 ```
