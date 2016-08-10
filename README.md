@@ -207,6 +207,15 @@ DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
 
 To use different configurations on different hosts, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and/or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [exrm](https://github.com/bitwalker/exrm) or [distillery](https://github.com/bitwalker/distillery) to build the releases.
 
+Another strategy is to using runtime environment variable evaluation.  For more information on this technique, see [Plataformatec - Deploying Elixir with edeliver](http://blog.plataformatec.com.br/2016/06/deploying-elixir-applications-with-edeliver/)
+
+If you wish to use `RELX_REPLACE_OS_VARS=true`, ensure this is exported in your deployment environment.
+
+For example in `.profile`
+
+```sh
+export RELX_REPLACE_OS_VARS=true
+```
 
 ## Build Commands
 
