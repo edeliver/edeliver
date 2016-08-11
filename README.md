@@ -108,7 +108,7 @@ mix edeliver migrate
 
 ## Installation
 
-Because it is based on [deliver](https://github.com/gerhard/deliver), is uses only shell scripts and has no further dependencies except the Erlang/Elixir build system.
+Because it is based on [deliver](https://github.com/gerhard/deliver), it uses only shell scripts and has no further dependencies except the Erlang/Elixir build system.
 
 It can be used with any one of these build systems:
 
@@ -167,7 +167,7 @@ mix local.hex
 
 ### Rebar considerations
 
-When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
+When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) dependency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
 
     {deps, [
       % ...
@@ -272,7 +272,7 @@ The reason for that is, that when the upgrade is build with rebar, rebar tries t
 
     mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
 
-Deploy commands deliver the builds that were created with a build command to your staging or prodution hosts.  They can also perform a live code upgrade.  Built releasees or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
+Deploy commands deliver the builds that were created with a build command to your staging or production hosts.  They can also perform a live code upgrade.  Built releasees or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
 
 - `APP`: the name of your release which should be built
 - `PRODUCTION_HOSTS`: the production hosts to deploy to, separated by space
@@ -384,7 +384,7 @@ mix edeliver deploy release to production
 mix edeliver start production
 ```
 
-Or execute the the above steps with a single command:
+Or execute the above steps with a single command:
 
 ```sh
 mix edeliver update production --branch=feature --start-deploy
