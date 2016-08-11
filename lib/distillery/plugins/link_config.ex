@@ -44,7 +44,6 @@ defmodule Releases.Plugin.LinkConfig do
         tar_file = Path.join [output_dir, "releases", version, "#{name}.tar.gz"]
         true = File.exists? tar_file
         :ok = File.mkdir_p tmp_path
-        tar_binary = <<_,_::binary>> = System.find_executable "tar"
         ln_binary = <<_,_::binary>>  = System.find_executable "ln"
         debug "Extracting release tar to #{tmp_dir}"
         :ok = :erl_tar.extract(tar_file, [{:cwd, to_char_list(tmp_path)}, :compressed])

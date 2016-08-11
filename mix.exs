@@ -34,18 +34,9 @@ defmodule Edeliver.Mixfile do
    ]
 
   defp deps do
-    if project_uses_distillery? do
-      [
-        {:distillery, ">= 0.8.0", warn_missing: false},
-        {:exrm, ">= 0.16.0", optional: true, warn_missing: false},
-      ]
-    else
-      [
-        {:exrm, ">= 0.16.0", warn_missing: false},
-        {:distillery, ">= 0.8.0", optional: true, warn_missing: false},
-      ]
-    end ++
     [
+      {:distillery, ">= 0.8.0", optional: true, warn_missing: false},
+      {:exrm, ">= 0.16.0", optional: true, warn_missing: false},
       {:meck, "~> 0.8.4", only: :test},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11.5", only: :dev},
