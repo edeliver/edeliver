@@ -38,11 +38,12 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 
 Assuming an Elixir project, you already have a build server and a staging server, and you've created a database on your staging server already (there is no ecto.create, we skip straight to migrations).
 
-Add edeliver to your project dependencies in mix.exs:
+Add edeliver and your build tool ([distillery](https://github.com/bitwalker/distillery) or [exrm](https://github.com/bitwalker/exrm)) to your project dependencies in mix.exs:
 
 ```exs
 def application, do: [
   applications: [
+  	 ...
     # Add edeliver to the END of the list
     :edeliver
   ]
@@ -51,7 +52,9 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 1.3.0"}
+    {:edeliver, "~> 1.3.0"},
+    {:distillery, ">= 0.8.0", warn_missing: false},
+    # or :exrm
   ]
 end
 ```
@@ -112,8 +115,8 @@ Because it is based on [deliver](https://github.com/gerhard/deliver), is uses on
 
 It can be used with any one of these build systems:
 
+  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [exrm](https://github.com/bitwalker/exrm) for elixir/erlang releases
-  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
   * [rebar](https://github.com/basho/rebar) for pure erlang releases
 
@@ -137,11 +140,15 @@ The Erlang runtime (OTP) and the Elixir runtime are packaged with the release—
 
 ### Mix considerations
 
-If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
+If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver and your build tool and your build tool ([distillery](https://hex.pm/packages/distillery) or [exrm](https://hex.pm/packages/exrm)) as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
 
 ```exs
 defp deps do
-  [{:edeliver, ">= 1.3.0"}]
+  [
+  	{:edeliver, ">= 1.3.0"},
+    {:distillery, ">= 0.8.0", warn_missing: false},
+	# or {:exrm, ">= 0.16.0", warn_missing: false},
+  ]
 end
 ```
 
