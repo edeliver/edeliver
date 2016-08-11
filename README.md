@@ -165,13 +165,6 @@ def application, do: [
 ]
 ```
 
-Before using mix to build the releases, you should install [hex](https://hex.pm) on the build host before the first build (otherwise mix asks interactively to install it).
-
-```console
-mix local.hex
-```
-
-
 ### Rebar considerations
 
 When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) depencency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
