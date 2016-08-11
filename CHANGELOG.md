@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.4.0__
+
+- Marked `:exrm` as `:optional` dependency. This __requires to add `:exrm`
+  as dependency to the mix file of the project__ if exrm is used as build tool
+- Allow to build releases using [distillery](https://github.com/bitwalker/distillery)
+- Improve detection whether exrm or distillery is used as build tool
+
 __1.3.0__
 
 - Support distillery as release tool
