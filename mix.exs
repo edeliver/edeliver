@@ -86,20 +86,24 @@ defmodule Edeliver.Mixfile do
         uses_distillery? -> true
         uses_exrm? -> false
         true ->
-          Mix.Shell.IO.error "Failed to detect whether :distillery or :exrm is used as dependency.\n"
-                          <> "If you used exrm before (default), please add it to your mix.exs\n"
-                          <> "config file like this:\n\n"
-                          <> "defp deps do\n"
-                          <> "  [\n"
-                          <> "   ...\n"
-                          <> "   {:exrm, \">= 0.16.0\", warn_missing: false},\n"
-                          <> "  ]\n"
-                          <> "end\n\n"
-                          <> "or upgrade to distillery as build tool. You find more information\n"
-                          <> "about how to upgrade on the edeliver wiki page:\n\n"
-                          <> "https://github.com/boldpoker/edeliver/wiki/Upgrade-from-exrm-to-distillery-as-build-tool\n\n"
+          case System.get_env("PUBLISHING_TO_HEX_PM") do
+            "true" -> false
+            _ ->
+              Mix.Shell.IO.error "Failed to detect whether :distillery or :exrm is used as dependency.\n"
+                              <> "If you used exrm before (default), please add it to your mix.exs\n"
+                              <> "config file like this:\n\n"
+                              <> "defp deps do\n"
+                              <> "  [\n"
+                              <> "   ...\n"
+                              <> "   {:exrm, \">= 0.16.0\", warn_missing: false},\n"
+                              <> "  ]\n"
+                              <> "end\n\n"
+                              <> "or upgrade to distillery as build tool. You find more information\n"
+                              <> "about how to upgrade on the edeliver wiki page:\n\n"
+                              <> "https://github.com/boldpoker/edeliver/wiki/Upgrade-from-exrm-to-distillery-as-build-tool\n\n"
 
-          System.halt(1)
+              System.halt(1)
+          end
       end
       rescue error ->
         Mix.Shell.IO.error "Error when detecting whether distillery or exrm is used as release build tool: #{inspect error}"
