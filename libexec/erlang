@@ -823,7 +823,15 @@ __get_node_command() {
   local _node_command="$1"
   local _app_path="$2"
   local _config_arg="$3"
-
+  if [[ "$USING_DISTILLERY" = "true" ]]; then
+    local _rpc_command="rpcterms"
+    local _rpc_open_brackets="["
+    local _rpc_close_brackets="]"
+  else
+    local _rpc_command="rpc"
+    local _rpc_open_brackets="[["
+    local _rpc_close_brackets="]]"
+  fi
   echo "
     [ -f ~/.profile ] && source ~/.profile
     set -e
@@ -845,7 +853,7 @@ __get_node_command() {
         __edeliver_node_running && break || :
         sleep 1
       done
-      bin/${APP} rpc Elixir.Edeliver run_command '[[monitor_startup_progress, \"$APP\", $MODE]].' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+      bin/${APP} ${_rpc_command} Elixir.Edeliver run_command '${_rpc_open_brackets}monitor_startup_progress, \"$APP\", $MODE${_rpc_close_brackets}.' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
     }
     if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
       ping_result=\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)
