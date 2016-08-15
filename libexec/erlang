@@ -832,12 +832,14 @@ __get_node_command() {
     local _rpc_open_brackets="[["
     local _rpc_close_brackets="]]"
   fi
+  [[ "${_node_command}" = start* ]] && local _is_start_command="true" || :
+  [[ "${_node_command}" = restart* ]] && local _is_restart_command="true" || :
   echo "
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
     cd ${_app_path}/${APP} $SILENCE
     output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
-    if [[ \"\$output_lines\" -gt 1 ]]; then
+    if [ \"\$output_lines\" -gt 1 ]; then
       output_filter_command='tail'
       output_filter_command_options=\"-n+\$output_lines\"
     else
@@ -850,31 +852,31 @@ __get_node_command() {
     __edeliver_synchronous_start() {
       bin/${APP} start | \$output_filter_command \$output_filter_command_options
       sleep 1
-      for i in {1..10}; do
+      for i in 1 2 3 4 5 6 7 8 9 10; do
         __edeliver_node_running && break || :
         sleep 1
       done
       bin/${APP} ${_rpc_command} Elixir.Edeliver run_command '${_rpc_open_brackets}monitor_startup_progress, \"$APP\", $MODE${_rpc_close_brackets}.' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
     }
-    if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
-      ping_result=\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)
+    if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
+      ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
       if __edeliver_node_running; then
         echo \"${txtred}already running${txtrst}\" && exit 1
       else
         __edeliver_synchronous_start
       fi
-    elif [[ \"${_node_command}\" = restart* ]]; then
+    elif [ \"$_is_restart_command\" = \"true\" ]; then
       # use stop / start instead of restart command to
       # not just restart the applications but also the erlang vm
       # with the most recent release
       if __edeliver_node_running; then
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)
-        if [[ \$? -ne 0 ]]; then
+        STOP_OUTPUT=\"\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)\"
+        if [ \"\$?\" -ne 0 ]; then
           cat \"\$STOP_OUTPUT\"
           exit 1
         fi
       fi
-      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+      if [ \"$RELEASE_CMD\" = \"mix\" ]; then
         __edeliver_synchronous_start
       else
         ${_node_env}bin/${APP} start ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
