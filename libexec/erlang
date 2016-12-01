@@ -170,7 +170,7 @@ erlang_clean_compile() {
       # see https://github.com/boldpoker/edeliver/issues/94
       if $MIX_CMD --version | grep 'Mix 1.3.[01234]' >/dev/null 2>&1 ; then
         echo \"Compiling deps because mix version 1.3.[01234] is used\"
-        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD deps.compile
+        APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD compile
       fi
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
         APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" AUTO_VERSION=\"$AUTO_VERSION\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD do${_set_auto_version} compile
