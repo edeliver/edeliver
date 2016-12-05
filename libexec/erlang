@@ -168,8 +168,8 @@ erlang_clean_compile() {
     elif [ \"$BUILD_CMD\" = \"mix\" ] && [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"Checking whether deps must be compiled for mix version 1.3.[01234]\"
       # see https://github.com/boldpoker/edeliver/issues/94
-      if $MIX_CMD --version | grep 'Mix 1.3.[01234]' >/dev/null 2>&1 ; then
-        echo \"Compiling deps because mix version 1.3.[01234] is used\"
+      if $MIX_CMD --version | grep 'Mix 1.3.[0-9]' >/dev/null 2>&1 ; then
+        echo \"Compiling deps because mix version 1.3.[0-9] is used\"
         APP=\"$APP\" MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD compile
       fi
       if [[ \"$SKIP_MIX_CLEAN\" = \"true\" ]]; then
