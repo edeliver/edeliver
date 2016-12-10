@@ -115,7 +115,7 @@ run() {
   # build upgrade  <---------------------------------------------------------------------------------------------------
   local _built_upgrade=false _upgrade_version_to_install
   if [[ -n "$_running_release_version" && "${#_online_upgrade_hosts[@]}" -gt 0 ]]; then
-    # check whehter installed version is the latest version
+    # check whether installed version is the latest version
     local _revision_from_version=$(__revision_from_version "$_running_release_version")
     local _version_without_revision=$(__version_without_revision "$_running_release_version")
     if [[ -n "$_revision_from_version" && "$_revision_from_version" = "$_revision_to_install"  ]]; then

@@ -21,8 +21,8 @@ To disable the automatic relup modifications you can use the `--skip-relup-mod` 
 If you want or need to implement your own `Edeliver.Relup.Modification`, the following instructions provided by edeliver can be used:
 
  - `Edeliver.Relup.Instructions.CheckProcessesRunningOldCode`: aborts the upgrade if processes uses old code from previous upgrades
- - `Edeliver.Relup.Instructions.CheckRanchAcceptors`: checks whehter ranch acceptors can be found or aborts the upgrade
- - `Edeliver.Relup.Instructions.CheckRanchConnections`: checks whehter ranch connections can be found or aborts the upgrade
+ - `Edeliver.Relup.Instructions.CheckRanchAcceptors`: checks whether ranch acceptors can be found or aborts the upgrade
+ - `Edeliver.Relup.Instructions.CheckRanchConnections`: checks whether ranch connections can be found or aborts the upgrade
  - `Edeliver.Relup.Instructions.CodeChangeOnAppProcesses`: runs `code_change` on suspended processes
  - `Edeliver.Relup.Instructions.FinishRunningRequests`: notifies running phoenix requests that an upgrade starts
  - `Edeliver.Relup.Instructions.Info`: prints info to the log on the nodes and the edeliver upgrade output
