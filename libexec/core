@@ -121,21 +121,27 @@ __find_all_strategies() {
     strategies_path+=("$ORIGIN_DIR/.deliver/strategies")
   fi
 
-  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9_/.-]*$' -type f ! -iname 'readme*')
+  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9 _/.-]*$' -type f ! -iname 'readme*')
+  SYSIFS=$IFS
+  IFS=$(echo -en "\n\b")
   for strategy in $STRATEGIES
   do
     STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
   done
+  IFS=$SYSIFS
 }
 
 # Load the correct strategy
 #
 __load_strategy() {
+  SYSIFS=$IFS
+  IFS=$(echo -en "\n\b")
   for strategy in $STRATEGIES
   do
     [[ ! $strategy =~ $STRATEGY ]] && continue
     source "$strategy" && strategy_loaded=true && break
   done
+  IFS=$SYSIFS
 
   if [ -z "$strategy_loaded" ]
   then
