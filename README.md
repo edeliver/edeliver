@@ -7,7 +7,7 @@ _Deployment for Elixir and Erlang_
 [![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
 
 
-**edeliver** is based on [deliver](https://github.com/gerhard/deliver) enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
+**edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
 
 The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines.  After being built, the release can then be deployed to one or more production machines.
 
