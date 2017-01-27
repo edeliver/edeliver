@@ -4,9 +4,9 @@ defmodule Edeliver.Mixfile do
   def project do
     [
       app: :edeliver,
-      version: "1.4.0",
+      version: "1.4.1",
       description:  "Build and Deploy Elixir Applications and perform Hot-Code Upgrades and Schema Migrations",
-      elixirc_paths: elixirc_paths,
+      elixirc_paths: elixirc_paths(),
       package: [
         licenses: ["MIT"],
         files:  [
@@ -21,8 +21,8 @@ defmodule Edeliver.Mixfile do
         ],
         links: %{"GitHub" => "https://github.com/boldpoker/edeliver"},
       ],
-      deps: deps,
-      docs: docs,
+      deps: deps(),
+      docs: docs(),
     ]
   end
 
@@ -54,7 +54,7 @@ defmodule Edeliver.Mixfile do
 
   defp elixirc_paths do
 
-    if project_uses_distillery? do
+    if project_uses_distillery?() do
       [Path.join("lib", "distillery")]
     else
       [Path.join("lib", "exrm")]
