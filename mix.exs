@@ -19,6 +19,7 @@ defmodule Edeliver.Mixfile do
           "strategies",
           "README.md",
         ],
+        maintainers: [],
         links: %{"GitHub" => "https://github.com/boldpoker/edeliver"},
       ],
       deps: deps(),
