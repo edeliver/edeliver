@@ -1,10 +1,14 @@
 eDeliver Versions
 =================
 
+__1.4.2__
+
+- Support Elixir 1.3.4 in addition to 1.4
+
 __1.4.1__
 
 - Compatibility with elixir 1.4
-- Compatibility with all elixir versions 1.3.x
+- Compatibility with elixir versions 1.3.[0-3]
 - Improved support for distillery as build tool
 
 __1.4.0__
