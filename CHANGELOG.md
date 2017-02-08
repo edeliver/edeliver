@@ -1,6 +1,12 @@
 eDeliver Versions
 =================
 
+__1.4.1__
+
+- Compatibility with elixir 1.4
+- Compatibility with all elixir versions 1.3.x
+- Improved support for distillery as build tool
+
 __1.4.0__
 
 - Marked `:exrm` as `:optional` dependency. This __requires to add `:exrm`
