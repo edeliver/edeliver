@@ -24,6 +24,6 @@ defmodule Edeliver.Relup.DefaultModification do
     the `--relup-mod=` command line option the module with the highest priority
     is used (which is also usable).
   """
-  def priority, do: priority_default
+  def priority, do: priority_default()
 
 end

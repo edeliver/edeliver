@@ -66,11 +66,11 @@ defmodule Mix.Tasks.Release.Version do
           {:modify, modification_functions} ->
             case Keyword.get(switches, :dry_run, false) do
               true ->
-                {:modified, new_version} = modify_version({:modify, modification_functions}, old_version = get_version)
+                {:modified, new_version} = modify_version({:modify, modification_functions}, old_version = get_version())
                 Mix.Shell.IO.info "Would update version from #{old_version} to #{new_version}"
               false -> update_release_version(modification_functions, switches)
             end
-          :show -> print_version
+          :show -> print_version()
           {:error, message} -> Mix.raise message
         end
       {_, _, [{unknown_option, _}]} -> Mix.raise "Error: Unknown argument #{unknown_option} for 'release.version' task."
@@ -80,9 +80,7 @@ defmodule Mix.Tasks.Release.Version do
     end
   end
 
-  @privdoc """
-    Sets the release version to the new value by using the passed update funs.
-  """
+  # Sets the release version to the new value by using the passed update funs.
   @spec update_release_version(modification_functions::[modification_fun], options::[String.t]) :: new_version::String.t
   defp update_release_version(modification_functions, options) do
     {old_version, new_version} = Agent.get_and_update Mix.ProjectStack, fn(state) ->
@@ -105,7 +103,7 @@ defmodule Mix.Tasks.Release.Version do
   end
 
   defp print_version() do
-    Mix.Shell.IO.info get_version
+    Mix.Shell.IO.info get_version()
   end
 
   defp get_version() do
@@ -351,14 +349,14 @@ defmodule Mix.Tasks.Release.Version do
     case System.get_env("BRANCH") do
       branch = <<_,_::binary>> -> valid_semver_metadata(branch)
       _ -> # try to detect the branch, but commit might be in several branches
-        System.cmd( "git", ["branch", "--contains", get_revision]) |> elem(0)
+        System.cmd( "git", ["branch", "--contains", get_revision()]) |> elem(0)
         |> String.split("\n", trim: true)
         |> Enum.filter(&(!String.contains?(&1, "detached") && !String.contains?(&1, "head") && !String.contains?(&1, "HEAD")))
         |> Enum.map(&(String.strip(&1))) |> List.first() |> valid_semver_metadata()
     end
   end
 
-  @privdoc "Returns the current revision which is checked out and will be built."
+  # Returns the current revision which is checked out and will be built.
   @spec get_revision() :: String.t
   defp get_revision() do
     System.cmd( "git", ["rev-parse", "HEAD"]) |> elem(0) |> String.rstrip

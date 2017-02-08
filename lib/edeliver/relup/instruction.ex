@@ -49,7 +49,7 @@ defmodule Edeliver.Relup.Instruction do
 
 
   """
-  use Behaviour
+
   alias Edeliver.Relup.Instructions
 
   @typedoc """

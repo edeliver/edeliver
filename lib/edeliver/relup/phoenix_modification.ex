@@ -77,6 +77,6 @@ defmodule Edeliver.Relup.PhoenixModification do
     the `--relup-mod=` command line option the module with the highest priority
     is used (which is also usable).
   """
-  def priority, do: priority_default + 1
+  def priority, do: priority_default() + 1
 
 end

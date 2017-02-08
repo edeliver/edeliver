@@ -73,7 +73,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
   @spec bulk_wait_for_termination(processes::[pid], timeout::non_neg_integer) :: [pid::pid]
   def bulk_wait_for_termination(_processes = [], _timeout), do: []
   def bulk_wait_for_termination(processes, timeout) do
-    proc = self
+    proc = self()
     waiting_pid = Process.spawn(fn() ->
       pids_and_monitor_refs = for pid <- processes do
         {pid, :erlang.monitor(:process, pid)}

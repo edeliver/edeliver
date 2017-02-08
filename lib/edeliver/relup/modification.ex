@@ -33,7 +33,6 @@ defmodule Edeliver.Relup.Modification do
       end
 
   """
-  use Behaviour
 
   @doc """
     Modifies the relup instructions and returns the modified instruction
@@ -77,7 +76,7 @@ defmodule Edeliver.Relup.Modification do
         the module with the highest priority is used (which is also usable).
       """
       @spec priority() :: non_neg_integer
-      def priority, do: priority_user
+      def priority, do: priority_user()
 
       @doc """
         Returns true if this relup modification is usable for the project or not.

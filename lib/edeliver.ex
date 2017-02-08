@@ -172,7 +172,7 @@ defmodule Edeliver do
     if :erlang.module_loaded(module) do
       exports = module.module_info(:exports)
       # :__adapter__ for ecto versions >= 2.0, :__repo__ for ecto versions < 2.0
-      Dict.get(exports, :__adapter__, nil) || Dict.get(exports, :__repo__, false)
+      Keyword.get(exports, :__adapter__, nil) || Keyword.get(exports, :__repo__, false)
     else
       false
     end
@@ -181,7 +181,7 @@ defmodule Edeliver do
   defp ecto_1_0_repo?(module) do
     if :erlang.module_loaded(module) do
       module.module_info(:exports)
-      |> Dict.get(:__repo__, false)
+      |> Keyword.get(:__repo__, false)
     else
       false
     end

@@ -43,7 +43,6 @@ defmodule Edeliver.Relup.RunnableInstruction do
       end
 
   """
-  use Behaviour
   require Logger
   import Edeliver.Relup.ShiftInstruction, only: [
     ensure_module_loaded_before_first_runnable_instructions: 3,
@@ -227,7 +226,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
     end
   end
 
-  @privdoc "Used by the assume macro for pattern assignment"
+  # Used by the assume macro for pattern assignment
   defp collect_vars_from_pattern(expr) do
     {_, vars} =
       Macro.prewalk(expr, [], fn
@@ -256,7 +255,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
       def modify_relup(instructions = %Instructions{}, config = %{}) do
         call_this_instruction = call_this(arguments(instructions, config))
-        insert_where_fun = insert_where
+        insert_where_fun = insert_where()
         instructions |> insert_where_fun.(call_this_instruction)
                      |> ensure_module_loaded_before_instruction(call_this_instruction, __MODULE__)
                      |> ensure_dependencies_loaded_before_instruction_for_upgrade(call_this_instruction, dependencies())

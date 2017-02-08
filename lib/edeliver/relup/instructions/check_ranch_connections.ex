@@ -86,11 +86,10 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     acceptor_pids
   end
 
-  @privdoc """
-    Checks whether the given `supervisor` contains exactly one child matching the given `child_id`,
-    assigns the pid of the child to `var` and continues executing `instructions`. If no child
-    or several childs with the id was/were found, it returns `:not_detected`.
-  """
+
+  # Checks whether the given `supervisor` contains exactly one child matching the given `child_id`,
+  # assigns the pid of the child to `var` and continues executing `instructions`. If no child
+  # or several childs with the id was/were found, it returns `:not_detected`.
   @spec supervised_child_with_id_or_return_not_detected(supervisor::pid, child_id::term, var::term, instructions::term) :: term | :not_detected
   defmacrop supervised_child_with_id_or_return_not_detected(supervisor, child_id, var, instructions) do
     quote do
