@@ -85,10 +85,9 @@ defmodule Mix.Tasks.Edeliver do
     end
   end
 
-  @privdoc """
-    Prints the output received from the port running the edeliver command to stdout.
-    If the edeliver command terminates, it returns the exit code of the edeliver script.
-  """
+
+  # Prints the output received from the port running the edeliver command to stdout.
+  # If the edeliver command terminates, it returns the exit code of the edeliver script.
   @spec print_stdout(port::port, stdin_pid::pid) :: exit_status::non_neg_integer
   defp print_stdout(port, stdin_pid) do
     receive do

@@ -40,7 +40,7 @@ defmodule Releases.Plugin.ModifyRelup do
                 [{down_version, up_description, up_instructions}],
                 [{down_version, down_description, down_instructions}]
               }
-              res = write_relup(relup, relup_file)
+              write_relup(relup, relup_file)
             error ->
               debug "Error when loading relup file: #{:io_lib.format('~p~n', [error])}"
               Mix.raise "Failed to load relup file from #{relup_file}\nYou can skip this step using the --skip-relup-mod option."
