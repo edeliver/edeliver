@@ -849,6 +849,7 @@ __get_node_command() {
     }
     __edeliver_synchronous_start() {
       bin/${APP} start | \$output_filter_command \$output_filter_command_options
+      sleep 1
       for i in {1..10}; do
         __edeliver_node_running && break || :
         sleep 1
