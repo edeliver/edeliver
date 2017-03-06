@@ -908,6 +908,7 @@ remote_extract_release_archive() {
     set -e
     cd ${_archive_dir} $SILENCE
     tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+  __exec_if_defined "post_extract_release_archive"
 }
 
 # gets the sha hash of the latest commit of the branch to deploy

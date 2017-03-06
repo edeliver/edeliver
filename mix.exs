@@ -69,7 +69,7 @@ defmodule Edeliver.Mixfile do
   defp project_uses_distillery? do
     try do
       deps = Mix.Dep.Loader
-          |> Kernel.apply(:children, [])
+          |> Kernel.apply(:children)
           |> Enum.map(&(Map.get(&1, :app)))
       uses_distillery? = Enum.member?(deps, :distillery)
       uses_exrm? = Enum.member?(deps, :exrm)
