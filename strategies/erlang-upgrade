@@ -271,14 +271,14 @@ END_OF_SCRIPT
 # empty string is printed
 __revision_from_version() {
   local _version="$1"
-  local _revision=${_version##*-}
+  local _revision=${_version##*+}
   [[ "$_revision" =~ ^[a-fA-F0-9]+$ ]] && echo "$_revision" || echo ""
 }
 
 # prints the version without the revision part if there is any
 __version_without_revision() {
   local _version="$1"
-  echo "${_version%%-*}"
+  echo "${_version%%+*}"
 }
 
 # checks whether the version passed as first argument
