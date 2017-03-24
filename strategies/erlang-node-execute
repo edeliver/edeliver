@@ -74,7 +74,11 @@ run() {
   fi
 
   if [[ "$NODE_ACTION" = version ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
-    NODE_ACTION="${_rpc_command} Elixir.Edeliver run_command '${_rpc_open_brackets}release_version, \"$APP\"${_rpc_close_brackets}.' | tr -d \\\""
+    if [[ "$USING_DISTILLERY" = "true" ]]; then
+      NODE_ACTION="rpcterms Elixir.Edeliver release_version '$APP.' | tr -d \\\""
+    else
+      NODE_ACTION="${_rpc_command} Elixir.Edeliver run_command '${_rpc_open_brackets}release_version, \"$APP\"${_rpc_close_brackets}.' | tr -d \\\""
+    fi
   elif [[ "$NODE_ACTION" = ping ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     NODE_ACTION="ping"
   elif [[ "$NODE_ACTION" = migrations ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
