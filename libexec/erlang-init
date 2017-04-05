@@ -470,6 +470,7 @@ do
         [[ -z "$SET_RELEASE_VERSION" ]] && __help && error_message "Value for --set-version= option must not be empty.\n" && exit 2
         [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --increment-version= option.\n" && exit 2
         [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+        SET_RELEASE_VERSION="set ${SET_RELEASE_VERSION}"
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi
