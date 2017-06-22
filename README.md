@@ -140,14 +140,14 @@ The Erlang runtime (OTP) and the Elixir runtime are packaged with the release—
 
 ### Mix considerations
 
-If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver and your build tool and your build tool ([distillery](https://hex.pm/packages/distillery) or [exrm](https://hex.pm/packages/exrm)) as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
+If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver and your build tool ([distillery](https://hex.pm/packages/distillery) or [exrm](https://hex.pm/packages/exrm)) as [hex package](https://hex.pm/packages/edeliver) to your `mix.exs` config:
 
 ```exs
 defp deps do
   [
-  	{:edeliver, ">= 1.4.2"},
+    {:edeliver, ">= 1.4.2"},
     {:distillery, ">= 0.8.0", warn_missing: false},
-	# or {:exrm, ">= 0.16.0", warn_missing: false},
+    # or {:exrm, ">= 0.16.0", warn_missing: false},
   ]
 end
 ```
