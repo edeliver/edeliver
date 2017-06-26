@@ -92,6 +92,7 @@ run() {
     NODE_ACTION="$NODE_ACTION"
   fi
   __exec_if_defined execute_custom_node_command "$NODE_ACTION" || execute_node_command "$NODE_ACTION"
+  [[ "$?" != 0 ]] && exit 1
 }
 
 # executes a node command asynchronously on all
@@ -151,17 +152,22 @@ __execute_node_command_asynchronously() {
 __execute_node_command_synchronously() {
   local _node_command=$1
   local _node=${NODES# *}
+  local _status_code
+  local _response
   __print_node_command_result "single_node" "0" "$_node" ""
   if [[ "$MODE" = "verbose" ]] &&  [[ "${_node_command}" = start* || "${_node_command}" = restart* ]]; then
     # display (re)start progress (= started applications)
     echo -en "  response: ${txtylw}"
     __execute_node_command "single_node" "$_node" "$_node_command"
+    _status_code=$?
     echo -e "${txtrst}"
   else
     echo -n "  response: "
-    local _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
+    _response=$(__execute_node_command "single_node" "$_node" "$_node_command")
+    _status_code=$?
     __format_response "$_response"
   fi
+  return $_status_code
 }
 
 # formats the response when node command is executed
@@ -208,6 +214,7 @@ __execute_node_command() {
   local _user=${_node_name%@*}
   local _host=${_node#*@}
   local _path=${_host#*:}
+  local _status_code
   [[ "$_path" =~ .*\|.* ]] && _config=${_path#*|} || _config=""
   _path=${_path%|*}
   _host=${_host%:*}
@@ -221,7 +228,7 @@ __execute_node_command() {
 
   [ "${_node_index}" = "single_node" ] && local _terminal_option="-t -q" || local _terminal_option=
   ssh $_terminal_option -o ConnectTimeout="$SSH_TIMEOUT" "${_user}@${_host}" "$_remote_job"
-  local _status_code="$?"
+  _status_code="$?"
   [ "${_node_index}" != "single_node" ] && echo -e "\n${_status_code}"
   [[ "$_status_code" = "0" ]] && return 0 || return 1
 }

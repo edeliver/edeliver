@@ -876,10 +876,10 @@ __get_node_command() {
       if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
         __edeliver_synchronous_start
       else
-        ${_node_env}bin/${APP} start ${_config_arg} | \$output_filter_command \$output_filter_command_options
+        ${_node_env}bin/${APP} start ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
       fi
     else # no restart command
-      ${_node_env}bin/${APP} ${_node_command} ${_config_arg} | \$output_filter_command \$output_filter_command_options
+      ${_node_env}bin/${APP} ${_node_command} ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
     fi
   "
 }
