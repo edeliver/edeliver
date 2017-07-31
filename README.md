@@ -52,7 +52,7 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 1.4.3"},
+    {:edeliver, "~> 1.4.4"},
     {:distillery, ">= 0.8.0", warn_missing: false},
     # or :exrm
   ]
@@ -145,7 +145,7 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver 
 ```exs
 defp deps do
   [
-    {:edeliver, ">= 1.4.3"},
+    {:edeliver, ">= 1.4.4"},
     {:distillery, ">= 0.8.0", warn_missing: false},
     # or {:exrm, ">= 0.16.0", warn_missing: false},
   ]
@@ -171,7 +171,7 @@ When using rebar, edeliver can be added as [rebar](https://github.com/basho/reba
 
     {deps, [
       % ...
-      {edeliver, "1.4.3",
+      {edeliver, "1.4.4",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 

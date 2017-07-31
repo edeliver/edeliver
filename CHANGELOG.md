@@ -1,6 +1,11 @@
 eDeliver Versions
 =================
 
+__1.4.4__
+
+- Removed support for spaces in project path. It broke using multiple hosts.
+- Update Readme
+
 __1.4.3__
 
 - Propagate exit code for the synchronous migration
