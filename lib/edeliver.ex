@@ -92,12 +92,12 @@ defmodule Edeliver do
   @spec release_version(application_name::atom, application_version::String.t) :: String.t
   def release_version(application_name, _application_version \\ nil) do
     releases = :release_handler.which_releases
-    application_name = Atom.to_char_list application_name
+    application_name = Atom.to_charlist application_name
     case (for {name, version, _apps, status} <- releases, status == :current and name == application_name, do: to_string(version)) do
       [current_version] -> current_version
       _ ->
         case (for {name, version, _apps, status} <- releases, status == :permanent and name == application_name, do: to_string(version)) do
-          [permanent_version] -> String.to_char_list(permanent_version)
+          [permanent_version] -> String.to_charlist(permanent_version)
         end
     end
   end
@@ -144,7 +144,7 @@ defmodule Edeliver do
   defp ecto_repository!(application_name, _ecto_repository) do
     case System.get_env "ECTO_REPOSITORY" do # ECTO_REPOSITORY env was set when the node was started
       ecto_repository = <<_,_::binary>> ->
-        ecto_repository_module = ecto_repository |> to_char_list |> List.to_atom
+        ecto_repository_module = ecto_repository |> to_charlist |> List.to_atom
         if maybe_ecto_repo?(ecto_repository_module) do
           ecto_repository_module
         else

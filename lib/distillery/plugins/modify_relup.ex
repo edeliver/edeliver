@@ -30,7 +30,7 @@ defmodule Releases.Plugin.ModifyRelup do
                 down_instructions: down_instructions,
                 up_version: List.to_string(up_version),
                 down_version: List.to_string(down_version),
-                changed_modules: changed_modules(up_instructions, name, String.to_char_list(version))
+                changed_modules: changed_modules(up_instructions, name, String.to_charlist(version))
               }
               %Instructions{
                 up_instructions: up_instructions,

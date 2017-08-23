@@ -47,6 +47,6 @@ defmodule Edeliver.Relup.Instructions.Info do
   @spec run(message::String.t) :: :ok
   def run(message) do
     Logger.info message
-    format_in_upgrade_script('~s~n', [String.to_char_list(message)])
+    format_in_upgrade_script('~s~n', [String.to_charlist(message)])
   end
 end

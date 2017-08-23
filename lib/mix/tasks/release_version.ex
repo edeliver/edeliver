@@ -212,7 +212,7 @@ defmodule Mix.Tasks.Release.Version do
         [arg | acc]
       end
     end)
-    |> Enum.filter(&(&1 != "increment" && &1 != "version" && &1 != "increase" && String.strip(&1) != ""))
+    |> Enum.filter(&(&1 != "increment" && &1 != "version" && &1 != "increase" && String.trim(&1) != ""))
     |> Enum.map(fn(arg) ->
       case arg do
         "append-" <> command -> command
@@ -313,19 +313,19 @@ defmodule Mix.Tasks.Release.Version do
   """
   @spec get_git_revision() :: String.t
   def get_git_revision() do
-    System.cmd( "git", ["rev-parse", "--short", "HEAD"]) |> elem(0) |> String.rstrip
+    System.cmd( "git", ["rev-parse", "--short", "HEAD"]) |> elem(0) |> String.trim_trailing
   end
 
   @doc "Gets the current number of commits across all branches"
   @spec get_commit_count() :: String.t
   def get_commit_count() do
-    System.cmd( "git", ["rev-list", "--all", "--count"]) |> elem(0) |> String.rstrip
+    System.cmd( "git", ["rev-list", "--all", "--count"]) |> elem(0) |> String.trim_trailing
   end
 
   @doc "Gets the current number of commits in the current branch"
   @spec get_commit_count_branch() :: String.t
   def get_commit_count_branch() do
-    System.cmd( "git", ["rev-list", "--count", "HEAD"]) |> elem(0) |> String.rstrip
+    System.cmd( "git", ["rev-list", "--count", "HEAD"]) |> elem(0) |> String.trim_trailing
   end
 
   @doc """
@@ -352,14 +352,14 @@ defmodule Mix.Tasks.Release.Version do
         System.cmd( "git", ["branch", "--contains", get_revision()]) |> elem(0)
         |> String.split("\n", trim: true)
         |> Enum.filter(&(!String.contains?(&1, "detached") && !String.contains?(&1, "head") && !String.contains?(&1, "HEAD")))
-        |> Enum.map(&(String.strip(&1))) |> List.first() |> valid_semver_metadata()
+        |> Enum.map(&(String.trim(&1))) |> List.first() |> valid_semver_metadata()
     end
   end
 
   # Returns the current revision which is checked out and will be built.
   @spec get_revision() :: String.t
   defp get_revision() do
-    System.cmd( "git", ["rev-parse", "HEAD"]) |> elem(0) |> String.rstrip
+    System.cmd( "git", ["rev-parse", "HEAD"]) |> elem(0) |> String.trim_trailing
   end
 
   def valid_semver_metadata(nil), do: ""
