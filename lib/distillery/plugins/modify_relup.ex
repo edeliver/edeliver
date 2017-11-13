@@ -7,7 +7,7 @@ defmodule Releases.Plugin.ModifyRelup do
 
   def before_assembly(_), do: nil
 
-  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, output_dir: output_dir}) do
+  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Mix.Releases.Profile{output_dir: output_dir}}) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
       "true" -> nil
       _ ->
