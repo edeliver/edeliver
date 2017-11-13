@@ -1,6 +1,16 @@
 defmodule Releases.Plugin.ModifyRelup do
   @moduledoc """
-    Exrm plugin to auto-patch the relup file when building upgrades.
+    Distillery plugin to auto-patch the relup file when building upgrades.
+
+    To be able use this plugin, it must be added in the `rel/config.exs`
+    distillery config as plugin like this:
+
+    ```
+    environment :prod do
+      ..
+      plugin Releases.Plugin.ModifyRelup
+    end
+    ```
   """
   use Mix.Releases.Plugin
   alias Edeliver.Relup.Instructions

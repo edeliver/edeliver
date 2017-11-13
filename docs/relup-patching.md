@@ -49,6 +49,18 @@ behaviour and implement the `run/1` function.
 
 If you think the custom instruction might be useful also for other applications, feel free to submit a pull request.
 
+#### Integration with Distillery
+
+In order for your modifications to be applied, you have to configure Distillery to use edeliver's `Releases.Plugin.ModifyRelup` plugin.
+You can configure this in the `rel/config.exs` file like this:
+
+```elixir
+environment :prod do
+  ..
+  plugin Releases.Plugin.ModifyRelup
+end
+```
+
 #### Example
 
 This example shows a custom (runnable) instruction which would execute pending ecto migrations during the upgrade.
@@ -70,7 +82,7 @@ defmodule MyApp.Relup.MigrationInstruction do
 
   @doc "pass application name and version to the `run/1` function when executing the relup"
   def arguments(_instructions = %Instructions{up_version: up_version}, _config = %{name: name}) do
-    {name |> String.to_atom, up_version}
+    {name, up_version}
   end
 
   @doc "runs during upgrade"
