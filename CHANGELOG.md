@@ -1,6 +1,16 @@
 eDeliver Versions
 =================
 
+__1.4.5__
+
+  # commits since v1.4.4
+- Merge pull request #248 from dmarkow/distillery-fixes
+- Update docs for distillery integration
+- Use correct output_dir from distillery
+- Ensure docs are built for both exrm/distillery plugins
+- Merge pull request #199 from otaq/master
+- Sleep 1 before check node running
+
 __1.4.4__
 
 - Removed support for spaces in project path. It broke using multiple hosts.
