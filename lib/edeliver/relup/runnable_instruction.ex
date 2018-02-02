@@ -92,7 +92,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
   """
   @spec log_in_upgrade_script(type:: :error|:warning|:info|:debug, message::String.t) :: no_return
   def log_in_upgrade_script(type, message) do
-    message = String.to_char_list(message)
+    message = String.to_charlist(message)
     prefix = case type do
       :error   -> '---> X '
       :warning -> '---> ! '
@@ -108,7 +108,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
     running the upgrade script which was started by the
     `$APP/bin/$APP upgrade $RELEASE` command.
   """
-  @spec format_in_upgrade_script(format::char_list, arguments::[term]) :: no_return
+  @spec format_in_upgrade_script(format::charlist, arguments::[term]) :: no_return
   def format_in_upgrade_script(format, arguments) do
     :erlang.nodes |> Enum.filter(fn node ->
       Regex.match?(~r/upgrader_\d+/, Atom.to_string(node))
@@ -220,7 +220,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
             # error is shown as erlang term in the upgrade script
             # `$APP/ebin/install_upgrade.escript`. so use an erlang
             # string as error message
-            throw {:error, String.to_char_list(unquote(error_message))}
+            throw {:error, String.to_charlist(unquote(error_message))}
         end
       right
     end
