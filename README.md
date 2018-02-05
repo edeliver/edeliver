@@ -131,7 +131,7 @@ This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_C
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
-It may be required to install and configure git on your build host. You may also have to clone the repository initially at the `BUILD_AT` path, although edeliver will try to take care of this for you. [Erlang](http://www.erlang.org/) and [Elixir](http://elixir-lang.org/) must be installed and available on the `BUILD_HOST`. The default shell for the build and deploy user should be `bash` or `zsh` on your build and deployment systems (check that especially if you are [running FreeBSD](https://www.freebsd.org/doc/en/articles/linux-users/shells.html)).
+It may be required to install and configure git on your build host. You may also have to clone the repository initially at the `BUILD_AT` path, although edeliver will try to take care of this for you. [Erlang](http://www.erlang.org/) and [Elixir](http://elixir-lang.org/) must be installed and available on the `BUILD_HOST`. The default shell for the build user should be `bash` or `zsh` on your build host (usually already the default on most systems).
 
 The build host must be similar to the production/staging hosts.  For example, if you want to deploy to a production system based on Linux, the release must also be built on a Linux system.
 

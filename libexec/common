@@ -131,6 +131,20 @@ init_app_remotely() {
     fi
   done
   __sync_remote "
+    current_shell=\"\$0\" || :
+    [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
+    case \"\$current_shell\" in
+      (*bash*) echo 'bash is installed and the default shell' $SILENCE ;;
+      (*zsh*)  echo  'zsh is installed and the default shell' $SILENCE ;;
+      (*)
+       echo
+       echo \"${txtred}You are using an unsupported shell: '\$current_shell'\"
+       echo \"edeliver requires either bash or zsh to be installed\"
+       echo \"and the default shell for the build user '$BUILD_USER'\"
+       echo \"on your build host: '$BUILD_HOST'.${txtrst}\"
+       exit 1
+       ;;
+    esac
     set -e
     if [ ! -d $DELIVER_TO ]
     then
