@@ -17,7 +17,6 @@ This options can or must be set in the `.deliver/config` file to configure edeli
 | `PRODUCTION_HOSTS`     |      yes | the production hosts to deploy to              |
 | `PRODUCTION_USER`      |      yes | the ssh user for the production hosts          |
 | `RELEASE_CMD`          |       no | tool used to build release. (mix\|relx\|rebar)   |
-| `USING_DISTILLERY`     |       no | use distillery instead of exrm (experimental)  |
 | `STAGING_HOSTS`        |       no | the staging hosts to deploy to                 |
 | `STAGING_USER`         |       no | the ssh user for the staging hosts             |
 | `TEST_AT`              |       no | the directory on staging hosts to deploy to    |
