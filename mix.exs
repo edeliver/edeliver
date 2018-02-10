@@ -39,8 +39,8 @@ defmodule Edeliver.Mixfile do
       {:distillery, ">= 1.0.0", optional: true, warn_missing: false},
       {:exrm, ">= 0.16.0", optional: true, warn_missing: false},
       {:meck, "~> 0.8.4", only: :test},
-      {:earmark, "~> 0.1", only: :dev},
-      {:ex_doc, "~> 0.11.5", only: :dev},
+      {:earmark, "~> 1.1.0", only: :dev},
+      {:ex_doc, "~> 0.18.2", only: :dev},
     ]
   end
 
