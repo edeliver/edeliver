@@ -28,7 +28,6 @@ __help() {
   edeliver [show] migrations [on] [staging|production]
 
   ${txtbld}Local Commands:${txtrst}
-  edeliver check release|config [--version=<release-version>]
   edeliver show releases|appups
   edeliver show relup <xyz.upgrade.tar.gz>
   edeliver edit relup [--version=<release-version>]
