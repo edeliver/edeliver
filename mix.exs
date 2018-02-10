@@ -52,13 +52,12 @@ defmodule Edeliver.Mixfile do
     ]
   ]
 
-  defp elixirc_paths do
-      base = if System.get_env("PUBLISHING_TO_HEX_PM"), do: [Path.join("lib", "distillery")], else: []
-
-      base ++ [
+  defp elixirc_paths() do
+    [
+      Path.join("lib", "distillery"),
       Path.join("lib", "edeliver"),
       Path.join("lib", "mix"),
-      Path.join("lib", "edeliver.ex"),
+      Path.join("lib", "edeliver.ex")
     ]
   end
 end
