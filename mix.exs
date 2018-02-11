@@ -37,7 +37,7 @@ defmodule Edeliver.Mixfile do
   defp deps do
     [
       {:distillery, ">= 1.0.0", optional: true, warn_missing: false},
-      {:meck, "~> 0.8.4", only: :test},
+      {:meck, "~> 0.8.9", only: :test},
       {:earmark, "~> 0.1", only: :dev},
       {:ex_doc, "~> 0.11.5", only: :dev},
     ]
