@@ -4,7 +4,7 @@
 
 _Deployment for Elixir and Erlang_
 
-[![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
+[![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver) [![Build Status](https://travis-ci.org/edeliver/edeliver.svg?branch=master)](https://travis-ci.org/edeliver/edeliver)
 
 
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
