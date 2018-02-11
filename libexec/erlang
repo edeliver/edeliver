@@ -939,7 +939,7 @@ git_clean_remote() {
       set -e
       cd $DELIVER_TO
       echo \"cleaning files in: $GIT_CLEAN_PATHS\"
-      git clean -fdx $GIT_CLEAN_PATHS
+      git clean -ffdx $GIT_CLEAN_PATHS
     "
   fi
 }
