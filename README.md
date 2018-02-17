@@ -38,7 +38,7 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 
 Assuming an Elixir project, you already have a build server and a staging server, and you've created a database on your staging server already (there is no ecto.create, we skip straight to migrations).
 
-Add edeliver and your build tool ([distillery](https://github.com/bitwalker/distillery) to your project dependencies in mix.exs:
+Add edeliver and your build tool ([distillery](https://github.com/bitwalker/distillery)) to your project dependencies in mix.exs:
 
 ```exs
 def application, do: [
