@@ -161,6 +161,12 @@ erlang_clean_compile() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd $DELIVER_TO
+    if [ -n "$(which kiex 2> /dev/null)" ]; then
+      echo 'using kiex'
+      kiex use
+    else
+      echo 'not using kiex'
+    fi
     if [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
