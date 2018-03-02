@@ -1,4 +1,4 @@
-
+# If these tests don't run because :cover is missing, install `erlang-tools`
 defmodule Edeliver.Release.Version.Test do
   use ExUnit.Case
   alias Mix.Tasks.Release.Version, as: ReleaseVersion
@@ -20,19 +20,19 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "mocking get git revision" do
-    assert "82a5834" = get_git_revision
+    assert "82a5834" = get_git_revision()
   end
 
   test "mocking get commit count" do
-    assert "12345" = get_commit_count
+    assert "12345" = get_commit_count()
   end
 
   test "mocking get current branch" do
-    assert "feature-xyz" = get_branch
+    assert "feature-xyz" = get_branch()
   end
 
   test "mocking get current date" do
-    assert "20160414" = get_date
+    assert "20160414" = get_date()
   end
 
   test "printing current release version for show argument" do
@@ -70,7 +70,7 @@ defmodule Edeliver.Release.Version.Test do
   end
 
   test "append git branch only unless master" do
-    assert <<_,_::binary>> = mocked_branch = get_branch
+    assert <<_,_::binary>> = mocked_branch = get_branch()
     assert mocked_branch != "master"
     try do
       assert {:modified, "1.0.0+feature-xyz"} = modify_version_with_args "1.0.0", "append-git-branch-unless-master"
@@ -86,7 +86,7 @@ defmodule Edeliver.Release.Version.Test do
       assert {:modified, "1.2.3+82a5834"} = modify_version_with_args "1.2.3", "branch-unless-master+git-revision"
     after
       :meck.expect(ReleaseVersion, :get_branch, fn -> mocked_branch end)
-      assert mocked_branch == get_branch
+      assert mocked_branch == get_branch()
     end
   end
 

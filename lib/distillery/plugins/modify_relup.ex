@@ -1,13 +1,23 @@
 defmodule Releases.Plugin.ModifyRelup do
   @moduledoc """
-    Exrm plugin to auto-patch the relup file when building upgrades.
+    Distillery plugin to auto-patch the relup file when building upgrades.
+
+    To be able use this plugin, it must be added in the `rel/config.exs`
+    distillery config as plugin like this:
+
+    ```
+    environment :prod do
+      ..
+      plugin Releases.Plugin.ModifyRelup
+    end
+    ```
   """
   use Mix.Releases.Plugin
   alias Edeliver.Relup.Instructions
 
   def before_assembly(_), do: nil
 
-  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, output_dir: output_dir}) do
+  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Mix.Releases.Profile{output_dir: output_dir}}) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
       "true" -> nil
       _ ->
@@ -30,7 +40,7 @@ defmodule Releases.Plugin.ModifyRelup do
                 down_instructions: down_instructions,
                 up_version: List.to_string(up_version),
                 down_version: List.to_string(down_version),
-                changed_modules: changed_modules(up_instructions, name, String.to_char_list(version))
+                changed_modules: changed_modules(up_instructions, name, String.to_charlist(version))
               }
               %Instructions{
                 up_instructions: up_instructions,

@@ -1,6 +1,6 @@
 defmodule Releases.Plugin.LinkConfig do
   @moduledoc """
-    Exrm plugin to link the `vm.args` or `sys.config` file on deploy hosts.
+    Distillery plugin to link the `vm.args` or `sys.config` file on deploy hosts.
 
     Because distillery uses `:systools_make.make_tar(...)` to create the release
     tar which resoves all links using the `:dereference` option, the release
@@ -23,10 +23,11 @@ defmodule Releases.Plugin.LinkConfig do
 
   def before_package(_), do: nil
 
-  def after_package(%Release{version: version, output_dir: output_dir, name: name}) do
+  def after_package(%Release{version: version, profile: profile, name: name} = release) do
     # repackage release tar including link, because tar is generated using `:systools_make.make_tar(...)`
     # which resoves the links using the `:dereference` option when creating the tar using the
     # `:erl_tar` module.
+    output_dir = profile.output_dir
     tmp_dir = "_edeliver_release_patch"
     tmp_path = Path.join [output_dir, "releases", version, tmp_dir]
     files_to_link = [

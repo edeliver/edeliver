@@ -201,14 +201,6 @@ erlang_generate_release() {
   __exec_if_defined "pre_erlang_generate_release"
 
   if [ "$RELEASE_CMD" = "mix" ]; then
-    [[ "$USING_DISTILLERY" != "true" ]] && __detect_exrm_version
-    [[ "$USING_DISTILLERY" != "true" ]] && [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "19" \
-       || "${EXRM_VERSION_MAJOR}.${EXRM_VERSION_MINOR}.${EXRM_VERSION_PATCH}" = "0.19.9" ]] \
-    && local _force_no_interaction=" --no-confirm-missing"
-    # exrm normal verbosity is very silent, so use --verbosity=normal for the release task if edeliver runs
-    # in verbose mode. if --verbosity=verbose is used for the exrm release task, the output is very very verbose,
-    # so we use it only if edeliver runs in silent mode because the very very verbose output is not visible
-    # until the release task fails and then it might be helpful to see the very very verbose output.
     if [[ "$USING_DISTILLERY" = "true" ]]; then
       local _mix_release_verbose_flag=" --verbose"
       local _env_flag=" --env=\"$TARGET_MIX_ENV\""
@@ -306,10 +298,6 @@ copy_release_to_release_store() {
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
     if [[ "$USING_DISTILLERY" = "true" ]]; then
       local _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
-    else
-      __detect_exrm_version
-      local _release_file="$(dirname $RELEASE_DIR)/${APP}/${APP}-${RELEASE_VERSION}.tar.gz"
-      [[ "$EXRM_VERSION_MAJOR" -gt "0" || "$EXRM_VERSION_MINOR" -gt "17" ]] && _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
     fi
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
@@ -350,7 +338,7 @@ copy_release_to_release_store() {
       fi
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
+    ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -697,25 +685,25 @@ upload_release_archive() {
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
       set -e
-      mkdir -p ${_destination_directory} $SILENCE
-      cd ${_destination_directory} $SILENCE
+      mkdir -p \"${_destination_directory}\" $SILENCE
+      cd \"${_destination_directory}\" $SILENCE
       AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'${_aws_script_content}EOF ;" "$HOSTS_APP_USER" "
 
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
       set -e
-      mkdir -p ${_destination_directory} $SILENCE
-      cd ${_destination_directory} $SILENCE
+      mkdir -p \"${_destination_directory}\" $SILENCE
+      cd \"${_destination_directory}\" $SILENCE
       AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" \\
       AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'
         content from libexec/aws file
       EOF ;"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     __remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
       set -e
-      mkdir -p ${_destination_directory} "
+      mkdir -p \"${_destination_directory}\" "
     __parallel_scp "${RELEASE_STORE}/releases/${_release_file}" "${_destination_directory}/${APP}_${_release_version}.tar.gz"
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
@@ -724,16 +712,16 @@ upload_release_archive() {
     local _dest_file_name="${_destination_directory}/${APP}_${_release_version}.tar.gz"
 
     local _remote_job="
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
       set -e
-      cd $_release_store_path
-      [ -f \"$_release_file\" ]
+      cd \"$_release_store_path\"
+      [ -f \"$_release_file\" ] || exit 1
       background_jobs_pids=()
       background_jobs=()
     "
     for _host in $_deploy_hosts; do
       _remote_job="$_remote_job
-        if [[ \"$_host\" = \"$_release_store_host\" ]]; then
+        if [ \"$_host\" = \"$_release_store_host\" ]; then
           mkdir -p \"${_destination_directory}\"
           cp $_release_file $_dest_file_name &
         else
@@ -751,7 +739,7 @@ upload_release_archive() {
       done
       exit
     "
-    ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
+    ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -766,9 +754,9 @@ upgrade_release() {
   [[ "$RELEASE_CMD" = "mix" ]] && local _upgrade_command="bin/${APP} upgrade ${VERSION} $SILENCE" \
                                || local _upgrade_command="bin/${APP} upgrade ${APP}_${VERSION} $SILENCE"
   __remote "
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
-    cd ${DELIVER_TO}/${APP} $SILENCE
+    cd \"${DELIVER_TO}/${APP}\" $SILENCE
     $_upgrade_command
   "
   __exec_if_defined "post_upgrade_release"
@@ -782,20 +770,20 @@ remote_clean_release_dir() {
   local _archive="${APP}_${_release_version}.tar.gz"
   status "Cleaning release directory"
   __remote "
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
-    cd ${_archive_dir} $SILENCE
-    [[ \"$RELEASE_CMD\" = \"mix\" ]] && _app_folder=\"${APP}\" || _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))
-    [[ -n \"\$_app_folder\" ]]
-    if [[ -d \$_app_folder ]]; then
-      cd \${_app_folder}
-      if [[ -d releases ]]; then
+    cd \"${_archive_dir}\" $SILENCE
+    [ \"$RELEASE_CMD\" = \"mix\" ] && _app_folder=\"${APP}\" || _app_folder=\$(dirname \$(dirname \$(tar -tzf ${_archive} | grep releases/RELEASES)))
+    [ -n \"\$_app_folder\" ] || exit 1
+    if [ -d \"\$_app_folder\" ]; then
+      cd \"\${_app_folder}\"
+      if [ -d releases ]; then
         echo \"deleting releases dir in \${_app_folder}\" $SILENCE
         rm -rf releases $SILENCE
       else
         echo \"releases dir already deleted in \${_app_folder}\" $SILENCE
       fi
-      if [[ -d lib ]]; then
+      if [ -d lib ]; then
         echo \"deleting lib dir in \${_app_folder}\" $SILENCE
         rm -rf lib $SILENCE
       else
@@ -803,9 +791,9 @@ remote_clean_release_dir() {
       fi
       ls -al | grep erts- > /dev/null && {
         for erts_dir in erts-*; do
-          if [[ -n \"\$erts_dir\" ]] && [[ -d \$erts_dir ]]; then
+          if [ -n \"\$erts_dir\" ] && [ -d \"\$erts_dir\" ]; then
             echo \"deleting \${erts_dir} in \${_app_folder}\" $SILENCE
-            rm -rf \${erts_dir} $SILENCE
+            rm -rf \"\${erts_dir}\" $SILENCE
           else
             echo \"erts dir already deleted in \${_app_folder}\" $SILENCE
           fi
@@ -832,12 +820,14 @@ __get_node_command() {
     local _rpc_open_brackets="[["
     local _rpc_close_brackets="]]"
   fi
+  [[ "${_node_command}" = start* ]] && local _is_start_command="true" || :
+  [[ "${_node_command}" = restart* ]] && local _is_restart_command="true" || :
   echo "
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
-    cd ${_app_path}/${APP} $SILENCE
+    cd \"${_app_path}/${APP}\" $SILENCE
     output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
-    if [[ \"\$output_lines\" -gt 1 ]]; then
+    if [ \"\$output_lines\" -gt 1 ]; then
       output_filter_command='tail'
       output_filter_command_options=\"-n+\$output_lines\"
     else
@@ -850,31 +840,31 @@ __get_node_command() {
     __edeliver_synchronous_start() {
       bin/${APP} start | \$output_filter_command \$output_filter_command_options
       sleep 1
-      for i in {1..10}; do
+      for i in 1 2 3 4 5 6 7 8 9 10; do
         __edeliver_node_running && break || :
         sleep 1
       done
       bin/${APP} ${_rpc_command} Elixir.Edeliver run_command '${_rpc_open_brackets}monitor_startup_progress, \"$APP\", $MODE${_rpc_close_brackets}.' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
     }
-    if [[ \"$RELEASE_CMD\" = \"mix\" && \"${_node_command}\" = start* ]]; then
-      ping_result=\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)
+    if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
+      ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
       if __edeliver_node_running; then
         echo \"${txtred}already running${txtrst}\" && exit 1
       else
         __edeliver_synchronous_start
       fi
-    elif [[ \"${_node_command}\" = restart* ]]; then
+    elif [ \"$_is_restart_command\" = \"true\" ]; then
       # use stop / start instead of restart command to
       # not just restart the applications but also the erlang vm
       # with the most recent release
       if __edeliver_node_running; then
-        STOP_OUTPUT=\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)
-        if [[ \$? -ne 0 ]]; then
+        STOP_OUTPUT=\"\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)\"
+        if [ \"\$?\" -ne 0 ]; then
           cat \"\$STOP_OUTPUT\"
           exit 1
         fi
       fi
-      if [[ \"$RELEASE_CMD\" = \"mix\" ]]; then
+      if [ \"$RELEASE_CMD\" = \"mix\" ]; then
         __edeliver_synchronous_start
       else
         ${_node_env}bin/${APP} start ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
@@ -905,10 +895,10 @@ remote_extract_release_archive() {
   # when building releses with mix, the tar does not contain the app name as subdirectory
   [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
   __remote "
-    [ -f ~/.profile ] && source ~/.profile
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
-    cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+    cd \"${_archive_dir}\" $SILENCE
+    tar -xzvf \"${_archive}\" $SILENCE && rm \"${_archive}\" $SILENCE"
   __exec_if_defined "post_extract_release_archive"
 }
 
@@ -949,7 +939,7 @@ git_clean_remote() {
       set -e
       cd $DELIVER_TO
       echo \"cleaning files in: $GIT_CLEAN_PATHS\"
-      git clean -fdx $GIT_CLEAN_PATHS
+      git clean -ffdx $GIT_CLEAN_PATHS
     "
   fi
 }
@@ -985,7 +975,7 @@ rename_release_remove_version() {
 }
 
 # removes the old release archive when building
-# upgrades with `mix release` (exrm)
+# upgrades with `mix release`
 remove_built_release_archive() {
   __detect_remote_release_dir
   local _release_version=${1}
@@ -1155,32 +1145,6 @@ __show_upgrade_version_does_not_differ_error_message() {
     error_message "to automatically increment the version or append the git revision."
     error_message "It is recommended to enable the git-auto-revision permanently"
     error_message "for automatic upgrades by setting AUTO_VERSION=revision in the config."
-}
-
-__detect_exrm_version() {
-  if [[ -z "$EXRM_VERSION_MAJOR" || -z "$EXRM_VERSION_MINOR" || -z "$EXRM_VERSION_PATCH" ]]; then
-    status "Detecting exrm version"
-    read EXRM_VERSION_MAJOR EXRM_VERSION_MINOR EXRM_VERSION_PATCH < <(__remote "
-      [ -f ~/.profile ] && source ~/.profile
-      cd $BUILD_AT $SILENCE
-      exrm_version=\$(MIX_ENV=\"$TARGET_MIX_ENV\" APP=\"$APP\" $MIX_CMD deps | grep exrm | grep locked | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
-      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(MIX_ENV=\"$TARGET_MIX_ENV\" APP=\"$APP\" $MIX_CMD deps | grep exrm | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
-      [[ -z \"\$exrm_version\" ]] && exrm_version=\$(cat deps/exrm/mix.exs | grep -m1 version | grep -oe '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+')
-      echo \"\$exrm_version\" | tr '.' ' '
-    ")
-    if ! [[ "$EXRM_VERSION_MAJOR" =~ ^[0-9]+$ || "$EXRM_VERSION_MINOR" =~ ^[0-9]+$ || "$EXRM_VERSION_PATCH" =~ ^[0-9]+$ ]]; then
-      error "\nFailed to detect exrm version.
-
-Please set EXRM_VERSION_MAJOR, EXRM_VERSION_MINOR and EXRM_VERSION_PATCH
-in the console or the config file.
-
-Detected '$EXRM_VERSION_MAJOR' as major,
-         '$EXRM_VERSION_MINOR' as minor
-     and '$EXRM_VERSION_PATCH' as patch version.
-
-      "
-    fi
-  fi
 }
 
 
