@@ -4,3 +4,4 @@ deps
 _build
 .idea
 edeliver.iml
+doc/
