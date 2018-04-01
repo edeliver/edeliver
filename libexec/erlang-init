@@ -479,7 +479,7 @@ done
 case "${MODE}" in
   (compact)
     VERBOSE=""
-    SILENCE="> /dev/null"
+    SILENCE="&> /dev/null"
   ;;
   (verbose)
     VERBOSE=true
