@@ -72,6 +72,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
     matching_children = Supervisor.which_children(endpoint_pid) |> Enum.filter(fn(child) ->
       case child do
         {Phoenix.Endpoint.Server, _pid, _type, [Phoenix.Endpoint.Server]} -> true
+        {Phoenix.Endpoint.Handler, _pid, _type, [Phoenix.Endpoint.Handler]} -> true
         _ -> false
       end
     end)
