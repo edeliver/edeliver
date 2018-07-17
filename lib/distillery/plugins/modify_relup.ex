@@ -96,13 +96,13 @@ defmodule Releases.Plugin.ModifyRelup do
           {:ok, {mod, chunks}} = :beam_lib.chunks('#{path}', [:attributes])
           {mod, get_in(chunks, [:attributes, :behaviour])}
         end)
-        |> Stream.filter(fn({module, behaviours}) ->
+        |> Stream.filter(fn {module, behaviours} ->
           is_list(behaviours) &&
           Edeliver.Relup.Modification in behaviours &&
           Code.ensure_loaded?(module) &&
           module.usable?(release)
         end)
-        |> Stream.map(fn({module, _}) ->
+        |> Stream.map(fn {module, _} ->
           {module, module.priority}
         end)
         |> Enum.uniq()
