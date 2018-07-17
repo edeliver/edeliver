@@ -30,7 +30,7 @@ defmodule Releases.Plugin.ModifyRelup do
         end
         debug "Using #{inspect relup_modification_module} module for relup modification."
         if File.exists?(relup_file) do
-          case :file.consult(to_char_list(relup_file)) do
+          case :file.consult(to_charlist(relup_file)) do
             {:ok, [{up_version,
                     [{down_version, up_description, up_instructions}],
                     [{down_version, down_description, down_instructions}]
