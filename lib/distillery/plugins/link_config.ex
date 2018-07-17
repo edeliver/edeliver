@@ -27,7 +27,7 @@ defmodule Releases.Plugin.LinkConfig do
 
   def after_cleanup(_, _), do: nil
 
-  def after_package(%Release{version: version, profile: profile, name: name} = release) do
+  def after_package(%Release{version: version, profile: profile, name: name}) do
     # repackage release tar including link, because tar is generated using `:systools_make.make_tar(...)`
     # which resoves the links using the `:dereference` option when creating the tar using the
     # `:erl_tar` module.
