@@ -17,11 +17,15 @@ defmodule Releases.Plugin.LinkConfig do
   use Mix.Releases.Plugin
 
 
-  def before_assembly(_), do: nil
+  def before_assembly(_, _), do: nil
 
-  def after_assembly(_), do: nil
+  def after_assembly(_, _), do: nil
 
-  def before_package(_), do: nil
+  def before_package(_, _), do: nil
+
+  def after_package(_, _), do: nil
+
+  def after_cleanup(_, _), do: nil
 
   def after_package(%Release{version: version, profile: profile, name: name} = release) do
     # repackage release tar including link, because tar is generated using `:systools_make.make_tar(...)`
@@ -67,7 +71,5 @@ defmodule Releases.Plugin.LinkConfig do
     end
     nil
   end
-
-  def after_cleanup(_), do: nil
 
 end
