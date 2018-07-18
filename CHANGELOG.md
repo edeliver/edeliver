@@ -1,9 +1,12 @@
 eDeliver Versions
 =================
+
 __1.5.1__
-  Enhancements
+
+  - Enhancements
     - Warnings cleanup by @kanmo
     - New autoversion option "-time" by @tejanium
+
 __1.4.6__
 
 _Good news everyone! Distillery compatability is restored!_
