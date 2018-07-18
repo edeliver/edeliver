@@ -12,6 +12,7 @@ defmodule Edeliver.Release.Version.Test do
     :meck.expect(ReleaseVersion, :get_commit_count_branch, fn ->   "4321" end)
     :meck.expect(ReleaseVersion, :get_branch, fn -> "feature-xyz" end)
     :meck.expect(ReleaseVersion, :get_date, fn -> "20160414" end)
+    :meck.expect(ReleaseVersion, :get_time, fn -> "110160" end)
     :ok
   end
 
@@ -33,6 +34,10 @@ defmodule Edeliver.Release.Version.Test do
 
   test "mocking get current date" do
     assert "20160414" = get_date()
+  end
+
+  test "mocking get current time" do
+    assert "110160" = get_time()
   end
 
   test "printing current release version for show argument" do
@@ -94,6 +99,12 @@ defmodule Edeliver.Release.Version.Test do
     assert {:modified, "1.0.0+20160414"} = modify_version_with_args "1.0.0", "append-build-date"
     assert {:modified, "1.0.1+20160414"} = modify_version_with_args "1.0.1", "build-date"
     assert {:modified, "1.2.3+20160414"} = modify_version_with_args "1.2.3", "date"
+  end
+
+  test "appending time" do
+    assert {:modified, "1.0.0+110160"} = modify_version_with_args "1.0.0", "append-build-time"
+    assert {:modified, "1.0.1+110160"} = modify_version_with_args "1.0.1", "build-time"
+    assert {:modified, "1.2.3+110160"} = modify_version_with_args "1.2.3", "time"
   end
 
   test "appending commit count and git revision" do
