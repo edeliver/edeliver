@@ -137,6 +137,10 @@ defmodule Edeliver do
     Path.join([lib_dir, application_with_version, "priv", "repo", "migrations"])
   end
 
+  def init(args) do
+    {:ok, args}
+  end
+
   defp ecto_repository!(_application_name, ecto_repository = [_|_] ) do
     # repository name was passed as ECTO_REPOSITORY env by the erlang-node-execute rpc call
     List.to_atom ecto_repository

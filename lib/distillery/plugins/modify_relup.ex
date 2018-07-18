@@ -15,7 +15,7 @@ defmodule Releases.Plugin.ModifyRelup do
   use Mix.Releases.Plugin
   alias Edeliver.Relup.Instructions
 
-  def before_assembly(_), do: nil
+  def before_assembly(_, _), do: nil
 
   def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Mix.Releases.Profile{output_dir: output_dir}}) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
@@ -30,7 +30,7 @@ defmodule Releases.Plugin.ModifyRelup do
         end
         debug "Using #{inspect relup_modification_module} module for relup modification."
         if File.exists?(relup_file) do
-          case :file.consult(to_char_list(relup_file)) do
+          case :file.consult(to_charlist(relup_file)) do
             {:ok, [{up_version,
                     [{down_version, up_description, up_instructions}],
                     [{down_version, down_description, down_instructions}]
@@ -59,13 +59,13 @@ defmodule Releases.Plugin.ModifyRelup do
     end
     nil
   end
-  def after_assembly(_), do: nil
+  def after_assembly(_, _), do: nil
 
-  def before_package(_), do: nil
+  def before_package(_, _), do: nil
 
-  def after_package(_), do: nil
+  def after_package(_, _), do: nil
 
-  def after_cleanup(_), do: nil
+  def after_cleanup(_, _), do: nil
 
   defp changed_modules([{:load_object_code, {name, version, modules}}|_], name, version), do: modules
   defp changed_modules([_|rest], name, version), do: changed_modules(rest, name, version)
@@ -96,12 +96,13 @@ defmodule Releases.Plugin.ModifyRelup do
           {:ok, {mod, chunks}} = :beam_lib.chunks('#{path}', [:attributes])
           {mod, get_in(chunks, [:attributes, :behaviour])}
         end)
-        |> Stream.filter_map(fn {module, behaviours} ->
+        |> Stream.filter(fn {module, behaviours} ->
           is_list(behaviours) &&
           Edeliver.Relup.Modification in behaviours &&
           Code.ensure_loaded?(module) &&
           module.usable?(release)
-        end, fn {module, _} ->
+        end)
+        |> Stream.map(fn {module, _} ->
           {module, module.priority}
         end)
         |> Enum.uniq()
