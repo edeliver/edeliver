@@ -59,6 +59,7 @@ defmodule Releases.Plugin.ModifyRelup do
     end
     nil
   end
+  def after_assembly(_, _), do: nil
 
   def before_package(_, _), do: nil
 
