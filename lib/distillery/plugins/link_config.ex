@@ -67,6 +67,7 @@ defmodule Releases.Plugin.LinkConfig do
     end
     nil
   end
+  def after_package(_, _), do: nil
 
   def after_cleanup(_, _), do: nil
 
