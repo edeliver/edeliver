@@ -1,6 +1,11 @@
 eDeliver Versions
 =================
 
+__1.5.3__
+
+  - Fixes
+    - Truly fixes broken distillery compatability by @TokiTori
+
 __1.5.2__
 
   - Fixes
