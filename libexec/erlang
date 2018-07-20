@@ -937,9 +937,12 @@ git_clean_remote() {
     __sync_remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
-      cd $DELIVER_TO
+      cd $BUILD_AT
       echo \"cleaning files in: $GIT_CLEAN_PATHS\"
-      git clean -ffdx $GIT_CLEAN_PATHS
+      for _clean_path in ${GIT_CLEAN_PATHS[@]}
+      do
+        git clean -ffdx \"\${_clean_path}\"
+      done
     "
   fi
 }
