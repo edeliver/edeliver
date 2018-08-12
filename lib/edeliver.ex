@@ -41,7 +41,7 @@ defmodule Edeliver do
 
     started as:
     ```
-    bin/$APP rpc Elixir.Edeliver run_command '[[command_name, \"$APP\", arguments...]].'
+    bin/$APP rpc 'Elixir.Edeliver.run_command('[command_name, \"$APP\", arguments...])'
     ```
 
     The first argument must be the name of the command, the second argument the
