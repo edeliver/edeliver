@@ -843,7 +843,7 @@ __get_node_command() {
         __edeliver_node_running && break || :
         sleep 1
       done
-      bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}monitor_startup_progress, \"$APP\", $MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+      bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
     }
     if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
       ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
