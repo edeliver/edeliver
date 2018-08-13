@@ -61,7 +61,6 @@ defmodule Edeliver do
     application_name = String.to_atom(application_name)
     {^application_name, _description, application_version} = :application.which_applications |> List.keyfind(application_name, 0)
     application_version = to_string application_version
-    IO.inspect [application_name, application_version | arguments], label: "args"
     apply __MODULE__, command_name, [application_name, application_version | arguments]
   end
 
