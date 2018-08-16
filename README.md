@@ -52,8 +52,8 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 2.0"},
-    {:distillery, "~> 1.0", warn_missing: false},
+    {:edeliver, ">= 1.6.0"},
+    {:distillery, "~> 2.0", warn_missing: false},
   ]
 end
 ```
@@ -142,8 +142,8 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver 
 ```exs
 defp deps do
   [
-    {:edeliver, ">= 1.4.5"},
-    {:distillery, "~> 1.0.0", warn_missing: false},
+    {:edeliver, ">= 1.6.0"},
+    {:distillery, "~> 2.0", warn_missing: false},
   ]
 end
 ```
