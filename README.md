@@ -52,8 +52,8 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, "~> 1.5.0"},
-    {:distillery, "~> 1.0.0", warn_missing: false},
+    {:edeliver, "~> 2.0"},
+    {:distillery, "~> 1.0", warn_missing: false},
   ]
 end
 ```
