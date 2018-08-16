@@ -1,6 +1,13 @@
 eDeliver Versions
 =================
 
+__1.6.0__
+
+  - Enhancements
+    - Support Distillery 2.x
+  - Backwards incompatible changes
+    - Distillery 1.x is not supproted anymore
+
 __1.5.3__
 
   - Fixes
