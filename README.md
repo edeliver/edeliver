@@ -271,7 +271,7 @@ The reason for that is, that when the upgrade is build with rebar, rebar tries t
 
     mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
 
-Deploy commands deliver the builds that were created with a build command to your staging or production hosts.  They can also perform a live code upgrade.  Built releasees or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
+Deploy commands deliver the builds that were created with a build command to your staging or production hosts.  They can also perform a live code upgrade.  Built releases or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
 
 - `APP`: the name of your release which should be built
 - `PRODUCTION_HOSTS`: the production hosts to deploy to, separated by space
