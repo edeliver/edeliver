@@ -148,7 +148,7 @@ run() {
     # when generating upgrades with `mix release` (exrm) the old
     # release must be uploaded before generating the release.
     # `erlang_generate_release` generates the upgrade then automatically
-    RELEASE_DIR="${RELEASE_DIR:-"${DELIVER_TO}/rel/${APP}"}"
+    RELEASE_DIR="${RELEASE_DIR:-"${DELIVER_TO}/_build/${TARGET_MIX_ENV}/rel/${APP}"}"
     local _release_destination_path="$(dirname $RELEASE_DIR)"
     [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]] && _release_destination_path="${_release_destination_path%%/}/${APP}"
     upload_release_archive "$_release_destination_path" "$RELEASE_FILE" "$WITH"

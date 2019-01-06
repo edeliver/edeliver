@@ -41,7 +41,7 @@ defmodule Edeliver do
 
     started as:
     ```
-    bin/$APP rpc Elixir.Edeliver run_command '[[command_name, \"$APP\", arguments...]].'
+    bin/$APP rpc 'Elixir.Edeliver.run_command('[command_name, \"$APP\", arguments...])'
     ```
 
     The first argument must be the name of the command, the second argument the
@@ -49,17 +49,16 @@ defmodule Edeliver do
     function thats name is equal to the command name.
   """
   @spec run_command(args::[term]) :: no_return
-  def run_command([:monitor_startup_progress, application_name = [_|_], :verbose]) do
+  def run_command([:monitor_startup_progress, application_name, :verbose]) do
     :error_logger.add_report_handler Edeliver.StartupProgress
     monitor_startup_progress(application_name)
     :error_logger.delete_report_handler Edeliver.StartupProgress
   end
-  def run_command([:monitor_startup_progress, application_name = [_|_] | _]) do
+  def run_command([:monitor_startup_progress, application_name | _]) do
     monitor_startup_progress(application_name)
   end
-  def run_command([command_name, application_name = [_|_] | arguments]) when is_atom(command_name) do
-    application_name = to_string(application_name)
-    application_name = String.to_atom(to_string(application_name))
+  def run_command([command_name, application_name | arguments]) when is_atom(command_name) do
+    application_name = String.to_atom(application_name)
     {^application_name, _description, application_version} = :application.which_applications |> List.keyfind(application_name, 0)
     application_version = to_string application_version
     apply __MODULE__, command_name, [application_name, application_version | arguments]
@@ -92,12 +91,12 @@ defmodule Edeliver do
   @spec release_version(application_name::atom, application_version::String.t) :: String.t
   def release_version(application_name, _application_version \\ nil) do
     releases = :release_handler.which_releases
-    application_name = Atom.to_char_list application_name
+    application_name = Atom.to_charlist application_name
     case (for {name, version, _apps, status} <- releases, status == :current and name == application_name, do: to_string(version)) do
       [current_version] -> current_version
       _ ->
         case (for {name, version, _apps, status} <- releases, status == :permanent and name == application_name, do: to_string(version)) do
-          [permanent_version] -> String.to_char_list(permanent_version)
+          [permanent_version] -> String.to_charlist(permanent_version)
         end
     end
   end
@@ -137,6 +136,10 @@ defmodule Edeliver do
     Path.join([lib_dir, application_with_version, "priv", "repo", "migrations"])
   end
 
+  def init(args) do
+    {:ok, args}
+  end
+
   defp ecto_repository!(_application_name, ecto_repository = [_|_] ) do
     # repository name was passed as ECTO_REPOSITORY env by the erlang-node-execute rpc call
     List.to_atom ecto_repository
@@ -144,7 +147,7 @@ defmodule Edeliver do
   defp ecto_repository!(application_name, _ecto_repository) do
     case System.get_env "ECTO_REPOSITORY" do # ECTO_REPOSITORY env was set when the node was started
       ecto_repository = <<_,_::binary>> ->
-        ecto_repository_module = ecto_repository |> to_char_list |> List.to_atom
+        ecto_repository_module = ecto_repository |> to_charlist |> List.to_atom
         if maybe_ecto_repo?(ecto_repository_module) do
           ecto_repository_module
         else

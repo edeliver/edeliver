@@ -24,8 +24,6 @@ ${txtbld}Options:${txtrst}
 
 ${bldylw}Info:${txtrst}
   Deploys a release on all staging (default) or production hosts.
-  The release must have been built before by the ${bldwht}build release${txtrst} command
-  (or by the ${bldwht}build upgrade${txtrst} command if exrm is used as release tool)
   ${txtgrn}The built release can be used after a (re)start${txtrst} of the node
   or if the ${bldwht}--start-deploy${txtrst} option is used.
   "

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # Copyright 2007-2010 Timothy Kay
 # http://timkay.com/aws/

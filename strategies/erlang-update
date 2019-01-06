@@ -134,9 +134,9 @@ __execute_on_deploy_host() {
   local _command="$2"
 
   ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
+    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
-    [ -f ~/.profile ] && source ~/.profile
-    cd $DELIVER_TO/$APP $SILENCE
+    cd \"$DELIVER_TO/$APP\" $SILENCE
     $_command"
 }
 
@@ -146,7 +146,8 @@ __execute_on_deploy_host() {
 # and returns 1 if node is offline.
 __is_node_offline() {
   local _deploy_host="$1"
-  [[ "pong" != "$(__execute_on_deploy_host "$_deploy_host" "bin/$APP ping" | tail -1)" ]]
+  local _node_command="$(__get_node_command "ping" "$DELIVER_TO" "")"
+  [[ "pong" != "$(__execute_on_deploy_host "$_deploy_host" "$_node_command")" ]]
 }
 
 # prints the currently running release version
@@ -154,7 +155,7 @@ __is_node_offline() {
 __get_installed_version_on_host() {
  local _deploy_host="$1"
  if [[ "$USING_DISTILLERY" = "true" ]]; then
-   __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpcterms Elixir.Edeliver run_command '[release_version, \"$APP\"].' | tail -1 | tr -d \\\""
+   __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc 'Elixir.Edeliver.run_command([:release_version, \"$APP\"])' | tail -1 | tr -d \\'"
  else
    __execute_on_deploy_host "$_deploy_host" "2>&1 bin/$APP rpc Elixir.Edeliver run_command '[[release_version, \"$APP\"]].' | tail -1 | tr -d \\\""
  fi

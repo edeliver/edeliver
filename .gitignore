@@ -1,2 +1,7 @@
 gh-pages/*
 .DS_Store
+deps
+_build
+.idea
+edeliver.iml
+doc/

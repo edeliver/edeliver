@@ -121,7 +121,7 @@ __find_all_strategies() {
     strategies_path+=("$ORIGIN_DIR/.deliver/strategies")
   fi
 
-  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9_/.-]*$' -type f ! -iname 'readme*')
+  STRATEGIES=$(find "${strategies_path[@]}" -regex '^[a-zA-Z0-9@_/.-]*$' -type f ! -iname 'readme*')
   for strategy in $STRATEGIES
   do
     STRATEGIES_NAME="$STRATEGIES_NAME ${strategy##*/}"
@@ -320,7 +320,7 @@ __sync_remote() {
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
   local _host="$_hosts"
   if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -A -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
+    ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
 
   $_host
 
@@ -330,7 +330,7 @@ on that host is printed below for debugging purposes:
 FAILED with exit status $?:\n${_remote_job}\n"
   else
     local _output _status
-    _output=$(ssh -A -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+    _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
     _status=$?
     [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
 
