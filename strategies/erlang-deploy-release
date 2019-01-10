@@ -34,6 +34,7 @@ run() {
   authorize_hosts
   authorize_release_store_host
   authorize_deploy_hosts_on_release_store
+  s3_requirements
   [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="release_or_upgrade_with_release" || local _release_type="release"
   select_release_from_store "$_release_type"
   if  [[ "$RELEASE_CMD" = "mix" ]] && [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then

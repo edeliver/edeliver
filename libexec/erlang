@@ -76,7 +76,20 @@ require_deploy_config() {
     REQUIRED_CONFIGS+=("TEST_AT")
   fi
 
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
+    REQUIRED_CONFIGS+=("AWS_ACCESS_KEY_ID")
+    REQUIRED_CONFIGS+=("AWS_SECRET_ACCESS_KEY")
+  fi
+
   OPTIONAL_CONFIGS+=("VERSION")
+}
+
+s3_requirements() {
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
+    __find_remote_s3cmd
+  fi
 }
 
 # sets all required config variables and defaults for node execute strategies
@@ -304,24 +317,12 @@ copy_release_to_release_store() {
   fi
   status "Copying release ${RELEASE_VERSION} to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
-    local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
       cd $(dirname ${_release_file}) $SILENCE
-      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'
-${_aws_script_content}
-EOF
-" "$HOSTS_APP_USER" "
-
-      [ -f ~/.profile ] && source ~/.profile
-      set -e
-      cd $(dirname ${_release_file}) $SILENCE
-      AWS_ARGUMENTS=\"put ${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz $(basename ${_release_file})\" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" \\
-      AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl $SILENCE <<'EOF'
-        content from libexec/aws file
-EOF
-"
+      \"${S3CMD}\" --access_key \"$AWS_ACCESS_KEY_ID\" --secret_key \"$AWS_SECRET_ACCESS_KEY\" put $(basename ${_release_file}) s3://${AWS_BUCKET_NAME}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz
+      "
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
@@ -431,7 +432,7 @@ upload_file_to_s3_release_store() {
     [[ $REPLY = [yY] ]] || exit 1
   }
   status "Uploading file $_source_file to $_destination_file"
-  AWS_ARGUMENTS="put ${AWS_BUCKET_NAME}/${_destination_file} ${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws || {
+  ${S3CMD} --access_key "$AWS_ACCESS_KEY_ID" --secret_key "$AWS_SECRET_ACCESS_KEY" "put ${_source_file} s3://${AWS_BUCKET_NAME}/${_destination_file}" || {
       error "\nFAILED to upload $_source_file\n"
   }
 }
@@ -487,7 +488,7 @@ download_file_from_s3_release_store() {
     exit 2
   }
   status "Downloading $_source_file to $_destination_file"
-  AWS_ARGUMENTS="get ${AWS_BUCKET_NAME}/${_source_file}" AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" perl $BASE_PATH/libexec/aws 2>/dev/null > "$_destination_file" || {
+  ${S3CMD} --access_key "$AWS_ACCESS_KEY_ID" --secret_key "$AWS_SECRET_ACCESS_KEY" "get ${AWS_BUCKET_NAME}/${_source_file}" "$_destination_file" || {
       [[ -f "$_destination_file" ]] && [[ ! -s "$_destination_file" ]] && rm "$_destination_file"
       error "\nFAILED to download $_source_file\n"
   }
@@ -651,7 +652,7 @@ __get_releases_in_store() {
   local _release_type="$1"
   __detect_release_store_type
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
-    AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" ${BASE_PATH}/libexec/aws ls ${AWS_BUCKET_NAME} 2>/dev/null | grep -o "${APP}_.*.${_release_type}.tar.gz" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
+    ${S3CMD} --access_key ${AWS_ACCESS_KEY_ID} --secret_key ${AWS_SECRET_ACCESS_KEY} ls s3://${AWS_BUCKET_NAME} 2>/dev/null | grep -o ${APP}_.*.${_release_type}.tar.gz | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     local _release_file;
     for _release_file in $(ls -1 ${RELEASE_STORE}/releases/${APP}_*.${_release_type}.tar.gz | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n); do
@@ -687,26 +688,13 @@ upload_release_archive() {
   # when building releses with mix, the tar does not contain the app name as subdirectory
   [[ "$RELEASE_CMD" = "mix" ]] && [[ ! "$_release_file" =~ upgrade\.tar\.gz$ ]] && _destination_directory="${_destination_directory%%/}/${APP}"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
-    local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
       [ -f ~/.profile ] && source ~/.profile
       set -e
       mkdir -p ${_destination_directory} $SILENCE
       cd ${_destination_directory} $SILENCE
-      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'
-${_aws_script_content}
-EOF
-" "$HOSTS_APP_USER" "
-
-      [ -f ~/.profile ] && source ~/.profile
-      set -e
-      mkdir -p ${_destination_directory} $SILENCE
-      cd ${_destination_directory} $SILENCE
-      AWS_ARGUMENTS=\"get ${AWS_BUCKET_NAME}/${_release_file} \" AWS_ACCESS_KEY_ID=\"$AWS_ACCESS_KEY_ID\" \\
-      AWS_SECRET_ACCESS_KEY=\"$AWS_SECRET_ACCESS_KEY\" perl > ${APP}_${_release_version}.tar.gz 2>/dev/null <<'EOF'
-        content from libexec/aws file
-EOF
-"
+      \"${S3CMD}\" --access_key ${AWS_ACCESS_KEY_ID} --secret_key ${AWS_SECRET_ACCESS_KEY} get s3://${AWS_BUCKET_NAME}/${_release_file} ${APP}_${_release_version}.tar.gz
+      "
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     __remote "
       [ -f ~/.profile ] && source ~/.profile
@@ -1157,6 +1145,20 @@ __show_upgrade_version_does_not_differ_error_message() {
     error_message "for automatic upgrades by setting AUTO_VERSION=revision in the config."
 }
 
+__find_remote_s3cmd() {
+  local _remote_host="${HOSTS}"
+  local _remote_user="${APP_USER}"
+  local _remote_job="which s3cmd"
+  S3CMD=$(ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_remote_user@$_remote_host" "$_remote_job")
+  if [ $? != 0 ]; then
+    error_message "You must have s3cmd installed on  to use edeliver with amazon s3."
+    echo -e "
+    On Debian/Ubuntu:
+      apt-get install s3cmd
+    "
+    exit 1
+  fi
+}
 
 # detects the type of the release store. sets RELEASE_STORE_TYPE either
 # to "local", "remote" or "s3" and also the following environment variables
