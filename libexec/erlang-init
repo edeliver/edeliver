@@ -28,10 +28,9 @@ __help() {
   edeliver [show] migrations [on] [staging|production]
 
   ${txtbld}Local Commands:${txtrst}
-  edeliver check release|config [--version=<release-version>]
   edeliver show releases|appups
   edeliver show relup <xyz.upgrade.tar.gz>
-  edeliver edit relup|appups [--version=<release-version>]
+  edeliver edit relup [--version=<release-version>]
   edeliver upload|download [release|upgrade <release-version>]|<src-file-name> [<dest-file-name>]
   edeliver increase [major|minor] versions [--from=<git-tag-or-revision>] [--to=<git-tag-or-revision>]
   edeliver unpack|pack release|upgrade [--version=<release-version>]
@@ -470,6 +469,7 @@ do
         [[ -z "$SET_RELEASE_VERSION" ]] && __help && error_message "Value for --set-version= option must not be empty.\n" && exit 2
         [[ -n "$INCREMENT_RELEASE_VERSION" ]] && __help && error_message "Option --set-version= cannot be used together with the --increment-version= option.\n" && exit 2
         [[ "$SKIP_MIX_CLEAN" = "true" ]] && __help && error_message "Option --increment-version= cannot be used together with the --skip-mix-clean option.\n" && exit 2
+        SET_RELEASE_VERSION="set ${SET_RELEASE_VERSION}"
       else
         [[ -n "${COMMAND}" ]] && __exec_if_defined "accepts_custom_command_argument" "${COMMAND}" "${arg}" || hint_message "Unknown argument ${arg} ignored"
       fi

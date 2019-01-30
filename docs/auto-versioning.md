@@ -52,6 +52,7 @@ To append metadata permanentely you can set the `AUTO_VERSION` configuration var
   * `[git-]branch` Appends the current branch that is built.
   * `[git-]branch-unless-master` Appends the current branch that is built but only unless it is the master branch.
   * `[build-]date` Appends the build date as YYYYMMDD.
+  * `[build-]time` Appends the build time as HHMMSS.
   * `[git-]commit-count[-all[-branches]` Appends the number of commits across all branches.
     Allows edeliver to detect which version is newer if it is appended as first metadata to
     the release version.

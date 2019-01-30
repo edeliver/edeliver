@@ -12,11 +12,11 @@ defmodule Edeliver.BashScript.Case do
       def call(bash_script_file = <<_,_::binary>>, function = <<_,_::binary>>, args) when is_list(args) do
         assert File.exists? bash_script_file
         args = args |> Enum.map(&("\\\"#{&1}\\\"")) |> Enum.join(" ")
-        "/usr/bin/env bash <<<\"
+        "/usr/bin/env bash -c \"
           set -e
           source \\\"#{bash_script_file}\\\"
           2>&1 #{function} #{args}
-        \"" |> String.to_char_list() |> :os.cmd() |> IO.chardata_to_string() |> String.rstrip(?\n)
+        \"" |> String.to_charlist() |> :os.cmd() |> IO.chardata_to_string() |> String.trim_trailing()
       end
       def call(function = <<_,_::binary>>, arg1 = <<_,_::binary>>, arg2 = <<_,_::binary>>), do: call(function, [arg1, arg2])
       def call(function = <<_,_::binary>>, arg1 = <<_,_::binary>>), do: call(function, [arg1])

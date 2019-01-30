@@ -9,7 +9,7 @@
 
 * Edeliver version (`mix edeliver --version`):
 * Elixir version (`elixir -v`):
-* Build tool and version (distillery|exrm):
+* Build tool and version (distillery):
 * Operating system (on build / deploy hosts):
 * Are you using an umbrella project (yes|no):
 
