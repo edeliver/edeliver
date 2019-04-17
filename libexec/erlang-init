@@ -49,7 +49,7 @@ __help() {
       --skip-mix-clean  Skip the 'mix clean step' for faster builds. Use in addition to --skip-git-clean
       --skip-relup-mod  Skip modification of relup file. Custom relup instructions are not added
       --relup-mod=<module-name> The name of the module to modify the relup
-      --auto-version=revision|commit-count|branch|date Automatically append metadata to release version.
+      --auto-version=revision|commit-count|branch|date|time Automatically append metadata to release version.
       --increment-version=major|minor|patch Increment the version for the current build.
       --set-version=<release-version> Set the release version for the current build.
       --start-deploy    Starts the deployed release. If release is running, it is restarted!
@@ -453,7 +453,7 @@ do
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#append-*}
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#git-*}
           AUTO_VERSION_ARG=${AUTO_VERSION_ARG#build-*}
-          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|branch-unless-master|date)$ ]]; then
+          if ! [[ "$AUTO_VERSION_ARG" =~  ^(revision|commit-count|commit-count-branch|commit-count-all|commit-count-all-branches|branch|branch-unless-master|date|time)$ ]]; then
             __help; error_message "Illegal value for --auto-version= option: '${ORIGINAL_AUTO_VERSION_ARG}'.\n"; exit 2
           fi
         done
