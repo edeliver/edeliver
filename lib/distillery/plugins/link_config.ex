@@ -14,7 +14,7 @@ defmodule Releases.Plugin.LinkConfig do
     end
     ```
   """
-  use Mix.Releases.Plugin
+  use Distillery.Releases.Plugin
 
 
   def before_assembly(_, _), do: nil
