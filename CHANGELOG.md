@@ -1,5 +1,10 @@
 eDeliver Versions
 =================
+__1.7.0__
+
+  - Backwards incompatible changes
+    - Elixir 1.9 compatibility by @pablo-meier. This is minimum required version now.
+    - Distillery 2.1.0 compatibility by @nifoc. This is minumum required version now.
 
 __1.6.0__
 
