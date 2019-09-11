@@ -87,12 +87,14 @@ run() {
     git_push
     git_reset_remote
     git_clean_remote
+    git_submodules
   elif [[ -n "$FROM" ]]; then
     # push current state
     init_app_remotely
     git_push
     git_reset_remote
     git_clean_remote
+    git_submodules
     # checkout old version
     git_checkout_remote $FROM
     # build old release
