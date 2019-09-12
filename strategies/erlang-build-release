@@ -56,6 +56,7 @@ run() {
   git_push
   git_reset_remote
   git_clean_remote
+  git_submodules
   authorize_release_store_on_build_host
   erlang_get_and_update_deps
   erlang_clean_compile
