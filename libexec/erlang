@@ -905,7 +905,7 @@ remote_extract_release_archive() {
     [ -f ~/.profile ] && source ~/.profile
     set -e
     cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+    tar -mxzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
   __exec_if_defined "post_extract_release_archive"
 }
 
