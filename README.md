@@ -1,4 +1,4 @@
-<img src="http://boldpoker.net/images/edeliver_500.png" width=120>
+<img src="https://raw.githubusercontent.com/edeliver/edeliver/master/docs/logo.png" width=120>
 
 # edeliver
 
