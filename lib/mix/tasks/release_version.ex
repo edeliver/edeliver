@@ -82,7 +82,6 @@ defmodule Mix.Tasks.Release.Version do
   end
 
   # Sets the release version to the new value by using the passed update funs.
-  # Mix.ProjectStack is GenServer after Elixir 1.10.0-rc.0
   @spec update_release_version(modification_functions::[modification_fun], options::[String.t]) :: new_version::String.t
   defp update_release_version(modification_functions, options) do
     {old_version, new_version} = GenServer.call(Mix.ProjectStack, {:update_stack, fn stack ->
