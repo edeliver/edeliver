@@ -315,31 +315,37 @@ __remote() {
 # not in background
 __sync_remote() {
   local _remote_job="$1"
-  local _hosts="${2:-"$HOSTS_APP_USER"}"
-  __log "${_hosts} : $_remote_job"
-  [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
-  local _host="$_hosts"
-  if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
 
-  $_host
+  if [[ "$BUILD_DOCKER" != true ]]; then
+    local _hosts="${2:-"$HOSTS_APP_USER"}"
+    __log "${_hosts} : $_remote_job"
+    [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but serveral hosts are configured ($_hosts)."
+    local _host="$_hosts"
+
+    if [[ "$VERBOSE" = "true" ]]; then
+      ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
+
+    $_host
 
 Output of the command is shown above and the command executed
 on that host is printed below for debugging purposes:
 
 FAILED with exit status $?:\n${_remote_job}\n"
-  else
-    local _output _status
-    _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
-    _status=$?
-    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+    else
+      local _output _status
+      _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+      _status=$?
+      [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
 
-  $_host
+    $_host
 
 Output of the command is shown above and the command executed
 on that host is printed below for debugging purposes:
 
 FAILED with exit status $_status:\n${_remote_job}\n"
+    fi
+  else # When it's Docker, just execute within the docker container
+    docker_exec "$_remote_job"
   fi
 }
 
