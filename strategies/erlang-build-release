@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 
 REQUIRED_CONFIGS+=("APP")
-REQUIRED_CONFIGS+=("BUILD_HOST")
-REQUIRED_CONFIGS+=("BUILD_USER")
-REQUIRED_CONFIGS+=("BUILD_AT")
 OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 
-set_build_hosts
+# Only require configs when not building for Docker
+if [[ "$BUILD_DOCKER" != true ]]; then
+  REQUIRED_CONFIGS+=("BUILD_HOST")
+  REQUIRED_CONFIGS+=("BUILD_USER")
+  REQUIRED_CONFIGS+=("BUILD_AT")
+else
+  OPTIONAL_CONFIGS+=("BUILD_HOST")
+  OPTIONAL_CONFIGS+=("BUILD_USER")
+  OPTIONAL_CONFIGS+=("BUILD_AT")
+fi
+
+if [[ "$BUILD_DOCKER" != true ]]; then
+  set_build_hosts
+fi
 
 help() {
   echo -e "
@@ -51,7 +61,10 @@ ${bldylw}Info:${txtrst}
 }
 
 run() {
-  authorize_hosts
+  if [[ "$BUILD_DOCKER" != true ]]; then
+    authorize_hosts
+  fi
+
   init_app_remotely
   git_push
   git_reset_remote

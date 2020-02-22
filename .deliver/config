@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
+BUILD_DOCKER=true
 GH_PAGES_EXEC="$ORIGIN_DIR/man/gh-pages"
-STRATEGY="gh-pages"
