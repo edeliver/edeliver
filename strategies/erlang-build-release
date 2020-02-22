@@ -63,6 +63,8 @@ ${bldylw}Info:${txtrst}
 run() {
   if [[ "$BUILD_DOCKER" != true ]]; then
     authorize_hosts
+  else
+    docker_up
   fi
 
   init_app_remotely

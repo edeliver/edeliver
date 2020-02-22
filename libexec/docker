@@ -2,6 +2,8 @@
 
 BUILD_DOCKER=${BUILD_DOCKER:="false"}
 DOCKERFILE=${DOCKERFILE:="$ORIGIN_DIR/Dockerfile"}
+DOCKER_LOCAL_PORT=${DOCKER_LOCAL_PORT:=5478}
+DOCKER_HOST="root@127.0.0.1:$DOCKER_LOCAL_PORT"
 
 docker_build() {
   status "Building Docker image"
@@ -38,11 +40,13 @@ docker_up() {
     __get_docker_image_hash
 
     status "Creating Docker container"
-    DOCKER_CONTAINER=$(docker run -d $DOCKER_IMAGE_HASH tail -f /dev/null)
+    DOCKER_CONTAINER=$(docker run --rm -d -p 127.0.0.1:$DOCKER_LOCAL_PORT:22 $DOCKER_IMAGE_HASH tail -f /dev/null)
 
     local _exit_code=$?
 
-    if [[ $? == 1 ]]; then
+    echo "Exit code: $_exit_code"
+
+    if [[ _exit_code == 1 ]]; then
       error "Could not create a new Docker container for image hash: $DOCKER_IMAGE_HASH"
     fi
   fi
@@ -52,7 +56,7 @@ docker_down() {
   if [[ -z "$DOCKER_CONTAINER" ]]; then
     # Only echo container related stuff whenever we actually built for Docker
     if [[ ! -z "$BUILD_DOCKER" ]]; then
-      echo "No running container to remove."
+      echo "Clean up: No running container to remove."
     fi
 
     exit 0
@@ -81,4 +85,4 @@ docker_cp_from_container() {
 }
 
 # Make sure we always clean up the created docker container
-trap docker_down EXIT
+# trap docker_down EXIT

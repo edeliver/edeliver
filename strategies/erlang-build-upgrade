@@ -1,13 +1,27 @@
 #!/usr/bin/env bash
 
+echo "erlang-build-upgrade"
+
 REQUIRED_CONFIGS+=("APP")
-REQUIRED_CONFIGS+=("BUILD_HOST")
-REQUIRED_CONFIGS+=("BUILD_USER")
-REQUIRED_CONFIGS+=("BUILD_AT")
+
+OPTIONAL_CONFIGS+=("BUILD_DOCKER")
 OPTIONAL_CONFIGS+=("FROM")
 OPTIONAL_CONFIGS+=("WITH")
 OPTIONAL_CONFIGS+=("TO")
 OPTIONAL_CONFIGS+=("REBAR_CONFIG")
+
+# Only require configs when not building for Docker
+if [[ "$BUILD_DOCKER" != true ]]; then
+  REQUIRED_CONFIGS+=("BUILD_HOST")
+  REQUIRED_CONFIGS+=("BUILD_USER")
+  REQUIRED_CONFIGS+=("BUILD_AT")
+else
+  OPTIONAL_CONFIGS+=("BUILD_HOST")
+  OPTIONAL_CONFIGS+=("BUILD_USER")
+  OPTIONAL_CONFIGS+=("BUILD_AT")
+fi
+
+exit 1
 
 TO="${TO:=$(get_latest_commit)}"
 
@@ -70,12 +84,28 @@ ${bldylw}Info:${txtrst}
   "
 }
 
+run() {
 
-set_build_hosts
+}
+
+if [[ "$BUILD_DOCKER" != true ]]; then
+  set_build_hosts
+fi
+
+exit 1
+
+
+
+
+
+
 
 run() {
-  authorize_hosts
-  authorize_release_store_on_build_host
+  if [[ "$BUILD_DOCKER" != true ]]; then
+    authorize_hosts
+    authorize_release_store_on_build_host
+  fi
+
   if [[ -n "$WITH" ]]; then
     [[ "$RELEASE_CMD" = "mix" ]] && local _release_type="*" || local _release_type="release"
     validate_release_is_in_store "$_release_type" $WITH # we can skip init_app_remotely and pushing to remote if release does not exist
@@ -210,7 +240,3 @@ run() {
 
   copy_release_to_release_store "upgrade"
 }
-
-
-
-
