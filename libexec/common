@@ -126,13 +126,6 @@ init_app_remotely() {
     HOSTS_APP_USER=$DOCKER_HOST
   fi
 
-  echo -e "
-****************
-1.
-HOSTS_APP_USER: $HOSTS_APP_USER
-DELIVER_TO: $DELIVER_TO
-****************
-"
 
   for _host in $HOSTS_APP_USER
   do
@@ -142,16 +135,6 @@ DELIVER_TO: $DELIVER_TO
     if [[ "$__USING_DOCKER" == true ]]; then
       _remote_name="root@edeliver-docker"
     fi
-
-    echo -e "
-*****************
-2.
-git_remote=$git_remote
-_host=$_host
-_remote_url=$_remote_url
-_remote_name=$_remote_name
-*****************
-"
 
     if [[ ! "$git_remote" =~ "$_remote_name $_remote_url" ]]; then
       [[ "$git_remote" =~ "$_remote_name" ]] && git remote rm "$_remote_name"
@@ -191,13 +174,6 @@ _remote_name=$_remote_name
 
 git_push() {
   __exec_if_defined "pre_git_push"
-
-  echo -e "
-*******
-3. Push
-HOSTS_APP_USER=$HOSTS_APP_USER
-*******
-"
 
   local _hosts="${1:-"$HOSTS_APP_USER"}"
 
