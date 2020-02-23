@@ -2,8 +2,6 @@
 
 BUILD_DOCKER=${BUILD_DOCKER:="false"}
 DOCKERFILE=${DOCKERFILE:="$ORIGIN_DIR/Dockerfile"}
-DOCKER_LOCAL_PORT=${DOCKER_LOCAL_PORT:=5478}
-DOCKER_HOST="root@127.0.0.1:$DOCKER_LOCAL_PORT"
 
 docker_build() {
   status "Building Docker image"
