@@ -122,26 +122,14 @@ init_app_remotely() {
 
   status "Ensuring hosts are ready to accept git pushes"
 
-  if [[ "$__USING_DOCKER" == true ]]; then
-    HOSTS_APP_USER=$DOCKER_HOST
-  fi
-
-
   for _host in $HOSTS_APP_USER
   do
     local _remote_url="$_host:$DELIVER_TO"
-    local _remote_name=$_host
-
-    if [[ "$__USING_DOCKER" == true ]]; then
-      _remote_name="root@edeliver-docker"
-    fi
-
-    if [[ ! "$git_remote" =~ "$_remote_name $_remote_url" ]]; then
-      [[ "$git_remote" =~ "$_remote_name" ]] && git remote rm "$_remote_name"
-      git remote add "$_remote_name" "$_remote_url"
+    if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
+      [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
+      git remote add "$_host" "$_remote_url"
     fi
   done
-
   __sync_remote "
     current_shell=\"\$0\" || :
     [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
