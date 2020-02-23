@@ -69,7 +69,7 @@ docker_down() {
 docker_exec() {
   docker_up
 
-  docker exec $DOCKER_CONTAINER bash -c $@
+  docker exec $DOCKER_CONTAINER bash -c "$@"
 }
 
 docker_cp_to_container() {

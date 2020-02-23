@@ -345,7 +345,19 @@ on that host is printed below for debugging purposes:
 FAILED with exit status $_status:\n${_remote_job}\n"
     fi
   else # When it's Docker, just execute within the docker container
-    docker_exec "$_remote_job"
+    local _output _status
+
+    _output=$(docker_exec "$_remote_job")
+    _status=$?
+
+    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+
+    Docker container: $DOCKER_CONTAINER
+
+Output of the command is shown above and the command executed
+on that host is printed below for debugging purposes:
+
+FAILED with exit status $_status:\n${_remote_job}\n"
   fi
 }
 
