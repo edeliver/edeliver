@@ -72,8 +72,6 @@ run() {
     git_submodules
     authorize_release_store_on_build_host
   else
-    # export DELIVER_TO=$BUILD_AT
-    echo "DELIVER_TO=$DELIVER_TO"
     docker_up
     docker_exec "if [ ! -d $DELIVER_TO ]; then mkdir -p $DELIVER_TO; fi"
     docker_cp_to_container "." "$DELIVER_TO"
