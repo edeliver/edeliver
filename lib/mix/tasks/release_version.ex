@@ -84,8 +84,8 @@ defmodule Mix.Tasks.Release.Version do
   # Sets the release version to the new value by using the passed update funs.
   @spec update_release_version(modification_functions::[modification_fun], options::[String.t]) :: new_version::String.t
   defp update_release_version(modification_functions, options) do
-    {old_version, new_version} = Agent.get_and_update Mix.ProjectStack, fn(state) ->
-      [root=%{config: config}|rest] = state.stack
+    {old_version, new_version} = GenServer.call(Mix.ProjectStack, {:update_stack, fn stack ->
+      [root=%{config: config}|rest] = stack
       {old_version, new_version, config} = List.foldr config, {"","", []}, fn({key, value}, {old_version, new_version, config}) ->
         {old_version, new_version, value} = if key == :version do
           old_version = value
@@ -98,8 +98,9 @@ defmodule Mix.Tasks.Release.Version do
         {old_version, new_version, [{key, value}|config]}
       end
       stack = [%{root|config: config}|rest]
-      {{old_version, new_version}, %{state| stack: stack}}
-    end
+      {{old_version, new_version}, stack}
+    end})
+
     debug "Changed release version from #{old_version} to #{new_version}", options
   end
 
