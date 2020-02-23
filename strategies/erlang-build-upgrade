@@ -11,7 +11,7 @@ OPTIONAL_CONFIGS+=("TO")
 OPTIONAL_CONFIGS+=("REBAR_CONFIG")
 
 # Only require configs when not building for Docker
-if [[ "$BUILD_DOCKER" != true ]]; then
+if [[ "$__USING_DOCKER" != true ]]; then
   REQUIRED_CONFIGS+=("BUILD_HOST")
   REQUIRED_CONFIGS+=("BUILD_USER")
   REQUIRED_CONFIGS+=("BUILD_AT")
@@ -88,7 +88,7 @@ run() {
 
 }
 
-if [[ "$BUILD_DOCKER" != true ]]; then
+if [[ "$__USING_DOCKER" != true ]]; then
   set_build_hosts
 fi
 
@@ -101,7 +101,7 @@ exit 1
 
 
 run() {
-  if [[ "$BUILD_DOCKER" != true ]]; then
+  if [[ "$__USING_DOCKER" != true ]]; then
     authorize_hosts
     authorize_release_store_on_build_host
   fi

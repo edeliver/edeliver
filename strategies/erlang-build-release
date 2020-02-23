@@ -16,6 +16,8 @@ fi
 
 if [[ "$BUILD_DOCKER" != true ]]; then
   set_build_hosts
+else
+  __USING_DOCKER=$BUILD_DOCKER
 fi
 
 help() {
@@ -61,18 +63,23 @@ ${bldylw}Info:${txtrst}
 }
 
 run() {
-  if [[ "$BUILD_DOCKER" != true ]]; then
+  if [[ "$__USING_DOCKER" != true ]]; then
     authorize_hosts
+    init_app_remotely
+    git_push
+    git_reset_remote
+    git_clean_remote
+    git_submodules
+    authorize_release_store_on_build_host
   else
+    # export DELIVER_TO=$BUILD_AT
+    echo "DELIVER_TO=$DELIVER_TO"
     docker_up
+    docker_exec "if [ ! -d $DELIVER_TO ]; then mkdir -p $DELIVER_TO; fi"
+    docker_cp_to_container "." "$DELIVER_TO"
+    docker_exec "cd $DELIVER_TO; git checkout -f $BRANCH"
   fi
 
-  init_app_remotely
-  git_push
-  git_reset_remote
-  git_clean_remote
-  git_submodules
-  authorize_release_store_on_build_host
   erlang_get_and_update_deps
   erlang_clean_compile
   erlang_generate_release

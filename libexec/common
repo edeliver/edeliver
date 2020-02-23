@@ -122,7 +122,7 @@ init_app_remotely() {
 
   status "Ensuring hosts are ready to accept git pushes"
 
-  if [[ "$BUILD_DOCKER" == true ]]; then
+  if [[ "$__USING_DOCKER" == true ]]; then
     HOSTS_APP_USER=$DOCKER_HOST
   fi
 
@@ -139,7 +139,7 @@ DELIVER_TO: $DELIVER_TO
     local _remote_url="$_host:$DELIVER_TO"
     local _remote_name=$_host
 
-    if [[ "$BUILD_DOCKER" == true ]]; then
+    if [[ "$__USING_DOCKER" == true ]]; then
       _remote_name="root@edeliver-docker"
     fi
 

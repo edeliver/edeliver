@@ -25,45 +25,38 @@ docker_build() {
   DOCKER_IMAGE_HASH="$_docker_build_result"
 }
 
-__get_docker_image_hash() {
-  # Only build when the image hash does not exist
-  if [[ -z "$DOCKER_IMAGE_HASH" ]]
-  then
-    docker_build
-  fi
-}
-
 docker_up() {
   # Only start a docker container when it has not started one already
   if [[ -z "$DOCKER_CONTAINER" ]]
   then
-    __get_docker_image_hash
+    local _output _status
+
+    __build_docker_when_not_built_yet
 
     status "Creating Docker container"
-    DOCKER_CONTAINER=$(docker run --rm -d -p 127.0.0.1:$DOCKER_LOCAL_PORT:22 $DOCKER_IMAGE_HASH tail -f /dev/null)
+    _output=$(docker run --rm -d $DOCKER_IMAGE_HASH tail -f /dev/null)
+    _status=$?
 
-    local _exit_code=$?
-
-    echo "Exit code: $_exit_code"
-
-    if [[ _exit_code == 1 ]]; then
+    if [[ "$_status" -ne 0 ]]; then
       error "Could not create a new Docker container for image hash: $DOCKER_IMAGE_HASH"
     fi
+
+    DOCKER_CONTAINER=$_output
   fi
 }
 
 docker_down() {
   if [[ -z "$DOCKER_CONTAINER" ]]; then
     # Only echo container related stuff whenever we actually built for Docker
-    if [[ ! -z "$BUILD_DOCKER" ]]; then
+    if [[ ! -z "$__USING_DOCKER" ]]; then
       echo "Clean up: No running container to remove."
     fi
 
     exit 0
   fi
 
-  docker kill $DOCKER_CONTAINER > /dev/null
-  docker rm $DOCKER_CONTAINER > /dev/null
+  docker kill $DOCKER_CONTAINER > /dev/null 2>&1
+  docker rm $DOCKER_CONTAINER > /dev/null 2>&1
 }
 
 docker_exec() {
@@ -75,7 +68,7 @@ docker_exec() {
 docker_cp_to_container() {
   docker_up
 
-  docker cp $1 $DOCKER_CONTAINER:$2
+  docker cp "$1" "$DOCKER_CONTAINER:$2"
 }
 
 docker_cp_from_container() {
@@ -84,5 +77,13 @@ docker_cp_from_container() {
   docker cp $DOCKER_CONTAINER:$1 $2
 }
 
+__build_docker_when_not_built_yet() {
+  # Only build when the image hash does not exist
+  if [[ -z "$DOCKER_IMAGE_HASH" ]]
+  then
+    docker_build
+  fi
+}
+
 # Make sure we always clean up the created docker container
-# trap docker_down EXIT
+trap docker_down EXIT

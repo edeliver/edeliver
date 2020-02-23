@@ -291,8 +291,10 @@ copy_release_to_release_store() {
   __detect_remote_release_dir
   __detect_remote_release_version
   __detect_release_store_type
+
   local _release_type="$1"
   local _release_revision="$2"
+
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
@@ -302,7 +304,9 @@ copy_release_to_release_store() {
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
+
   status "Copying release ${RELEASE_VERSION} to $RELEASE_STORE_TYPE release store"
+
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
@@ -325,7 +329,14 @@ EOF
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
-    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
+
+    local _host_release_path="${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
+
+    if [[ "$__USING_DOCKER" != true ]]; then
+      __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} $_host_release_path"
+    else
+      docker cp $DOCKER_CONTAINER:$_release_file $_host_release_path
+    fi
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
@@ -1079,7 +1090,7 @@ __detect_remote_release_dir() {
   else
     if [ "$RELEASE_CMD" = "relx" ]; then
       local _relx_release_dir_exists=($(__remote "
-        [ -f ~/.profile ] && source ~/.profile
+        [[ -f ~/.profile ]] && source ~/.profile
         set -e
         cd $DELIVER_TO $SILENCE
         [[ -d ./_rel ]] && echo true || echo false
@@ -1091,8 +1102,8 @@ __detect_remote_release_dir() {
         exit 1
       fi
     else # built with rebar
-      local _release_directories=($(__remote "
-        [ -f ~/.profile ] && source ~/.profile
+      local _find_releases_script="
+        [[ -f ~/.profile ]] && source ~/.profile
         set -e
         cd $DELIVER_TO $SILENCE
         OS_TYPE=\$(uname)
@@ -1101,11 +1112,26 @@ __detect_remote_release_dir() {
         else
           find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
         fi
-      "))
+      "
+      local _release_directories=""
+
+      if [[ "$__USING_DOCKER" != true ]]; then
+        _release_directories=($(__remote $_find_releases_script))
+      else
+        _release_directories=($(docker_exec "$_find_releases_script"))
+      fi
+
       if [ ${#_release_directories[@]} -eq 1 ]; then
         RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
       else
-        error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
+        local _release_location="$APP_USER@$HOSTS:$DELIVER_TO"
+
+        # For Docker we don't have a app user and host.
+        if [[ "$__USING_DOCKER" == true ]]; then
+          _release_location="$DOCKER_CONTAINER:$DELIVER_TO"
+        fi
+
+        error_message "Failed to detect generated release at\n$_release_location\n"
         error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
         if [ ${#_release_directories[@]} -gt 1 ]; then
           hint_message "Maybe one of these directories contains the release:"
@@ -1125,13 +1151,24 @@ __detect_remote_release_version() {
   if ! [ -z $RELEASE_VERSION ]; then
     return
   else
-    local _releases=($(__remote "
-      ls -Ad $RELEASE_DIR/releases/*/
-    "))
+    local _releases=""
+
+    if [[ "$__USING_DOCKER" != true ]]; then
+      _releases=($(__remote "ls -Ad $RELEASE_DIR/releases/*/"))
+    else
+      _releases=($(docker_exec "ls -Ad $RELEASE_DIR/releases/*/"))
+    fi
+
     if [ ${#_releases[@]} -eq 1 ]; then
       RELEASE_VERSION=`basename ${_releases[0]}`
     else
-      error_message "Failed to detect generated release version at:\n$APP_USER@$HOSTS:$RELEASE_DIR/releases/\n"
+      local _release_version_location="$APP_USER@$HOSTS:$DELIVER_TO"
+
+      if [[ "$__USING_DOCKER" == true ]]; then
+        _release_version_location="$DOCKER_CONTAINER:$DELIVER_TO"
+      fi
+
+      error_message "Failed to detect generated release version at:\n$_release_version_location/releases/\n"
       if [ ${#_releases[@]} -gt 1 ]; then
         hint_message "Detected several releases:"
         for _release in "${_releases[@]}"; do
