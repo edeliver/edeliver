@@ -13,6 +13,13 @@ The [erlang releases](http://www.erlang.org/doc/design_principles/release_handli
 
 Once built, the [release](http://www.erlang.org/doc/design_principles/release_handling.html) contains the full [erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html), all [dependencies (erlang or elixir applications)](http://www.erlang.org/doc/design_principles/applications.html), the Elixir runtime, native port drivers, and your erlang/elixir application(s) in a standalone embedded node.
 
+## Version compatibility
+
+| Edeliver  | Elixir |
+|---------- |--------|
+| 1.8.*     | 1.10.* |
+| 1.7.*     | 1.9.*  |
+| 1.6.*     | 1.8.*  |
 
 ## Community
 

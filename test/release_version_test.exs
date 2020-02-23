@@ -264,6 +264,10 @@ defmodule Edeliver.Release.Version.Test do
     assert "foo-barz" = valid_semver_metadata("foo-barüz")
   end
 
+  test "ensure Mix.ProjectStack is available" do
+    assert :ok == GenServer.call(Mix.ProjectStack, {:update_stack, fn [%{} | _] = stack -> {:ok, stack} end})
+  end
+
   ### test helpers ####
 
   defp modify_version_with_args(version, args) do
