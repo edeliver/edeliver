@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DELIVER_VERSION="1.6.1"
+DELIVER_VERSION="1.8.0"
 HOMEPAGE="https://github.com/edeliver/edeliver"
 CREATOR="bharendt"
 

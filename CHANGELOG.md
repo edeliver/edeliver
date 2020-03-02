@@ -1,5 +1,10 @@
 eDeliver Versions
 =================
+__1.8.0__
+
+  - Backwards incompatible changes
+    - Elixir 1.10 compatibility by @progsmile. This is minimum required version now.
+    
 __1.7.0__
 
   - Backwards incompatible changes
