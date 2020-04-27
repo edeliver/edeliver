@@ -234,6 +234,9 @@ erlang_generate_release() {
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to generate release\"
       $RELX_CMD release
+    elif [ \"$RELEASE_CMD\" = \"mix-release\" ]; then
+      echo \"using mix with releases to generate release\"
+      MIX_ENV=\"$TARGET_MIX_ENV\" mix release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using mix to generate release\"
       MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD $_set_auto_version distillery.release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
@@ -279,6 +282,8 @@ erlang_archive_release() {
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to archive release\"
       $RELX_CMD tar
+    elif [ \"$RELEASE_CMD\" = \"mix-release\" ]; then
+      tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     fi
   "
 }
@@ -299,7 +304,7 @@ copy_release_to_release_store() {
     if [[ "$USING_DISTILLERY" = "true" ]]; then
       local _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
     fi
-  else # used rebar to generate release
+  else # used rebar or mix-release to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
   status "Copying release ${RELEASE_VERSION} to $RELEASE_STORE_TYPE release store"
@@ -407,7 +412,6 @@ upload_file_to_release_store() {
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     upload_file_to_s3_release_store "$_source_file" "$_destination_file"
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
-    status "Copying ${_source_file} to local release store"
     [ "$FORCE" != "true" ] && file_exists_in_store $(basename $_destination_file) && {
       read -n1 -p "${txtylw}Destination File '$_destination_file' already uploaded. Overwrite? (y/n)${txtrst}"
       echo
@@ -820,7 +824,7 @@ __get_node_command() {
   local _app_path="$2"
   local _config_arg="$3"
   local _rpc_command="rpc"
-  if [[ "$USING_DISTILLERY" = "true" ]]; then
+  if [[ "$USING_DISTILLERY" = "true" ]] || [[ "$RELEASE_CMD" = "mix-release" ]]; then
     local _rpc_open_brackets="["
     local _rpc_close_brackets="]"
   else
@@ -833,7 +837,13 @@ __get_node_command() {
     [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
     set -e
     cd ${_app_path}/${APP} $SILENCE
-    output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+
+    if [ \"$RELEASE_CMD\" = \"mix-release\" ]; then
+      output_lines=\"\$(bin/${APP} pid 2>&1 | wc -l | tr -d ' ')\"
+    else
+      output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+    fi
+
     if [ \"\$output_lines\" -gt 1 ]; then
       output_filter_command='tail'
       output_filter_command_options=\"-n+\$output_lines\"
@@ -842,10 +852,20 @@ __get_node_command() {
       output_filter_command_options=''
     fi
     __edeliver_node_running() {
-      bin/${APP} ping 2>/dev/null >/dev/null
+      if [ \"$RELEASE_CMD\" = \"mix-release\" ]; then
+        local __result=\"\$(bin/${APP} pid 2>&1)\"
+        [[ \"\$__result\" =~ [0-9]+ ]]
+      else
+        bin/${APP} ping 2>/dev/null >/dev/null
+      fi
     }
     __edeliver_synchronous_start() {
-      bin/${APP} start | \$output_filter_command \$output_filter_command_options
+      local _start_cmd=\"start\"
+      if [ \"$RELEASE_CMD\" = \"mix-release\" ]; then
+        _start_cmd=\"daemon\"
+      fi
+
+      bin/${APP} \$_start_cmd | \$output_filter_command \$output_filter_command_options
       sleep 1
       for i in 1 2 3 4 5 6 7 8 9 10; do
         __edeliver_node_running && break || :
@@ -855,6 +875,12 @@ __get_node_command() {
     }
     if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
       ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
+      if __edeliver_node_running; then
+        echo \"${txtred}already running${txtrst}\" && exit 1
+      else
+        __edeliver_synchronous_start
+      fi
+    elif [ \"$RELEASE_CMD\" = \"mix-release\" ] && [ \"$_is_start_command\" = \"true\" ]; then
       if __edeliver_node_running; then
         echo \"${txtred}already running${txtrst}\" && exit 1
       else
