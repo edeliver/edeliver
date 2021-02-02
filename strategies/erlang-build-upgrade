@@ -136,7 +136,7 @@ run() {
       local _version_command="release.version show"
     fi
     local _version_that_will_be_built=$(__remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       cd $BUILD_AT $SILENCE
       MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD $_version_command
     ")
@@ -158,7 +158,7 @@ run() {
     if [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then
       status "Removing old releases which were included in upgrade package"
       __remote "
-        [ -f ~/.profile ] && source ~/.profile
+        [ -f $PROFILE ] && source $PROFILE
         set -e
         cd \"$(dirname $RELEASE_DIR)/${APP}/releases\" $SILENCE
         for release_dir in \$(ls -1); do
