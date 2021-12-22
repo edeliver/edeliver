@@ -23,9 +23,9 @@ This options can or must be set in the `.deliver/config` file to configure edeli
 
 See also [Configuration Section](https://github.com/boldpoker/edeliver#user-content-configuration) in the [README](https://github.com/boldpoker/edeliver/blob/master/README.md).
 
-### Use edeliver Options Permanentely
+### Use edeliver Options Permanently
 
-This options can be set in the `.deliver/config` file to use the command line option permanentely without passing them every time:
+This options can be set in the `.deliver/config` file to use the command line option permanently without passing them every time:
 
 
 | environment variable in config file   | edeliver argument    | info                                          |
@@ -36,14 +36,14 @@ This options can be set in the `.deliver/config` file to use the command line op
 | `RELUP_MODIFICATION_MODULE=...`       | `--relup-mod=...`    | specify module to modify relups automatically |
 | `SKIP_GIT_CLEAN=boolean`              | `--skip-git-clean`   | don't clean anything when building            |
 | `SKIP_MIX_CLEAN=boolean`              | `--skip-mix-clean`   | don't clean compiled output when building     |
-| `SKIP_RELUP_MODIFICATIONS=boolean`    | `--skip-relup-mod`   | don't modify relup automaticaly               |
+| `SKIP_RELUP_MODIFICATIONS=boolean`    | `--skip-relup-mod`   | don't modify relup automatically               |
 | `START_DEPLOY=boolean`                | `--start-deploy`     | (re-) start node(s) after deploy              |
 | `TARGET_MIX_ENV=prod\|dev\|...`       | `--mix-env=...`      | build with custom `MIX_ENV`                   |
 
-Passing any of that arguements to edeliver overrides the value set in the config file.
+Passing any of that arguments to edeliver overrides the value set in the config file.
 Try also `edeliver help build release`, `edeliver help build upgrade` or `edeliver help deploy release` for more information.
 
-### Additional Envirionment Variables available in config file
+### Additional Environment Variables available in config file
 
 
 This environment variables are set by edeliver and can be used `.deliver/config` file to adjust something:

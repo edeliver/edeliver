@@ -818,7 +818,7 @@ if ((!@ARGV || join(@ARGV, "") == "-") && $ENV{"AWS_ARGUMENTS"}) {
 	    }
 	    else
 	    {
-		die "--$key0: mispelled meta parameter?\n" unless exists $meta{$key};
+		die "--$key0: misspelled meta parameter?\n" unless exists $meta{$key};
 		$ {$key} = defined $val? $val: 1;
 		# --cmd0 is used to call self but without getting the command from $0
 		undef $cmd if $key eq "cmd0" && $val;
@@ -834,7 +834,7 @@ if ((!@ARGV || join(@ARGV, "") == "-") && $ENV{"AWS_ARGUMENTS"}) {
 	    {
 		for (split(//, $1))
 		{
-		    die "-$_: mispelled meta parameter?\n" unless exists $meta{$_};
+		    die "-$_: misspelled meta parameter?\n" unless exists $meta{$_};
 		    s/^(\d)$/d$1/;
 		    $ {$_}++;
 		}

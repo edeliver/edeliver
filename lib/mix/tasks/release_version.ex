@@ -333,7 +333,7 @@ defmodule Mix.Tasks.Release.Version do
 
   @doc """
     Gets the current branch that will be built. Since the git repository on the build
-    host is usually in a detatched state because a specific revision is checked out
+    host is usually in a detached state because a specific revision is checked out
     when building (see `git_reset_remote()` in `libexec/common`), this won't work:
 
     `git rev-parse --abbrev-ref HEAD`

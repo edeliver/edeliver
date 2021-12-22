@@ -4,7 +4,7 @@ defmodule Edeliver.Relup.Instructions.StartSection do
 
     and logs that info on the node which runs the upgrade and
     in the upgrade script started by the
-    `$APP/bin/$APP upgarde $RELEASE` command. Usage:
+    `$APP/bin/$APP upgrade $RELEASE` command. Usage:
 
     ```
     Edeliver.Relup.Instructions.StartSection.modify_relup(config, _section = :check)

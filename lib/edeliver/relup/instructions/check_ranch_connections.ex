@@ -3,7 +3,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     This upgrade instruction checks whether the running ranch connections can be found.
 
     This instruction will cause the upgrade to be canceled if the ranch connections
-    cannot be found and because it is insterted before the "point of no return"
+    cannot be found and because it is inserted before the "point of no return"
     it will run twice, once when checking the relup and once when executing the relup.
 
     If `Phoenix.PubSub.PG2` is used as pubsub backend for phoenix channels,
@@ -89,7 +89,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
 
   # Checks whether the given `supervisor` contains exactly one child matching the given `child_id`,
   # assigns the pid of the child to `var` and continues executing `instructions`. If no child
-  # or several childs with the id was/were found, it returns `:not_detected`.
+  # or several child's with the id was/were found, it returns `:not_detected`.
   @spec supervised_child_with_id_or_return_not_detected(supervisor::pid, child_id::term, var::term, instructions::term) :: term | :not_detected
   defmacrop supervised_child_with_id_or_return_not_detected(supervisor, child_id, var, instructions) do
     quote do
@@ -116,7 +116,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchConnections do
     because they should be suspended during the hot code upgrade and resumed again afterwards.
     If detection fails, websocket connections must be treated as "normal" http request connections.
     Detection of websocket connections is not possible either by the phoenix api nor by the cowboy / ranch api.
-    Thats why this function takes the processes that are monitored by the `Phoenix.PubSub.Local` process
+    That's why this function takes the processes that are monitored by the `Phoenix.PubSub.Local` process
     and are a subset of the detected connections as websocket connections for channels. The lookup for
     `Phoenix.PubSub.Local` process is dones by searching the supervision tree of the application for:
 

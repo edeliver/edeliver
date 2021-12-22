@@ -68,7 +68,7 @@ run() {
     rename_release_remove_version $NEW_RELEASE_VERSION
   fi
 
-  # genrate and copy appups
+  # generate and copy appups
   rebar_generate_appup $OLD_RELEASE_VERSION
   copy_appups_to_release_store $OLD_RELEASE_VERSION
 }

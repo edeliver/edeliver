@@ -6,7 +6,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
     requests finished and notifies the remaining, that a
     code upgrade will appear.  If a `phoenix` version is used
     which supports the upgrade notification feature, the
-    remaining requests that did not finish but failed durining
+    remaining requests that did not finish but failed during
     the upgrade will be replayed with the original request
     when the code upgrade is done. This instruction should be
     used in conjunction with and after the
