@@ -1,10 +1,15 @@
-<img src="https://raw.githubusercontent.com/edeliver/edeliver/master/docs/logo.png" width=120>
+![Logo](./assets/logo.png)
 
 # edeliver
 
 _Deployment for Elixir and Erlang_
 
-[![Hex.pm](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver) [![Hex.pm](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver) [![Build Status](https://travis-ci.org/edeliver/edeliver.svg?branch=master)](https://travis-ci.org/edeliver/edeliver)
+[![Build Status](https://travis-ci.org/edeliver/edeliver.svg?branch=master)](https://travis-ci.org/edeliver/edeliver)
+[![Hex Version](http://img.shields.io/hexpm/v/edeliver.svg)](https://hex.pm/packages/edeliver)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/edeliver/)
+[![Total Download](http://img.shields.io/hexpm/dt/edeliver.svg)](https://hex.pm/packages/edeliver)
+[![License](https://img.shields.io/hexpm/l/edeliver.svg)](https://mit-license.org/)
+[![Last Updated](https://img.shields.io/github/last-commit/edeliver/edeliver.svg)](https://github.com/edeliver/edeliver/commits/master)
 
 
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
@@ -460,6 +465,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
-
