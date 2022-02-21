@@ -55,7 +55,7 @@ authorize_deploy_hosts_on_release_store() {
     status "Authorizing deploy hosts on release store"
     local _release_store_host=${RELEASE_STORE%:*}
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       set -e
       for _host in $HOSTS_APP_USER
       do
@@ -85,7 +85,7 @@ authorize_release_store_on_build_host() {
     local _release_store_host=${RELEASE_STORE%:*}
     _release_store_host=${_release_store_host#*@}
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       set -e
       if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
         echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
@@ -217,7 +217,7 @@ rvmrc_trust() {
 
     status "Trusting rvmrc in $DELIVER_TO"
     __remote "
-      source ~/.profile
+      source $PROFILE
       set -e
       rvm rvmrc trust $DELIVER_TO $SILENCE
     "
@@ -232,7 +232,7 @@ bundle_install() {
 
   status "Installing gems with bundler"
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
@@ -251,7 +251,7 @@ npm_install() {
 
   status "Installing modules with npm"
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
@@ -269,7 +269,7 @@ foreman_export() {
   test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
 
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
