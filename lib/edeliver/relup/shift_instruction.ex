@@ -117,7 +117,7 @@ defmodule Edeliver.Relup.ShiftInstruction do
   end
 
   @doc """
-    Returns the first occurence of a `RunnableInstruction` implemented by the given module.
+    Returns the first occurrence of a `RunnableInstruction` implemented by the given module.
   """
   @spec first_runnable_instruction(instructions::Instructions.instructions, module::module) :: runnable_instruction::{:apply, {module::module, :run, arguments::[term]}} | :not_found
   def first_runnable_instruction(_instructions = [], _module), do: :not_found

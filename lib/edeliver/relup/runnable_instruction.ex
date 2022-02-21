@@ -63,7 +63,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
   @doc """
     Returns a function which inserts the relup instruction
 
-    that calls the `c:Edeliver.Relup.RunnableInstruction.run/1` fuction of this module.
+    that calls the `c:Edeliver.Relup.RunnableInstruction.run/1` function of this module.
     Default is inserting it at the end of the instructions
   """
   @callback insert_where() :: ((%Edeliver.Relup.Instructions{}, Edeliver.Relup.Instruction.instruction) -> %Edeliver.Relup.Instructions{})
@@ -122,7 +122,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
     In addition the same error message is logged on the node which executes
     the upgrade and is displayed as output of the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec error(message::String.t) :: no_return
   def error(message) do
@@ -135,7 +135,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
     In addition the same warning message is logged on the node which executes
     the upgrade and is displayed as output of the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec warn(message::String.t) :: no_return
   def warn(message) do
@@ -148,7 +148,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
     In addition the same info message is logged on the node which executes
     the upgrade and is displayed as output of the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec info(message::String.t) :: no_return
   def info(message) do
@@ -161,7 +161,7 @@ defmodule Edeliver.Relup.RunnableInstruction do
 
     In addition the same debug message is logged on the node which executes
     the upgrade and is displayed as output of the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec debug(message::String.t) :: no_return
   def debug(message) do

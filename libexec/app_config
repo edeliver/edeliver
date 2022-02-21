@@ -75,6 +75,13 @@ then
   GENERATED_BRANCH="generated"
 fi
 
+# The profile sourced on the remote build host
+#
+if [ -z "$PROFILE" ]
+then
+  PROFILE="$HOME/.profile"
+fi
+
 # command to compile the source the remote build host
 # rebar | mix
 if [ -z "$BUILD_CMD" ]; then
