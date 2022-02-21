@@ -172,7 +172,7 @@ __execute_node_command_synchronously() {
 # formats the response when node command is executed
 # synchronously. If version is displayed and --verbose option passed
 # the last git revisions are displayed in addition if the version
-# contains the git revsion.
+# contains the git revision.
 __format_response() {
   local _response="$@"
   if [[ "$COMMAND" = "version" ]] && [[ "$_response" =~ "+" ]]; then

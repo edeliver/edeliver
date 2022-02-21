@@ -684,7 +684,7 @@ upload_release_archive() {
   local _release_version=${3:-"$VERSION"}
   __detect_release_store_type
   status "Uploading archive of release $_release_version from $RELEASE_STORE_TYPE release store"
-  # when building releses with mix, the tar does not contain the app name as subdirectory
+  # when building releases with mix, the tar does not contain the app name as subdirectory
   [[ "$RELEASE_CMD" = "mix" ]] && [[ ! "$_release_file" =~ upgrade\.tar\.gz$ ]] && _destination_directory="${_destination_directory%%/}/${APP}"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
@@ -900,7 +900,7 @@ remote_extract_release_archive() {
   local _archive="${APP}_${_release_version}.tar.gz"
   __exec_if_defined "pre_extract_release_archive"
   status "Extracting archive ${_archive} into ${_archive_dir}"
-  # when building releses with mix, the tar does not contain the app name as subdirectory
+  # when building releases with mix, the tar does not contain the app name as subdirectory
   [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
   __remote "
     [ -f ~/.profile ] && source ~/.profile
@@ -1120,7 +1120,7 @@ __detect_remote_release_dir() {
   fi
 }
 
-# detectes the current version of the generated release
+# detects the current version of the generated release
 # on the remote build host
 __detect_remote_release_version() {
   if ! [ -z $RELEASE_VERSION ]; then
@@ -1303,7 +1303,7 @@ begin() {
 }
 
 
-# If we reach this step, delivery was successfull
+# If we reach this step, delivery was successful
 #
 finish() {
   case "$COMMAND" in

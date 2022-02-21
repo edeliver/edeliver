@@ -6,7 +6,7 @@ defmodule Edeliver.Relup.Instructions.CheckProcessesRunningOldCode do
     modules that will be (re)loaded during upgrade has old code.
     If any of them has old code it will throw an error and abort the release upgrade.
     This prevents  crashing and restarting the node during the live upgrade. This instruction
-    is insterted before the "point of no return" which causes it to run twice,
+    is inserted before the "point of no return" which causes it to run twice,
     once when checking the relup and once when executing the relup.
   """
   use Edeliver.Relup.RunnableInstruction

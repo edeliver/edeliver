@@ -3,7 +3,7 @@ defmodule Edeliver.Relup.Instructions.CheckRanchAcceptors do
     This upgrade instruction checks whether the ranch acceptors can be found.
 
     This instruction will cause the upgrade to be canceled if the ranch acceptors
-    cannot be found and because it is insterted before the "point of no return"
+    cannot be found and because it is inserted before the "point of no return"
     it will run twice, once when checking the relup and once when executing the relup.
   """
   use Edeliver.Relup.RunnableInstruction

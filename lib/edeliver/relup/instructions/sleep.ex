@@ -12,7 +12,7 @@ defmodule Edeliver.Relup.Instructions.Sleep do
     ```
 
     It prints a countown in the upgrade script which was
-    started by the `$APP/bin/$APP upgarde $RELEASE` command.
+    started by the `$APP/bin/$APP upgrade $RELEASE` command.
   """
   use Edeliver.Relup.RunnableInstruction
 
@@ -37,7 +37,7 @@ defmodule Edeliver.Relup.Instructions.Sleep do
     Waits the given amount of seconds and prints a countdown
 
     in the upgrade script which was started by the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec run(seconds::integer) :: :ok
   def run(seconds) do
