@@ -25,7 +25,7 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
     `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
     instruction at the end of your instructions list to
-    resume the websocket processes and reenable handling
+    resume the websocket processes and re-enable handling
     channel messages.
 
     Suspending and resuming websocket processes for
@@ -73,7 +73,7 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
   @doc """
     Suspends a list of processes. Because suspending a process might take a while depending on the length
     of the message queue or duration of current operation processed by the pid, suspending is done
-    asynchronously for each process by spawing a new process which calls `:sys.suspend/2` and then waiting
+    asynchronously for each process by spawning a new process which calls `:sys.suspend/2` and then waiting
     for all results before returning from this function. Be careful when using `:infinity` as timeout,
     because this function might hang for infinite time if one of the process does not handle sys events.
   """
@@ -128,7 +128,7 @@ defmodule Edeliver.Relup.Instructions.SuspendChannels do
           :not_supported ->
             warn "Suspending websocket connections for phoenix channels is not supported."
             debug "#{inspect websocket_connections_count} websockets were not suspended."
-            debug "Please upgrade the 'phoenix' dependeny to a newer version which supports handling sys events for websockets."
+            debug "Please upgrade the 'phoenix' dependency to a newer version which supports handling sys events for websockets."
             debug "Not suspended websockets might crash during the code upgrade."
           {:errors, errors_count, _errors} ->
             succeeded_count = websocket_connections_count - errors_count

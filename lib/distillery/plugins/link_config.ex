@@ -3,7 +3,7 @@ defmodule Releases.Plugin.LinkConfig do
     Distillery plugin to link the `vm.args` or `sys.config` file on deploy hosts.
 
     Because distillery uses `:systools_make.make_tar(...)` to create the release
-    tar which resoves all links using the `:dereference` option, the release
+    tar which resolves all links using the `:dereference` option, the release
     tar needs to be repackaged including the links. To be able use this plugin,
     it must be added in the `rel/config.exs` distillery config as plugin like this:
 
@@ -25,7 +25,7 @@ defmodule Releases.Plugin.LinkConfig do
 
   def after_package(%Release{version: version, profile: profile, name: name}, _) do
     # repackage release tar including link, because tar is generated using `:systools_make.make_tar(...)`
-    # which resoves the links using the `:dereference` option when creating the tar using the
+    # which resolves the links using the `:dereference` option when creating the tar using the
     # `:erl_tar` module.
     output_dir = profile.output_dir
     tmp_dir = "_edeliver_release_patch"

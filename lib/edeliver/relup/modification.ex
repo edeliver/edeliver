@@ -23,7 +23,7 @@ defmodule Edeliver.Relup.Modification do
 
         def modify_relup(instructions = %Instructions{}, config = %{}) do
           instructions |> Edeliver.Relup.DefaultModification.modify_relup(config) # use default modifications
-                       |> log_upgrade # add custom modifcation which logs the upgrade
+                       |> log_upgrade # add custom modification which logs the upgrade
         end
 
         defp log_upgrade(instructions = %Instructions{up_instructions: up_instructions}) do
@@ -46,7 +46,7 @@ defmodule Edeliver.Relup.Modification do
   def priority_default, do: 1
 
   @doc """
-    Default priorty for user defined relup modificaitons
+    Default priority for user defined relup modificaitons
   """
   @spec priority_user :: 1000
   def priority_user, do: 1_000

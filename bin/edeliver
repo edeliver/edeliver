@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# The most comprehensive way of figuring this script's absoute path,
+# The most comprehensive way of figuring this script's absolute path,
 # even when we're dealing with multi-level symlinks
 SOURCE="${BASH_SOURCE[0]}"
 DIR="$( dirname "$SOURCE" )"

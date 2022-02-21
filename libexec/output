@@ -107,7 +107,7 @@ status() {
   __log "$_message"
 }
 
-# If we reach this step, delivery was successfull
+# If we reach this step, delivery was successful
 #
 finish() {
   local _message="${bldgrn}$(upcase "$APP delivered!")${txtrst}"

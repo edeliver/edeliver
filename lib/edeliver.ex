@@ -9,7 +9,7 @@ defmodule Edeliver do
     (`edeliver migrate`).
 
     In addition it represents the edeliver application callback module
-    and starts a process registered locally as `Edeliver` whichs onliest
+    and starts a process registered locally as `Edeliver` which's onliest
     purpose is to be able to detect whether the release was successfully
     started. This requires to start edeliver as last application in the
     release.
@@ -46,7 +46,7 @@ defmodule Edeliver do
 
     The first argument must be the name of the command, the second argument the
     name  of the main application and all further arguments are passed to the
-    function thats name is equal to the command name.
+    function that's name is equal to the command name.
   """
   @spec run_command(args::[term]) :: no_return
   def run_command([:monitor_startup_progress, application_name, :verbose]) do

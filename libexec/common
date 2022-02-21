@@ -286,7 +286,7 @@ launch() {
   # You should be able to log in with $USER to the remote servers, and you
   # should be able to run sudo without needing a password.
   #
-  # I will be tackling this shortly, you really shouldn't neeed sudo
+  # I will be tackling this shortly, you really shouldn't need sudo
   # privileges to deliver an app. What was I thinking?!?
   if [[ "$SUPERVISOR" == "bluepill" ]]; then
     __remote "

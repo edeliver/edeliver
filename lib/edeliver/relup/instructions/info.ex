@@ -4,7 +4,7 @@ defmodule Edeliver.Relup.Instructions.Info do
     message on the node which runs the upgrade
 
     and in the running upgrade script which was started
-    by the `$APP/bin/$APP upgarde $RELEASE` command.
+    by the `$APP/bin/$APP upgrade $RELEASE` command.
     Usage:
 
     ```
@@ -42,7 +42,7 @@ defmodule Edeliver.Relup.Instructions.Info do
     Logs the message on the node which is upgraded
 
     and in the upgrade script which was started by the
-    `$APP/bin/$APP upgarde $RELEASE` command.
+    `$APP/bin/$APP upgrade $RELEASE` command.
   """
   @spec run(message::String.t) :: :ok
   def run(message) do
