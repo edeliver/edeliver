@@ -123,7 +123,8 @@ It can be used with any one of these build systems:
 
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
-  * [rebar](https://github.com/basho/rebar) for pure erlang releases
+  * [rebar3](https://github.com/erlang/rebar3) for pure erlang releases
+  * [rebar](https://github.com/basho/rebar) for legacy erlang releases
 
 Edeliver tries to autodetect which system to use:
 
@@ -131,7 +132,7 @@ Edeliver tries to autodetect which system to use:
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
   * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
 
-This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_CMD=rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
+This can be overridden by the config variables `BUILD_CMD=rebar3|rebar|mix`, `RELEASE_CMD=rebar3|rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
