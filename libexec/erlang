@@ -139,7 +139,13 @@ stop_build_container() {
 start_build_container() {
   status "Creating build container"
   info "Starting build container with image $DOCKER_BUILD_IMAGE"
-  DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; docker run --detach "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
+  local _target="${DELIVER_TO/\~//root}" # target must be absolute
+  DOCKER_BUILD_DIR="$(pwd)/.docker-build"
+  mkdir -p "$DOCKER_BUILD_DIR"
+  DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; \
+    docker run --detach \
+               --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$_target" \
+           "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
     || error "Failed to start build container"
   info "Started container $DOCKER_BUILD_CONTAINER"
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
