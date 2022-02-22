@@ -24,6 +24,7 @@ REBAR_CMD=${REBAR_CMD:="./rebar $REBAR_OPTIONS"}
 REBAR3_CMD=${REBAR3_CMD:="./rebar3 $REBAR_OPTIONS"}
 MIX_CMD=${MIX_CMD:="mix"}
 RELX_CMD=${RELX_CMD:="./relx"}
+DOCKER_BUILD_IMAGE=${DOCKER_BUILD_IMAGE:-elixir:1.13.3}
 
 # sets the build host, user and path as deliver hosts and path
 set_build_hosts() {
@@ -102,6 +103,47 @@ require_node_config() {
       done
       eval NODES=\$$_node_config_variable_name
     fi
+  fi
+}
+
+# runs docker and prints command output only if
+# edeliver runs with --verbose flag
+silent_docker() {
+  if [ "$VERBOSE" = "true" ]; then
+    docker $@
+  else
+    docker $@ >/dev/null
+  fi
+}
+
+# stops the build container whene deliver exits and a build
+# container was created because the BUILD_HOST is set to "docker".
+# if it exits normally the container is also removed, otherwise 
+# it is kept to be able to debug the build failure.
+stop_build_container() {
+  local status="$?"
+  if [ "$status" = "0" ]; then
+    status "Removing build container"
+    silent_docker kill $DOCKER_BUILD_CONTAINER
+    silent_docker rm $DOCKER_BUILD_CONTAINER
+  else
+    echo "Stopping build container $DOCKER_BUILD_CONTAINER"
+    silent_docker kill $DOCKER_BUILD_CONTAINER
+  fi
+}
+
+# starts the build container with the DOCKER_BUILD_IMAGE image
+# and automatically pulls it if not available locally. Pull output
+# is hidden until executed with --verbose. The container is started
+# detatched and the container id is set to DOCKER_BUILD_CONTAINER
+start_build_container() {
+  status "Creating build container"
+  info "Starting build container with image $DOCKER_BUILD_IMAGE"
+  DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; docker run --detach "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
+    || error "Failed to start build container"
+  info "Started container $DOCKER_BUILD_CONTAINER"
+  if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
+    trap stop_build_container EXIT
   fi
 }
 

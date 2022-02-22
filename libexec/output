@@ -107,6 +107,15 @@ status() {
   __log "$_message"
 }
 
+info() {
+  local _message="${txtrst}$@${txtrst}"
+  if [ "$VERBOSE" = "true" ]; then
+    echo "$_message"
+  fi
+  __log "$_message"
+}
+
+
 # If we reach this step, delivery was successful
 #
 finish() {
