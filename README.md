@@ -131,7 +131,7 @@ Edeliver tries to autodetect which system to use:
   * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
   * If a `./rebar.config` file exists but no `./relx.config`, [rebar3](https://github.com/erlang/rebar3) is used to fetch the dependencies, compile the sources and to build the release
-  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
+  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. It is recommended to [migrate to rebar3](https://rebar3.readme.io/docs/from-rebar-2x-to-rebar3) in that case.
 
 This can be overridden by the config variables `BUILD_CMD=rebar3|rebar|mix`, `RELEASE_CMD=rebar3|rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
@@ -169,6 +169,25 @@ def application, do: [
   ],
 ]
 ```
+
+### Rebar3 considerations
+
+When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as [rebar3 dependency](https://rebar3.readme.io/docs/dependencies). Just add it to your `rebar.config` (and ensure that a `./rebar3` binary/link is in your project directory):
+
+    {deps, [
+      % ...
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {ref, "f08b1a7ac74ced0c799d0e6567aed30c117b6de7"}}}
+    ]}.
+
+And link the `edeliver` binary to the root of your project directory:
+
+    wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+    ./rebar3 get-deps
+    ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
+
+
+Then use the linked binary `./edeliver` to build and deploy releases.
+
 
 ### Rebar considerations
 
