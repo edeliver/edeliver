@@ -315,31 +315,56 @@ __remote() {
 # not in background
 __sync_remote() {
   local _remote_job="$1"
-  local _hosts="${2:-"$HOSTS_APP_USER"}"
-  __log "${_hosts} : $_remote_job"
-  [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
-  local _host="$_hosts"
-  if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
+  if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
+    __log "$DOCKER_BUILD_CONTAINER : $_remote_job"
+    if [ "$VERBOSE" = "true" ]; then
+      docker exec --tty "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job" || error "\nDocker exec command failed on:
 
-  $_host
+    $DOCKER_BUILD_CONTAINER
 
-Output of the command is shown above and the command executed
-on that host is printed below for debugging purposes:
+  Output of the command is shown above and the command executed
+  in the docker container is printed below for debugging purposes:
 
-FAILED with exit status $?:\n${_remote_job}\n"
+  FAILED with exit status $?:\n${_remote_job}\n"
+    else
+      local _output _status
+      _output=$(docker exec "$DOCKER_BUILD_CONTAINER" --tty /bin/bash -c "$_remote_job")
+      [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nDocker exec command failed on:
+
+    $DOCKER_BUILD_CONTAINER
+
+  Output of the command is shown above and the command executed
+  in the container printed below for debugging purposes:
+
+  FAILED with exit status $_status:\n${_remote_job}\n"
+    fi
   else
-    local _output _status
-    _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
-    _status=$?
-    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+    local _hosts="${2:-"$HOSTS_APP_USER"}"
+    __log "${_hosts} : $_remote_job"
+    [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
+    local _host="$_hosts"
+    if [[ "$VERBOSE" = "true" ]]; then
+      ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
 
-  $_host
+    $_host
 
-Output of the command is shown above and the command executed
-on that host is printed below for debugging purposes:
+  Output of the command is shown above and the command executed
+  on that host is printed below for debugging purposes:
 
-FAILED with exit status $_status:\n${_remote_job}\n"
+  FAILED with exit status $?:\n${_remote_job}\n"
+    else
+      local _output _status
+      _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+      _status=$?
+      [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+
+    $_host
+
+  Output of the command is shown above and the command executed
+  on that host is printed below for debugging purposes:
+
+  FAILED with exit status $_status:\n${_remote_job}\n"
+    fi
   fi
 }
 
