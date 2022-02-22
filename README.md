@@ -176,7 +176,7 @@ When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as 
 
     {deps, [
       % ...
-      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {ref, "f08b1a7ac74ced0c799d0e6567aed30c117b6de7"}}}
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {ref, "e103c2b012058168857552562b158e1c76ebfbe9"}}}
     ]}.
 
 And link the `edeliver` binary to the root of your project directory:
