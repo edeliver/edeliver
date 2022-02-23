@@ -413,6 +413,11 @@ EOF
     "
     ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    status "Generating docker image with release"
+    info "Creating image $DOCKER_RUN_IMAGE"
+    info "Using base image $DOCKER_RELEASE_BASE_IMAGE"
+    info "Tagging as ${RELEASE_VERSION}-latest"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
@@ -1235,12 +1240,14 @@ __show_upgrade_version_does_not_differ_error_message() {
 
 
 # detects the type of the release store. sets RELEASE_STORE_TYPE either
-# to "local", "remote" or "s3" and also the following environment variables
+# to "local", "remote", "s3" or "docker" and also the following environment variables
 # depending on the detected release store type:
 #
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_BUCKET_NAME (for s3)
+# 
+# DOCKER_RUN_IMAGE (for docker)
 __detect_release_store_type() {
   if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
     local _s3location=${RELEASE_STORE/#[sS]3:\/\//}
@@ -1253,6 +1260,10 @@ __detect_release_store_type() {
 
   if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]] && [[ -n \"${AWS_ACCESS_KEY_ID}\" ]] && [[ -n \"${AWS_SECRET_ACCESS_KEY}\" ]] && [[ -n \"${AWS_BUCKET_NAME}\" ]]; then
     RELEASE_STORE_TYPE="s3"
+  elif [[ "$RELEASE_STORE" =~ ^docker://.+$ ]]; then
+    RELEASE_STORE_TYPE="docker"
+    DOCKER_RUN_IMAGE=${RELEASE_STORE/#docker:\/\//}
+    DOCKER_RELEASE_BASE_IMAGE=${DOCKER_RELEASE_BASE_IMAGE:-edeliver/release-base}
   elif [[ "$RELEASE_STORE" =~ ^[^@]+@[^:]+:.+$ ]]; then
     RELEASE_STORE_TYPE="remote"
   else
