@@ -388,7 +388,8 @@ EOF
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
-    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
+    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
+      || error "Failed to copy release to release store"
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
