@@ -323,7 +323,7 @@ __sync_remote() {
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
     __log "$DOCKER_BUILD_CONTAINER : $_remote_job"
     if [ "$VERBOSE" = "true" ]; then
-      docker exec --tty "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job" || error "\nDocker exec command failed on:
+      docker exec "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job" || error "\nDocker exec command failed on:
 
     $DOCKER_BUILD_CONTAINER
 
@@ -333,7 +333,7 @@ __sync_remote() {
   FAILED with exit status $?:\n${_remote_job}\n" >&2
     else
       local _output _status
-      _output=$(docker exec --tty "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job")
+      _output=$(docker exec "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job")
       _status=$?
       [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nDocker exec command failed on:
 
