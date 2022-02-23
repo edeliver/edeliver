@@ -1142,12 +1142,13 @@ __detect_remote_release_dir() {
     return
   else
     if [ "$RELEASE_CMD" = "relx" ]; then
-      local _relx_release_dir_exists=($(__sync_remote "
+      local _relx_release_dir_exists
+      _relx_release_dir_exists=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
         [[ -d ./_rel ]] && echo true || echo false
-      "))
+      ")) || error "Failed to detect generated release\n"
       if [ "$_relx_release_dir_exists" = "true" ]; then
         RELEASE_DIR=${DELIVER_TO%%/}/_rel
       else
@@ -1155,7 +1156,8 @@ __detect_remote_release_dir() {
         exit 1
       fi
     else # built with rebar
-      local _release_directories=($(__sync_remote "
+      local _release_directories
+      _release_directories=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
@@ -1168,7 +1170,7 @@ __detect_remote_release_dir() {
         else
           find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
         fi
-      "))
+      ")) || error "Failed to detect generated release\n"
       if [ ${#_release_directories[@]} -eq 1 ]; then
         RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
       else
@@ -1192,9 +1194,10 @@ __detect_remote_release_version() {
   if ! [ -z $RELEASE_VERSION ]; then
     return
   else
-    local _releases=($(__sync_remote "
+    local _releases
+    _releases=($(__sync_remote "
       ls -Ad $RELEASE_DIR/releases/*/
-    "))
+    ")) || error "Failed to detect release version."
     if [ ${#_releases[@]} -eq 1 ]; then
       RELEASE_VERSION=`basename ${_releases[0]}`
     else
