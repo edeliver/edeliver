@@ -368,7 +368,7 @@ copy_release_to_release_store() {
   status "Copying release ${RELEASE_VERSION} to $RELEASE_STORE_TYPE release store"
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
-    __remote "
+    __sync_remote "
       [ -f $PROFILE ] && source $PROFILE
       set -e
       cd $(dirname ${_release_file}) $SILENCE
@@ -1142,7 +1142,7 @@ __detect_remote_release_dir() {
     return
   else
     if [ "$RELEASE_CMD" = "relx" ]; then
-      local _relx_release_dir_exists=($(__remote "
+      local _relx_release_dir_exists=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
@@ -1155,7 +1155,7 @@ __detect_remote_release_dir() {
         exit 1
       fi
     else # built with rebar
-      local _release_directories=($(__remote "
+      local _release_directories=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
@@ -1192,7 +1192,7 @@ __detect_remote_release_version() {
   if ! [ -z $RELEASE_VERSION ]; then
     return
   else
-    local _releases=($(__remote "
+    local _releases=($(__sync_remote "
       ls -Ad $RELEASE_DIR/releases/*/
     "))
     if [ ${#_releases[@]} -eq 1 ]; then
