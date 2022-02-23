@@ -136,10 +136,11 @@ init_app_remotely() {
     fi
   done
   if [ "$BUILD_HOST" = "docker" ]; then
-    ( cd "$DOCKER_BUILD_DIR" \
-      && git init $SILENCE \
+    ( [ "$VERBOSE" != "true" ] && exec >/dev/null;
+      cd "$DOCKER_BUILD_DIR" \
+      && git init --quiet \
       && git config receive.denyCurrentBranch ignore
-    )
+    ) || error "Failed to initialize local git repository which will be mounted into the build container"
   else 
     __sync_remote "
       current_shell=\"\$0\" || :
@@ -189,7 +190,7 @@ git_reset_remote() {
   __sync_remote "
     set -e
     cd $DELIVER_TO
-    git reset --hard $REVISION
+    git reset --hard $REVISION 2>&1
   "
 }
 

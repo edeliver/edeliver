@@ -167,7 +167,7 @@ erlang_get_and_update_deps() {
       echo \"using rebar3 to fetch and update deps\"
       which $REBAR3_CMD || {
         echo \"installing rebar3\"
-        wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+        wget https://s3.amazonaws.com/rebar3/rebar3 2>&1 && chmod +x rebar3
       }
       $REBAR3_CMD update get-deps
     elif [ \"$BUILD_CMD\" = \"rebar\" ]; then
