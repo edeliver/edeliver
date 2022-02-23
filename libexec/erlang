@@ -388,8 +388,13 @@ EOF
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
-    __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
-      || error "Failed to copy release to release store"
+    if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
+      __exec "docker cp ${DOCKER_BUILD_CONTAINER}:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
+        || error "Failed to copy release from container to release store"
+    else
+      __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
+        || error "Failed to copy release to release store"
+    fi
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
