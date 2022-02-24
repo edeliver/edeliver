@@ -391,6 +391,56 @@ __sync_local() {
   fi
 }
 
+# Executes a docker command and hides output unless --verbose flag is set.
+# The output is captured and displayed in case of a failure. If this
+# runs in a subshell e.g. to assign the output to a vaiable 
+# (a container id for instance), the output is printed.
+__docker() {
+  if [ "$(exec sh -c 'echo "$PPID"')" != "$$" ]; then
+     local _stderr _status
+     exec 3>&2 # save stderr
+     exec 2>&1 # redirect stderr to stdout because command swapps stdout <> stderr
+     # execute command with stdout <> stderr swapped
+     _stderr="$(docker $@ 3>&1 1>&2 2>&3)" || error "
+Error output: >>> -------------
+
+$_stderr
+
+<<< Error output --------------
+
+Command 'docker $@'
+
+failed with status code $?!
+
+Error output is displayed above.
+
+    " >&3 # redirect to old stderr
+  else # not in a subshell
+    if [ "$VERBOSE" = "true" ]; then
+      docker $@ || error "
+
+Command 'docker $@'
+
+failed with status code $?!
+
+Error output is displayed above.
+"
+    else # not verbose
+      local _stdout
+      _stdout="$(docker $@)" || error "
+$_stderr
+
+Command 'docker $@'
+
+failed with status code $?!
+
+Stdout and error output is displayed above."
+    fi
+  fi
+
+}
+
+
 # monitors the parent pid if edeliver is started by a mix task.
 # this is required because edeliver is started from an erlang node
 # using "Port.open({:spawn, edeliver_command}, options)" and will

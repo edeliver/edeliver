@@ -418,6 +418,10 @@ EOF
     info "Creating image $DOCKER_RUN_IMAGE"
     info "Using base image $DOCKER_RELEASE_BASE_IMAGE"
     info "Tagging as ${RELEASE_VERSION}-latest"
+    if [[ -z "$(__docker images -q "$DOCKER_RELEASE_BASE_IMAGE")" ]]; then
+      info "Pulling release base image $DOCKER_RELEASE_BASE_IMAGE"
+      __docker pull "$DOCKER_RELEASE_BASE_IMAGE" || error "Failed to pull release base image $DOCKER_RELEASE_BASE_IMAGE"
+    fi
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
