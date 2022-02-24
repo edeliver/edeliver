@@ -114,7 +114,7 @@ stop_build_container() {
   local status="$?"
   if [ "$status" = "0" ]; then
     status "Removing build container"
-    __docker kill $DOCKER_BUILD_CONTAINER
+    _=$( __docker kill $DOCKER_BUILD_CONTAINER ) 
     __docker rm $DOCKER_BUILD_CONTAINER
   else
     info "Stopping build container $DOCKER_BUILD_CONTAINER"
