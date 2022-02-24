@@ -106,16 +106,6 @@ require_node_config() {
   fi
 }
 
-# runs docker and prints command output only if
-# edeliver runs with --verbose flag
-silent_docker() {
-  if [ "$VERBOSE" = "true" ]; then
-    docker $@
-  else
-    docker $@ >/dev/null
-  fi
-}
-
 # stops the build container whene deliver exits and a build
 # container was created because the BUILD_HOST is set to "docker".
 # if it exits normally the container is also removed, otherwise 
@@ -124,11 +114,11 @@ stop_build_container() {
   local status="$?"
   if [ "$status" = "0" ]; then
     status "Removing build container"
-    silent_docker kill $DOCKER_BUILD_CONTAINER
-    silent_docker rm $DOCKER_BUILD_CONTAINER
+    __docker kill $DOCKER_BUILD_CONTAINER
+    __docker rm $DOCKER_BUILD_CONTAINER
   else
-    echo "Stopping build container $DOCKER_BUILD_CONTAINER"
-    silent_docker kill $DOCKER_BUILD_CONTAINER
+    info "Stopping build container $DOCKER_BUILD_CONTAINER"
+    __docker kill $DOCKER_BUILD_CONTAINER
   fi
 }
 
@@ -143,9 +133,9 @@ start_build_container() {
   DOCKER_BUILD_DIR="$(pwd)/.docker-build"
   mkdir -p "$DOCKER_BUILD_DIR"
   DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; \
-    docker run --detach \
-               --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$_target" \
-           "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
+    __docker run --detach \
+                 --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$_target" \
+             "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
     || error "Failed to start build container"
   info "Started container $DOCKER_BUILD_CONTAINER"
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
@@ -389,7 +379,7 @@ EOF
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
     if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
-      __exec "docker cp ${DOCKER_BUILD_CONTAINER}:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
+      __docker cp "${DOCKER_BUILD_CONTAINER}:${_release_file}" "${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
         || error "Failed to copy release from container to release store"
     else
       __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
