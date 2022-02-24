@@ -106,16 +106,6 @@ require_node_config() {
   fi
 }
 
-# runs docker and prints command output only if
-# edeliver runs with --verbose flag
-silent_docker() {
-  if [ "$VERBOSE" = "true" ]; then
-    docker $@
-  else
-    docker $@ >/dev/null
-  fi
-}
-
 # stops the build container whene deliver exits and a build
 # container was created because the BUILD_HOST is set to "docker".
 # if it exits normally the container is also removed, otherwise 
@@ -124,11 +114,11 @@ stop_build_container() {
   local status="$?"
   if [ "$status" = "0" ]; then
     status "Removing build container"
-    silent_docker kill $DOCKER_BUILD_CONTAINER
-    silent_docker rm $DOCKER_BUILD_CONTAINER
+    _=$( __docker kill $DOCKER_BUILD_CONTAINER ) 
+    __docker rm $DOCKER_BUILD_CONTAINER
   else
-    echo "Stopping build container $DOCKER_BUILD_CONTAINER"
-    silent_docker kill $DOCKER_BUILD_CONTAINER
+    info "Stopping build container $DOCKER_BUILD_CONTAINER"
+    __docker kill $DOCKER_BUILD_CONTAINER
   fi
 }
 
@@ -139,13 +129,13 @@ stop_build_container() {
 start_build_container() {
   status "Creating build container"
   info "Starting build container with image $DOCKER_BUILD_IMAGE"
-  local _target="${DELIVER_TO/\~//root}" # target must be absolute
+  CONTAINER_BUILD_DIR="${DELIVER_TO/\~//root}" # target must be absolute
   DOCKER_BUILD_DIR="$(pwd)/.docker-build"
   mkdir -p "$DOCKER_BUILD_DIR"
   DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; \
-    docker run --detach \
-               --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$_target" \
-           "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
+    __docker run --detach \
+                 --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$CONTAINER_BUILD_DIR" \
+             "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
     || error "Failed to start build container"
   info "Started container $DOCKER_BUILD_CONTAINER"
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
@@ -389,7 +379,7 @@ EOF
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
     if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
-      __exec "docker cp ${DOCKER_BUILD_CONTAINER}:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
+      __docker cp "${DOCKER_BUILD_CONTAINER}:${_release_file}" "${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
         || error "Failed to copy release from container to release store"
     else
       __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
@@ -413,8 +403,53 @@ EOF
     "
     ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
       error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    status "Generating docker image with release"
+    info "Creating image $DOCKER_RUN_IMAGE"
+    info "Using base image $DOCKER_RELEASE_BASE_IMAGE"
+    if [[ -z "$(__docker images -q "$DOCKER_RELEASE_BASE_IMAGE")" ]]; then
+      info "Pulling release base image $DOCKER_RELEASE_BASE_IMAGE"
+      __docker pull "$DOCKER_RELEASE_BASE_IMAGE" || error "Failed to pull release base image $DOCKER_RELEASE_BASE_IMAGE"
+    fi
+    local _release_container
+    info "Creating release container"
+    _release_container="$(__docker create "$DOCKER_RELEASE_BASE_IMAGE")" || error "Failed to create release container"
+    if [ -z "$RELEASE_DIR" ]; then
+      __detect_remote_release_dir || error "Failed to detect release dir"
+    fi
+    info "Copying built release into release container at /${APP}"
+    local _local_release_dir="${DOCKER_BUILD_DIR}${RELEASE_DIR#$CONTAINER_BUILD_DIR}"
+    [ -d "$_local_release_dir" ] || error "Local release dir '${_local_release_dir}' not found!"
+    __docker cp "$_local_release_dir" "${_release_container}:/${APP}" || error "Failed to copy release into release container"
+    [ "$VERBOSE" = "true" ] && __docker diff "$_release_container" || :
+    info "Commiting as ${RELEASE_VERSION}-latest"
+    local _committed_image="${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-latest"
+    __docker commit "$_release_container" "$_committed_image" \
+      || error "Failed to commit release container"
+
+    local _built_revision _build_branch
+    _built_revision="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null)" && {
+      info "Tagging also as ${RELEASE_VERSION}-${_built_revision}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" \
+        || error "Failed to tag image with built revision"
+    } || hint_message "Failed to detect built revision"
+    _built_branch="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null)" && {
+      info "Tagging also as ${RELEASE_VERSION}-${_built_branch}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" \
+        || error "Failed to tag image with branch name"
+    } || hint_message "Failed to detect built branch"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
+  fi
+
+  if [ "$DOCKER_PUSH" = "true" ]; then
+    status "Pusing release image to registry"
+    info "Pushing ${_committed_image}"
+    __docker push "${_committed_image}" || error "Failed to push release image ${_committed_image}"
+    info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
+    __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
+    info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
+    __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
   fi
 
 }
@@ -1235,12 +1270,14 @@ __show_upgrade_version_does_not_differ_error_message() {
 
 
 # detects the type of the release store. sets RELEASE_STORE_TYPE either
-# to "local", "remote" or "s3" and also the following environment variables
+# to "local", "remote", "s3" or "docker" and also the following environment variables
 # depending on the detected release store type:
 #
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_BUCKET_NAME (for s3)
+# 
+# DOCKER_RUN_IMAGE (for docker)
 __detect_release_store_type() {
   if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
     local _s3location=${RELEASE_STORE/#[sS]3:\/\//}
@@ -1253,6 +1290,10 @@ __detect_release_store_type() {
 
   if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]] && [[ -n \"${AWS_ACCESS_KEY_ID}\" ]] && [[ -n \"${AWS_SECRET_ACCESS_KEY}\" ]] && [[ -n \"${AWS_BUCKET_NAME}\" ]]; then
     RELEASE_STORE_TYPE="s3"
+  elif [[ "$RELEASE_STORE" =~ ^docker://.+$ ]]; then
+    RELEASE_STORE_TYPE="docker"
+    DOCKER_RUN_IMAGE=${RELEASE_STORE/#docker:\/\//}
+    DOCKER_RELEASE_BASE_IMAGE=${DOCKER_RELEASE_BASE_IMAGE:-edeliver/release-base:1.0}
   elif [[ "$RELEASE_STORE" =~ ^[^@]+@[^:]+:.+$ ]]; then
     RELEASE_STORE_TYPE="remote"
   else
