@@ -123,15 +123,17 @@ It can be used with any one of these build systems:
 
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
-  * [rebar](https://github.com/basho/rebar) for pure erlang releases
+  * [rebar3](https://github.com/erlang/rebar3) for pure erlang releases or in conjunction with [rebar_mix plugin](https://github.com/Supersonido/rebar_mix) to build also Elixir sources and dependencies
+  * [rebar](https://github.com/basho/rebar) for legacy pure erlang releases
 
 Edeliver tries to autodetect which system to use:
 
   * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
-  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
+  * If a `./rebar.config` file exists but no `./relx.config`, [rebar3](https://github.com/erlang/rebar3) is used to fetch the dependencies, compile the sources and to build the release
+  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. It is recommended to [migrate to rebar3](https://rebar3.readme.io/docs/from-rebar-2x-to-rebar3) in that case.
 
-This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_CMD=rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
+This can be overridden by the config variables `BUILD_CMD=rebar3|rebar|mix`, `RELEASE_CMD=rebar3|rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
@@ -167,6 +169,25 @@ def application, do: [
   ],
 ]
 ```
+
+### Rebar3 considerations
+
+When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as [rebar3 dependency](https://rebar3.readme.io/docs/dependencies). Just add it to your `rebar.config` (and ensure that a `./rebar3` binary/link is in your project directory):
+
+    {deps, [
+      % ...
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {ref, "e103c2b012058168857552562b158e1c76ebfbe9"}}}
+    ]}.
+
+And link the `edeliver` binary to the root of your project directory:
+
+    wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+    ./rebar3 get-deps
+    ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
+
+
+Then use the linked binary `./edeliver` to build and deploy releases.
+
 
 ### Rebar considerations
 

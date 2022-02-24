@@ -21,6 +21,7 @@ else
 fi
 
 REBAR_CMD=${REBAR_CMD:="./rebar $REBAR_OPTIONS"}
+REBAR3_CMD=${REBAR3_CMD:="./rebar3 $REBAR_OPTIONS"}
 MIX_CMD=${MIX_CMD:="mix"}
 RELX_CMD=${RELX_CMD:="./relx"}
 
@@ -114,7 +115,14 @@ erlang_get_and_update_deps() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
-    if [ \"$BUILD_CMD\" = \"rebar\" ]; then
+    if [ \"$BUILD_CMD\" = \"rebar3\" ]; then
+      echo \"using rebar3 to fetch and update deps\"
+      which $REBAR3_CMD || {
+        echo \"installing rebar3\"
+        wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+      }
+      $REBAR3_CMD update get-deps
+    elif [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to fetch and update deps\"
       $REBAR_CMD update-deps get-deps
     elif [ \"$BUILD_CMD\" = \"mix\" ]; then
@@ -161,7 +169,11 @@ erlang_clean_compile() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
-    if [ \"$BUILD_CMD\" = \"rebar\" ]; then
+    if [ \"$BUILD_CMD\" = \"rebar3\" ]; then
+      echo \"using rebar3 to compile files\"
+      [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR3_CMD clean || :
+      $REBAR3_CMD compile
+    elif [ \"$BUILD_CMD\" = \"rebar\" ]; then
       echo \"using rebar to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR_CMD clean skip_deps=true || :
       $REBAR_CMD compile
@@ -228,7 +240,10 @@ erlang_generate_release() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
-    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
+    if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
+      echo \"using rebar3 to generate release\"
+      $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
+    elif [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\"
       $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
@@ -274,7 +289,7 @@ erlang_archive_release() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
-    if [ \"$RELEASE_CMD\" = \"rebar\" ]; then
+    if [ \"$RELEASE_CMD\" = \"rebar\" ] || [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to archive release\"
@@ -1096,6 +1111,9 @@ __detect_remote_release_dir() {
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
+        if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
+          cd _build
+        fi
         OS_TYPE=\$(uname)
         if [[ \"\$OS_TYPE\" = \"Darwin\" ]]; then
           find ./ -name RELEASES | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/RELEASES\$
