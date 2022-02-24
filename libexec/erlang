@@ -417,14 +417,27 @@ EOF
     if [ -z "$RELEASE_DIR" ]; then
       __detect_remote_release_dir || error "Failed to detect release dir"
     fi
-    info "Copying release from build container into release container at /${APP}"
+    info "Copying built release into release container at /${APP}"
     local _local_release_dir="${DOCKER_BUILD_DIR}${RELEASE_DIR#$CONTAINER_BUILD_DIR}"
     [ -d "$_local_release_dir" ] || error "Local release dir '${_local_release_dir}' not found!"
     __docker cp "$_local_release_dir" "${_release_container}:/${APP}" || error "Failed to copy release into release container"
     [ "$VERBOSE" = "true" ] && __docker diff "$_release_container" || :
     info "Commiting as ${RELEASE_VERSION}-latest"
-    __docker commit "$_release_container" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-latest" \
+    local _committed_image="${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-latest"
+    __docker commit "$_release_container" "$_committed_image" \
       || error "Failed to commit release container"
+
+    local _built_revision _build_branch
+    _built_revision="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null)" && {
+      info "Tagging also as ${RELEASE_VERSION}-${_built_revision}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" \
+        || error "Failed to tag image with built revision"
+    } || hint_message "Failed to detect built revision"
+    _built_branch="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null)" && {
+      info "Tagging also as ${RELEASE_VERSION}-${_built_branch}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" \
+        || error "Failed to tag image with branch name"
+    } || hint_message "Failed to detect built branch"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
