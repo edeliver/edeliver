@@ -129,12 +129,12 @@ stop_build_container() {
 start_build_container() {
   status "Creating build container"
   info "Starting build container with image $DOCKER_BUILD_IMAGE"
-  local _target="${DELIVER_TO/\~//root}" # target must be absolute
+  CONTAINER_BUILD_DIR="${DELIVER_TO/\~//root}" # target must be absolute
   DOCKER_BUILD_DIR="$(pwd)/.docker-build"
   mkdir -p "$DOCKER_BUILD_DIR"
   DOCKER_BUILD_CONTAINER="$([ "$VERBOSE" != "true" ] && exec 2>/dev/null; \
     __docker run --detach \
-                 --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$_target" \
+                 --mount type=bind,source="${DOCKER_BUILD_DIR}",target="$CONTAINER_BUILD_DIR" \
              "$DOCKER_BUILD_IMAGE" tail -f /dev/null)" \
     || error "Failed to start build container"
   info "Started container $DOCKER_BUILD_CONTAINER"
@@ -407,11 +407,24 @@ EOF
     status "Generating docker image with release"
     info "Creating image $DOCKER_RUN_IMAGE"
     info "Using base image $DOCKER_RELEASE_BASE_IMAGE"
-    info "Tagging as ${RELEASE_VERSION}-latest"
     if [[ -z "$(__docker images -q "$DOCKER_RELEASE_BASE_IMAGE")" ]]; then
       info "Pulling release base image $DOCKER_RELEASE_BASE_IMAGE"
       __docker pull "$DOCKER_RELEASE_BASE_IMAGE" || error "Failed to pull release base image $DOCKER_RELEASE_BASE_IMAGE"
     fi
+    local _release_container
+    info "Creating release container"
+    _release_container="$(__docker create "$DOCKER_RELEASE_BASE_IMAGE")" || error "Failed to create release container"
+    if [ -z "$RELEASE_DIR" ]; then
+      __detect_remote_release_dir || error "Failed to detect release dir"
+    fi
+    info "Copying release from build container into release container at /${APP}"
+    local _local_release_dir="${DOCKER_BUILD_DIR}${RELEASE_DIR#$CONTAINER_BUILD_DIR}"
+    [ -d "$_local_release_dir" ] || error "Local release dir '${_local_release_dir}' not found!"
+    __docker cp "$_local_release_dir" "${_release_container}:/${APP}" || error "Failed to copy release into release container"
+    [ "$VERBOSE" = "true" ] && __docker diff "$_release_container" || :
+    info "Commiting as ${RELEASE_VERSION}-latest"
+    __docker commit "$_release_container" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-latest" \
+      || error "Failed to commit release container"
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
