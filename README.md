@@ -323,6 +323,7 @@ Deploy commands deliver the builds that were created with a build command to you
 
 Deploying to staging can be used to test your releases and upgrades before deploying them to the production hosts.  Staging is the default target if you don't pass the `[to] production` argument.
 
+If the `RELEASE_STORE` is a docker image, the deploy command pulls and starts the image with the given tag as version. See section __Deploy Docker Releases__ below for details.
 
 ### Deploy an initial/clean release
 
@@ -353,6 +354,27 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Deploy Docker Releases
+
+When embedding releases into docker containers, the deploy command starts the container with 
+
+```sh
+docker run --rm --detatch $DOCKER_RUN_ARGS $DOCKER_RUN_IMAGE:$VERSION /$APP/bin/$APP console
+```
+while `DOCKER_RUN_IMAGE` is the image from the `RELEASE_STORE` and `$VERSION` the version passed by the `--version` argument (defaults to the latest image available on the host).
+
+`DOCKER_RUN_ARGS` defaults to
+
+```sh
+--workdir "/${APP}" \
+--env ERL_DIST_PORT="${ERL_DIST_PORT:-9999}" \
+--env INET_DIST_USE_INTERFACE='{0,0,0,0}' \
+--mount type=bind,source="${COOKIE_FILE:-~/.erlang.cookie},target=/root/.erlang.cookie"
+```
+
+to enable remote console and can be extended (e.g. `DOCKER_RUN_ARGS="$DOCKER_RUN_ARGS ... your args"`) or overridden in your `.deliver/config`. 
+
+If you want to use an own wrapper script to start the container, set the `DOCKER_RUN_SCRIPT` env in your config. The script will be called with a `start` argument and `VERSION` env set. 
 
 ## Admin Commands
 
