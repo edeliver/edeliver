@@ -1293,7 +1293,7 @@ __detect_release_store_type() {
   elif [[ "$RELEASE_STORE" =~ ^docker://.+$ ]]; then
     RELEASE_STORE_TYPE="docker"
     DOCKER_RUN_IMAGE=${RELEASE_STORE/#docker:\/\//}
-    DOCKER_RELEASE_BASE_IMAGE=${DOCKER_RELEASE_BASE_IMAGE:-edeliver/release-base}
+    DOCKER_RELEASE_BASE_IMAGE=${DOCKER_RELEASE_BASE_IMAGE:-edeliver/release-base:1.0}
   elif [[ "$RELEASE_STORE" =~ ^[^@]+@[^:]+:.+$ ]]; then
     RELEASE_STORE_TYPE="remote"
   else

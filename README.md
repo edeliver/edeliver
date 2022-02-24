@@ -273,7 +273,7 @@ If `BUILD_HOST` is set to `"docker"`, edeliver builds the release in a docker co
 
 ### Build as a docker container
 
-If `RELEASE_STORE` is a (private) docker image in a docker registry like `docker://edeliver/echo-server` the built release will be embedded into a docker image based on `DOCKER_RELEASE_BASE_IMAGE` (which defaults to `edeliver/release-base`) and pushed with that image name from the `RELEASE_STORE` to your registry (if `--push` is used). It creates (and optionally pushes) three image tags: *release version* + `latest`, *release version* + *git sha* and *release version* + *branch*. The release can then be started on a host authenticated at the same docker registry like this:
+If `RELEASE_STORE` is a (private) docker image in a docker registry like `docker://edeliver/echo-server` the built release will be embedded into a docker image based on `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [`edeliver/release-base:1.0`](https://hub.docker.com/r/edeliver/release-base)) and pushed with that image name from the `RELEASE_STORE` to your registry (if `--push` is used). It creates (and optionally pushes) three image tags: *release version* + `latest`, *release version* + *git sha* and *release version* + *branch*. The release can then be started on a host authenticated at the same docker registry like this:
 
 ```sh
 docker start -ti edeliver/echo-server:1.0-latest -p 8080:8080 echo-server/bin/echo-server console
