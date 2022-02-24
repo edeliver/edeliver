@@ -311,35 +311,68 @@ __remote() {
 }
 
 
-# execute on single remote host
-# not in background
+# execute a (build) command on a single remote host or in a docker container if
+# BUILD_HOST="docker". if VERBOSE != "true" the output is captured and only printed
+# if the command failed or if it is executed in a subshell like `result=$(__sync_remote "…")`
 __sync_remote() {
   local _remote_job="$1"
-  local _hosts="${2:-"$HOSTS_APP_USER"}"
-  __log "${_hosts} : $_remote_job"
-  [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
-  local _host="$_hosts"
-  if [[ "$VERBOSE" = "true" ]]; then
-    ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
+  local _subshell="false"
+  if [ "$(exec sh -c 'echo "$PPID"')" != "$$" ]; then
+      _subshell="true"
+  fi
+  if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
+    __log "$DOCKER_BUILD_CONTAINER : $_remote_job"
+    if [ "$VERBOSE" = "true" ]; then
+      docker exec "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job" || error "\nDocker exec command failed on:
 
-  $_host
+    $DOCKER_BUILD_CONTAINER
 
-Output of the command is shown above and the command executed
-on that host is printed below for debugging purposes:
+  Output of the command is shown above and the command executed
+  in the docker container is printed below for debugging purposes:
 
-FAILED with exit status $?:\n${_remote_job}\n"
+  FAILED with exit status $?:\n${_remote_job}\n" >&2
+    else
+      local _output _status
+      _output=$(docker exec "$DOCKER_BUILD_CONTAINER" /bin/bash -c "$_remote_job")
+      _status=$?
+      [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nDocker exec command failed on:
+
+    $DOCKER_BUILD_CONTAINER
+
+  Output of the command is shown above and the command executed
+  in the container printed below for debugging purposes:
+
+  FAILED with exit status $_status:\n${_remote_job}\n"  >&2
+      [ "$_subshell" = "true" ] && echo "$_output"
+    fi
   else
-    local _output _status
-    _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
-    _status=$?
-    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+    local _hosts="${2:-"$HOSTS_APP_USER"}"
+    __log "${_hosts} : $_remote_job"
+    [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
+    local _host="$_hosts"
+    if [[ "$VERBOSE" = "true" ]]; then
+      ssh -t -A -S none -q -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" || error "\nA remote command failed on:
 
-  $_host
+    $_host
 
-Output of the command is shown above and the command executed
-on that host is printed below for debugging purposes:
+  Output of the command is shown above and the command executed
+  on that host is printed below for debugging purposes:
 
-FAILED with exit status $_status:\n${_remote_job}\n"
+  FAILED with exit status $?:\n${_remote_job}\n" >&2
+    else
+      local _output _status
+      _output=$(ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job" 2>&1)
+      _status=$?
+      [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nA remote command failed on:
+
+    $_host
+
+  Output of the command is shown above and the command executed
+  on that host is printed below for debugging purposes:
+
+  FAILED with exit status $_status:\n${_remote_job}\n" >&2
+    [ "$_subshell" = "true" ] && echo "$_output"
+    fi
   fi
 }
 

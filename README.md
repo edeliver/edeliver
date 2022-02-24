@@ -9,7 +9,7 @@ _Deployment for Elixir and Erlang_
 
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
 
-The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines.  After being built, the release can then be deployed to one or more production machines.
+The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines - or in a [*docker*](https://www.docker.com/) container. After being built, the release can then be deployed to one or more production machines.
 
 Once built, the [release](http://www.erlang.org/doc/design_principles/release_handling.html) contains the full [erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html), all [dependencies (erlang or elixir applications)](http://www.erlang.org/doc/design_principles/applications.html), the Elixir runtime, native port drivers, and your erlang/elixir application(s) in a standalone embedded node.
 
@@ -216,7 +216,7 @@ Create a `.deliver` directory in your project folder and add the `config` file:
 
 APP="your-erlang-app" # name of your release
 
-BUILD_HOST="build-system.acme.org" # host where to build the release
+BUILD_HOST="build-system.acme.org" # host where to build the release, or "docker"
 BUILD_USER="build" # local user at build host
 BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
 
@@ -250,7 +250,7 @@ export MY_CUSTOM_DATABASE_PORT=5433
 For build commands the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
-- `BUILD_HOST`: the host where to build the release
+- `BUILD_HOST`: the host where to build the release, or "docker" to build in a docker container
 - `BUILD_USER`: the local user at build host
 - `BUILD_AT`: the directory on build host where to build the release. must exist.
 
@@ -267,6 +267,9 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
+### Build in a docker container
+
+If `BUILD_HOST` is set to `"docker"`, edeliver builds the release in a docker container instead of building on a build host. It uses the docker image set as `DOCKER_BUILD_IMAGE` which defaults to [elixir:1.13.3](https://hub.docker.com/_/elixir) with erlang 24, but can be overridden in your `.deliver/config`. When building in a docker container, the git repository to build is pushed to the local dir `.docker-build` which is then mounted into the container and edelivers build commands are executed as `docker exec` commands in the container.
 
 ### Build an upgrade package
 

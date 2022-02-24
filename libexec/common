@@ -124,39 +124,52 @@ init_app_remotely() {
 
   for _host in $HOSTS_APP_USER
   do
-    local _remote_url="$_host:$DELIVER_TO"
+    local _remote_url
+    if [ "$BUILD_HOST" = "docker" ]; then
+      _remote_url="file://$DOCKER_BUILD_DIR"
+    else 
+      _remote_url="$_host:$DELIVER_TO"
+    fi
     if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
       [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
       git remote add "$_host" "$_remote_url"
     fi
   done
-  __sync_remote "
-    current_shell=\"\$0\" || :
-    [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
-    case \"\$current_shell\" in
-      (*bash*) echo 'bash is installed and the default shell' $SILENCE ;;
-      (*zsh*)  echo  'zsh is installed and the default shell' $SILENCE ;;
-      (*)
-       echo
-       echo \"${txtred}You are using an unsupported shell: '\$current_shell'\"
-       echo \"edeliver requires either bash or zsh to be installed\"
-       echo \"and the default shell for the build user '$BUILD_USER'\"
-       echo \"on your build host: '$BUILD_HOST'.${txtrst}\"
-       exit 1
-       ;;
-    esac
-    set -e
-    if [ ! -d $DELIVER_TO ]
-    then
-      mkdir -p $DELIVER_TO
-      cd $DELIVER_TO
-      git init $SILENCE
-      git config receive.denyCurrentBranch ignore
-    else
-      cd $DELIVER_TO
-      git config receive.denyCurrentBranch ignore
-    fi
-  "
+  if [ "$BUILD_HOST" = "docker" ]; then
+    ( [ "$VERBOSE" != "true" ] && exec >/dev/null;
+      cd "$DOCKER_BUILD_DIR" \
+      && git init --quiet \
+      && git config receive.denyCurrentBranch ignore
+    ) || error "Failed to initialize local git repository which will be mounted into the build container"
+  else 
+    __sync_remote "
+      current_shell=\"\$0\" || :
+      [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
+      case \"\$current_shell\" in
+        (*bash*) echo 'bash is installed and the default shell' $SILENCE ;;
+        (*zsh*)  echo  'zsh is installed and the default shell' $SILENCE ;;
+        (*)
+         echo
+         echo \"${txtred}You are using an unsupported shell: '\$current_shell'\"
+         echo \"edeliver requires either bash or zsh to be installed\"
+         echo \"and the default shell for the build user '$BUILD_USER'\"
+         echo \"on your build host: '$BUILD_HOST'.${txtrst}\"
+         exit 1
+         ;;
+      esac
+      set -e
+      if [ ! -d $DELIVER_TO ]
+      then
+        mkdir -p $DELIVER_TO
+        cd $DELIVER_TO
+        git init $SILENCE
+        git config receive.denyCurrentBranch ignore
+      else
+        cd $DELIVER_TO
+        git config receive.denyCurrentBranch ignore
+      fi
+    "
+  fi
   __exec_if_defined "post_init_app_remotely"
 }
 
@@ -177,7 +190,7 @@ git_reset_remote() {
   __sync_remote "
     set -e
     cd $DELIVER_TO
-    git reset --hard $REVISION
+    git reset --hard $REVISION 2>&1
   "
 }
 
