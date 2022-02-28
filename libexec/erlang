@@ -864,6 +864,21 @@ EOF
     "
     ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
+    __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e
+      mkdir -p ${_destination_directory} $SILENCE
+      cd ${_destination_directory} $SILENCE
+      if [[ -z \"\$(docker images -q \"$_image_name\")\" ]]; then
+        echo \"Pulling release image $_image_name\" $SILENCE
+        docker pull \"$_image_name\" $SILENCE || {
+          echo \"Failed to pull release image $_image_name\" >&2
+          exit 1
+        }
+      fi
+    "
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
