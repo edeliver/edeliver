@@ -1023,20 +1023,39 @@ force_start_release() {
   __exec_if_defined "post_start_deployed_release"
 }
 
-# installs a release at all production hosts
+# installs a release at all production hosts. if a docker registry is used as
+# release store, the start script is extracted from the image.
 remote_extract_release_archive() {
   local _release_version=${1:-"$VERSION"}
   local _archive_dir=${2:-"$DELIVER_TO"}
   local _archive="${APP}_${_release_version}.tar.gz"
   __exec_if_defined "pre_extract_release_archive"
-  status "Extracting archive ${_archive} into ${_archive_dir}"
-  # when building releases with mix, the tar does not contain the app name as subdirectory
-  [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
-  __remote "
-    [ -f $PROFILE ] && source $PROFILE
-    set -e
-    cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    _archive_dir="${_archive_dir}/bin"
+    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
+    if [ -z "$CONTAINER_START_SCRIPT" ]; then
+      CONTAINER_START_SCRIPT="/$APP/bin/start_container"
+    fi
+    status "Extracting container start script into ${_archive_dir}"
+    __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e
+      mkdir -p \"${_archive_dir}\"
+      cd \"${_archive_dir}\" $SILENCE
+      docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" | sed \"s/{{edeliver-version}}/$_release_version/g\" > \"$APP\"
+      chmod 700 \"$APP\"
+    "
+  else
+    status "Extracting archive ${_archive} into ${_archive_dir}"
+    # when building releases with mix, the tar does not contain the app name as subdirectory
+    [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
+    __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e
+      cd ${_archive_dir} $SILENCE
+      tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+  fi
   __exec_if_defined "post_extract_release_archive"
 }
 
