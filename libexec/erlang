@@ -960,7 +960,7 @@ __get_node_command() {
   [[ "${_node_command}" = start* ]] && local _is_start_command="true" || :
   [[ "${_node_command}" = restart* ]] && local _is_restart_command="true" || :
   echo "
-    [ -f \$PROFILE ] && . \$PROFILE
+    [ -f \"$PROFILE\" ] && . \"$PROFILE\"
     set -e
     cd ${_app_path}/${APP} $SILENCE
     output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
