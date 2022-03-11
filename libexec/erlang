@@ -783,6 +783,31 @@ __get_releases_in_store() {
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    local _registry _name _image _out _status _tags
+    IFS='/' read _registry _name _image < <(echo "$DOCKER_RUN_IMAGE")
+    if [ -n "$_registry" ] && [ -n "$_name" ] && [ -n "$_image" ]; then
+      :
+    else
+      _image="$_name"
+      _name="$_registry"
+      _registry="index.docker.io"
+    fi
+    if [ -n "$DOCKER_REGISTRY_TOKEN" ]; then
+      _out="$(curl --fail --silent -H "Authorization: Bearer $DOCKER_REGISTRY_TOKEN" "https://${_registry}/v2/${_name}/${_image}/tags/list")"
+    else
+      _out="$(curl --fail --silent "https://${_registry}/v2/${_name}/${_image}/tags/list")"
+    fi
+    _status=$?
+    if [ "$_status" != "0" ]; then
+      echo "Failed to detect tags of image ${_name}/${_image} from registry ${_registry}" >&2
+      if [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
+        echo "Maybe it is required to set DOCKER_REGISTRY_TOKEN in your edeliver config for authorization." >&2
+      fi
+      exit 2
+    else
+      echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"'
+    fi
   else
     error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}" >&2; exit 2
   fi
