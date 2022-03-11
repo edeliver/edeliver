@@ -784,7 +784,7 @@ __get_releases_in_store() {
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
   else
-    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
+    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}" >&2; exit 2
   fi
 }
 
