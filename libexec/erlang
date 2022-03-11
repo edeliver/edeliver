@@ -1032,7 +1032,7 @@ remote_extract_release_archive() {
   __exec_if_defined "pre_extract_release_archive"
   __detect_release_store_type
   if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
-    _archive_dir="${_archive_dir}/bin"
+    _archive_dir="${_archive_dir}/${APP}/bin"
     local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
     if [ -z "$CONTAINER_START_SCRIPT" ]; then
       CONTAINER_START_SCRIPT="/$APP/bin/start_container"
