@@ -186,7 +186,7 @@ And link the `edeliver` binary to the root of your project directory:
     ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
 
 
-Then use the linked binary `./edeliver` to build and deploy releases.
+Then use the linked binary `./edeliver` to build and deploy releases. The `default` [rebar3 profile](https://rebar3.readme.io/docs/profiles) can be overridden by setting the `REBAR_PROFILE` environment variable in the edeliver config e.g. to `prod`.
 
 
 ### Rebar considerations

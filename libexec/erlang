@@ -280,7 +280,7 @@ erlang_generate_release() {
     cd $DELIVER_TO
     if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       echo \"using rebar3 to generate release\"
-      $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
+      REBAR_PROFILE=\"$REBAR_PROFILE\" $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
     elif [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\"
       $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate
