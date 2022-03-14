@@ -669,7 +669,7 @@ select_release_from_store() {
   else
     [[ "$_release_type" = "release_or_upgrade_with_release" ]] && _release_type="*" && local _autoselect_release_if_relase_and_upgrade_exists="true"
     __detect_release_store_type
-    local _release_files=( $(__get_releases_in_store "$_release_type" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
+    local _release_files=( $(__get_releases_in_store "$_release_type") )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=$(__release_version_from_archive_name "$RELEASE_FILE" "$_release_type")
@@ -779,7 +779,7 @@ __get_releases_in_store() {
       [ -f $PROFILE ] && source $PROFILE
       set -e
       cd $_release_store_path
-      ls -1 ${APP}_*.${_release_type}.tar.gz
+      ls -1 ${APP}_*.${_release_type}.tar.gz | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
@@ -806,7 +806,14 @@ __get_releases_in_store() {
       fi
       exit 2
     else
-      echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"'
+      local _image_info _tag _created_at
+      for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
+        _tag="$(echo "$_image_info" | grep -oe '\"tag\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " ")"
+        _created_at="$(echo "$_image_info" | grep -oe '\"timeCreatedMs\"\s*:\s*\"[^\"]\+\"' | cut -f2 -d ":" | grep -oe '"[^"]\+"' | tr -d '"')"
+        if [ -n "$_tag" ]; then
+          echo "$_created_at $_tag"
+        fi
+      done | sort -n | cut -d' ' -f 2-
     fi
   else
     error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}" >&2; exit 2
