@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# This script starts an erlang or elixir edeliver release as docker container
+# and can be used as template for custom release start scripts.
+# It allows to start a release in the foreground or as daemon and
+# to connect to it via the remote console.
+# It requires an /$APP/bin/$APP-<version> relx extended start script to
+# exist in the image. This file is extracted by edeliver to 
+# $DELIVER_TO/$APP/bin/$APP and the string {{edeliver-version}} is replaced
+# with the installed version.
+
+INTERNAL_INTERFACE="${INTERNAL_INTERFACE:-127.0.0.1}"
+HOST_NAME="${HOST_NAME:-$(hostname -f)}"
+ERL_DIST_PORT="${ERL_DIST_PORT:-4321}"
+ERLANG_COOKIE_FILE="${ERLANG_COOKIE_FILE:-"$HOME/.erlang.cookie"}"
+
+_info() {
+  echo $@
+}
+
+_error() {
+  echo "" >&2
+  echo $@ >&2
+  echo "" >&2
+  exit 1
+}
+
+if [ -z "$DOCKER_RUN_IMAGE" ]; then
+  _error -e "DOCKER_RUN_IMAGE must be set.\nUsually the image name in the docker registry set as docker RELEASE_STORE." 
+fi 
+
+if [ -z "$APP" ]; then
+  _error -e "APP must be set.\nUsually the same name as set in the edeliver config." 
+fi 
+
+COMMAND="$1"
+
+ARGS=()
+for ARG in $@; do
+  case "$ARGS" in
+    start|daemon)
+      args+=("console")
+      ;;
+    *)
+      ARGS+=("$ARG")
+      ;;
+  esac
+done
+
+
+TAG="${TAG:-"{{edeliver-version}}"}"
+if [[ "$TAG" == *edeliver-version* ]]; then
+  # if not passed and not replaced by edeliver, use latest:
+  TAG="$(docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}" | head -n1)"
+  if [ -n "$TAG" ]; then
+    _info "Using latest tag $TAG of image ${DOCKER_RUN_IMAGE}."
+    _info "If multiple tags are available, you can set the TAG environment variable."
+  else
+    _error -e "Image $DOCKER_RUN_IMAGE not found.\nPlease pull that image."
+  fi
+else
+  _info "Using tag $TAG of image $DOCKER_RUN_IMAGE"
+fi
+
+DOCKER_OPTS=""
+case "$COMMAND" in
+  console|start|foreground|daemon|exec)
+    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping
+    DOCKER_OPTS+=" --hostname "$HOST_NAME"" # required for long node names
+    CONTAINER_NAME="$APP"
+    DOCKER_OPTS+=" --name $CONTAINER_NAME"
+    EXISTING_CONTAINER="$(docker ps -aq --filter name="${CONTAINER_NAME}")"
+    if [ "$COMMAND" != "exec" ] && [ -n "$EXISTING_CONTAINER" ]; then
+      echo "  Removing old container $CONTAINER_NAME ($EXISTING_CONTAINER)"
+      docker rm "$EXISTING_CONTAINER" >/dev/null 2>&1 || {
+        echo 
+        echo "Failed to remove existing container ${EXISTING_CONTAINER}!" >&2
+        echo "Container seems to be running." >&2
+        echo  >&2
+        exit 1
+      }
+    else 
+      echo "  Using container name $CONTAINER_NAME"
+    fi
+    ;;
+  *) # e.g. remote_console 
+    DOCKER_OPTS=" --network host"
+    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE={$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"
+    ;;
+esac
+
+if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
+  DOCKER_OPTS+=" --detach --tty"
+else
+  DOCKER_OPTS+=" --tty --interactive" 
+fi
+
+if [ "$COMMAND" = "exec" ]; then
+  docker exec -ti $container_name bash
+else
+  docker run \
+      $DOCKER_OPTS \
+      --workdir "/${APP}" \
+      --env ERL_DIST_PORT="$ERL_DIST_PORT" \
+      --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
+      "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
+fi
+
+
