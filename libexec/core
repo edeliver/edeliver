@@ -382,7 +382,7 @@ __sync_local() {
   __log "local : $__local_job"
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
   if [[ "$VERBOSE" = "true" ]]; then
-    $_local_job || error "\nFAILED $?:\n${_local_job}\n"
+    /bin/sh -c "$_local_job" || error "\nFAILED $?:\n${_local_job}\n"
   else
     local _output _status
     _output=$($_local_job 2>&1)
