@@ -390,19 +390,27 @@ EOF
     local _release_store_host=${RELEASE_STORE%:*}
     local _build_hosts="${2:-"$HOSTS_APP_USER"}"
     local _dest_file_name="${_release_store_path%%/}/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz"
-    local _remote_job="
-      [ -f $PROFILE ] && source $PROFILE
-      set -e
-      [ -f \"$_release_file\" ]
-      if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then
-        cp $_release_file $_dest_file_name
-      else
-        cat $_release_file | ssh $_release_store_host \"cat > $_dest_file_name\"
-      fi
-      exit
-    "
-    ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
-      error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
+    if [ "$BUILD_HOST" = "docker" ]; then
+      local _local_release_dir="${DOCKER_BUILD_DIR}${RELEASE_DIR#$CONTAINER_BUILD_DIR}"
+      [ -d "$_local_release_dir" ] || error "Local release dir '${_local_release_dir}' not found!"
+      _release_file="${_local_release_dir}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
+      [ -f "$_release_file" ] || error "Local release file '${_release_file}' not found!"
+      scp "$_release_file" "${_release_store_host}:${_dest_file_name}"
+    else
+      local _remote_job="
+        [ -f $PROFILE ] && source $PROFILE
+        set -e
+        [ -f \"$_release_file\" ]
+        if [[ \"$_build_hosts\" = \"$_release_store_host\" ]]; then
+          cp $_release_file $_dest_file_name
+        else
+          cat $_release_file | ssh $_release_store_host \"cat > $_dest_file_name\"
+        fi
+        exit
+      "
+      ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
+        error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
+    fi
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     status "Generating docker image with release"
     info "Creating image $DOCKER_RUN_IMAGE"
