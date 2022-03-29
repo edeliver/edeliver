@@ -264,7 +264,11 @@ erlang_generate_release() {
         fi
       fi
     else
-      [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbosity=normal" || local _mix_release_verbose_flag=" --verbosity=verbose"
+      if [ $(mix deps 2>/dev/null | grep -oe 'distillery [^ ]\+ ' | cut -d' ' -f2 | cut -d'.' -f1) -ge 2 ]; then
+        [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbose" || local _mix_release_verbose_flag=""
+      else
+        [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbosity=normal" || local _mix_release_verbose_flag=" --verbosity=verbose"
+      fi
     fi
     [[ "$MODE" = "verbose" ]] && local _auto_release_verbose=" --verbose"
     local _auto_version_args="$(__get_auto_version_args)"
