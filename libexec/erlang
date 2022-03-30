@@ -43,6 +43,10 @@ set_deploy_hosts() {
   if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
     export HOSTS=$PRODUCTION_HOSTS
     export APP_USER=$PRODUCTION_USER
+  elif [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    export HOSTS="localhost"
+    export APP_USER="$(id -un)"
+    export DELIVER_TO="$TEST_LOCALLY_AT"
   else
     export HOSTS=$STAGING_HOSTS
     export APP_USER=$STAGING_USER
@@ -65,6 +69,7 @@ update_hosts_app_user() {
 require_deploy_config() {
   DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
   TEST_AT="${TEST_AT:=$DELIVER_TO}"
+  TEST_LOCALLY_AT="${TEST_LOCALLY_AT:="${PWD}/.local-release"}"
 
   REQUIRED_CONFIGS+=("APP")
 
@@ -72,6 +77,13 @@ require_deploy_config() {
     REQUIRED_CONFIGS+=("PRODUCTION_HOSTS")
     REQUIRED_CONFIGS+=("PRODUCTION_USER")
     REQUIRED_CONFIGS+=("DELIVER_TO")
+  elif [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    REQUIRED_CONFIGS+=("TEST_LOCALLY_AT")
+    PRODUCTION_HOSTS=""
+    STAGING_HOSTS=""
+    eval '__remote() {
+      __sync_local "$@"
+    }'
   else
     REQUIRED_CONFIGS+=("STAGING_HOSTS")
     REQUIRED_CONFIGS+=("STAGING_USER")
@@ -783,6 +795,8 @@ __get_releases_in_store() {
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ] && [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     local _registry _name _image _out _status _tags
     IFS='/' read _registry _name _image < <(echo "$DOCKER_RUN_IMAGE")
@@ -1392,10 +1406,14 @@ __create_directory_in_release_store() {
 __release_version_from_archive_name() {
   local _release_type=${2}
   _release_type=${_release_type:=*}
-  local _removed_app_name=${1/${APP}_/}
-  local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
-  local _removed_release_type=${_removed_archive_extension%.${_release_type}}
-  echo ${_removed_release_type}
+  if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    echo $1
+  else
+    local _removed_app_name=${1/${APP}_/}
+    local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
+    local _removed_release_type=${_removed_archive_extension%.${_release_type}}
+    echo ${_removed_release_type}
+  fi
 }
 
 # copy a file to all remote production hosts in parallel
