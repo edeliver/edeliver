@@ -81,18 +81,30 @@ authorize_deploy_hosts_on_release_store() {
 authorize_release_store_on_build_host() {
   __detect_release_store_type
   if [[ "$AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
-    status "Authorizing release store on build host"
     local _release_store_host=${RELEASE_STORE%:*}
     _release_store_host=${_release_store_host#*@}
-    __sync_remote "
-      [ -f $PROFILE ] && source $PROFILE
-      set -e
-      if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
-        echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
-        ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
-        ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
-      fi
-    "
+    if [ "$BUILD_HOST" = "docker" ]; then
+      status "Authorizing release store on localhost"
+      __sync_local "
+          set -e
+          if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
+            echo \"Authorizing $_release_store_host on \$(hostname -f):\" $SILENCE
+            ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
+            ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
+          fi
+        "
+    else
+      status "Authorizing release store on build host"
+      __sync_remote "
+        [ -f $PROFILE ] && source $PROFILE
+        set -e
+        if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
+          echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
+          ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
+          ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
+        fi
+      "
+    fi
     AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST="true"
   fi
 }
