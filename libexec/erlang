@@ -1084,12 +1084,26 @@ remote_extract_release_archive() {
       CONTAINER_START_SCRIPT="/$APP/bin/start_container"
     fi
     status "Extracting container start script into ${_archive_dir}"
-    __remote "
+    cat "${BASE_PATH}/docker/start_container" \
+      | sed "s/{{edeliver-version}}/${_release_version}/g" \
+      | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
+      | sed "s/{{edeliver-app}}/${APP}/g" \
+      | __remote "
       [ -f $PROFILE ] && source $PROFILE
-      set -e
+      set -e -o pipefail
       mkdir -p \"${_archive_dir}\"
       cd \"${_archive_dir}\" $SILENCE
-      docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" | sed \"s/{{edeliver-version}}/$_release_version/g\" > \"$APP\"
+      docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
+         | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
+         | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
+         | sed \"s/{{edeliver-app}}/${APP}/g\" \
+         > \"$APP\" && {
+        echo \"Extracted script\"
+      } || {
+        echo \"Copied edeliver default script\"
+        echo \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
+        cat >\"$APP\"
+      }
       chmod 700 \"$APP\"
     "
   else

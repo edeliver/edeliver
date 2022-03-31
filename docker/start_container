@@ -24,11 +24,13 @@ _error() {
   exit 1
 }
 
-if [ -z "$DOCKER_RUN_IMAGE" ]; then
+DOCKER_RUN_IMAGE="${DOCKER_RUN_IMAGE:-"{{edeliver-docker-image}}"}"
+if [[ "$DOCKER_RUN_IMAGE" == *edeliver-docker-image* ]]; then
   _error -e "DOCKER_RUN_IMAGE must be set.\nUsually the image name in the docker registry set as docker RELEASE_STORE." 
 fi 
 
-if [ -z "$APP" ]; then
+APP="${APP:-"{{edeliver-app}}"}"
+if [[ "$APP" == *edeliver-app* ]]; then
   _error -e "APP must be set.\nUsually the same name as set in the edeliver config." 
 fi 
 
