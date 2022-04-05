@@ -108,6 +108,7 @@ else
       $DOCKER_OPTS \
       --workdir "/${APP}" \
       --env ERL_DIST_PORT="$ERL_DIST_PORT" \
+      --env ERL_OPTS="-erl_epmd_port ${ERL_DIST_PORT} -start_epmd false" \
       --env DEBUG_BOOT="${DEBUG_BOOT}" \
       --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
