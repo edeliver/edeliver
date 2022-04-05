@@ -39,7 +39,7 @@ COMMAND="$1"
 
 ARGS=()
 for ARG in $@; do
-  case "$ARGS" in
+  case "$ARG" in
     start|daemon)
       args+=("console")
       ;;
