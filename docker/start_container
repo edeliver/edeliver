@@ -43,12 +43,15 @@ for ARG in $@; do
     start|daemon)
       args+=("console")
       ;;
+    --debug)
+      DEBUG=1
+      DEBUG_BOOT=1
+      ;;
     *)
       ARGS+=("$ARG")
       ;;
   esac
 done
-
 
 TAG="${TAG:-"{{edeliver-version}}"}"
 if [[ "$TAG" == *edeliver-version* ]]; then
@@ -105,6 +108,7 @@ else
       $DOCKER_OPTS \
       --workdir "/${APP}" \
       --env ERL_DIST_PORT="$ERL_DIST_PORT" \
+      --env DEBUG_BOOT="${DEBUG_BOOT}" \
       --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
 fi
