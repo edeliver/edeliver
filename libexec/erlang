@@ -375,6 +375,7 @@ EOF
         content from libexec/aws file
 EOF
 "
+    [ "$DOCKER_PUSH" = "true" ] && hint_message "Ignoring --push flag because s3 release store is not a docker registry." || :
   elif [ "$RELEASE_STORE_TYPE" = "local" ]; then
     status "Copying $(basename $_release_file) to release store"
     __create_directory_in_release_store "/releases"
@@ -385,6 +386,7 @@ EOF
       __exec "scp -o ConnectTimeout=\"$SSH_TIMEOUT\"  -p $BUILD_USER@$BUILD_HOST:${_release_file} ${RELEASE_STORE}/releases/${APP}_${RELEASE_VERSION}${_release_revision}.${_release_type}.tar.gz" \
         || error "Failed to copy release to release store"
     fi
+    [ "$DOCKER_PUSH" = "true" ] && hint_message "Ignoring --push flag because local release store is not a docker registry." || :
   elif [ "$RELEASE_STORE_TYPE" = "remote" ]; then
     local _release_store_path=${RELEASE_STORE#*:}
     local _release_store_host=${RELEASE_STORE%:*}
@@ -410,6 +412,8 @@ EOF
       "
       ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_build_hosts" "$_remote_job $SILENCE" || \
         error "Copying release file failed\n  source: $_release_file on $_build_hosts\n  destination: $_dest_file_name on $_release_store_host"
+
+      [ "$DOCKER_PUSH" = "true" ] && hint_message "Ignoring --push flag because remote release store is not a docker registry." || :
     fi
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     status "Generating docker image with release"
@@ -446,20 +450,19 @@ EOF
       __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" \
         || error "Failed to tag image with branch name"
     } || hint_message "Failed to detect built branch"
+
+    if [ "$DOCKER_PUSH" = "true" ]; then
+      status "Pusing release image to registry"
+      info "Pushing ${_committed_image}"
+      __docker push "${_committed_image}" || error "Failed to push release image ${_committed_image}"
+      info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
+      __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
+      info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
+      __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
+    fi
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
-
-  if [ "$DOCKER_PUSH" = "true" ]; then
-    status "Pusing release image to registry"
-    info "Pushing ${_committed_image}"
-    __docker push "${_committed_image}" || error "Failed to push release image ${_committed_image}"
-    info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
-    __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
-    info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
-    __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
-  fi
-
 }
 
 # copies the release from the release store
