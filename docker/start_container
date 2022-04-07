@@ -72,7 +72,10 @@ else
   _info "Using tag $TAG of image $DOCKER_RUN_IMAGE"
 fi
 
-DOCKER_OPTS=""
+DOCKER_OPTS="${DOCKER_OPTS:-"{{edeliver-docker-opts}}"}"
+if [[ "$DOCKER_OPTS" == *edeliver-docker-opts* ]]; then
+  DOCKER_OPTS=""
+fi
 case "$COMMAND" in
   console|start|foreground|daemon|exec)
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping

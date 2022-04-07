@@ -1087,6 +1087,7 @@ remote_extract_release_archive() {
     cat "${BASE_PATH}/docker/start_container" \
       | sed "s/{{edeliver-version}}/${_release_version}/g" \
       | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
+      | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
       | sed "s/{{edeliver-app}}/${APP}/g" \
       | __remote "
       [ -f $PROFILE ] && source $PROFILE
@@ -1096,6 +1097,7 @@ remote_extract_release_archive() {
       docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
          | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
          | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
+         | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
          | sed \"s/{{edeliver-app}}/${APP}/g\" \
          > \"$APP\" && {
         echo \"Extracted script\"
