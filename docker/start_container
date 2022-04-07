@@ -7,12 +7,15 @@
 # exist in the image. This file is extracted by edeliver to 
 # $DELIVER_TO/$APP/bin/$APP and the string {{edeliver-version}} is replaced
 # with the installed version.
+set -e -o pipefail
 
 INTERNAL_INTERFACE="${INTERNAL_INTERFACE:-127.0.0.1}"
 HOST_NAME="${HOST_NAME:-$(hostname -f)}"
 ERL_DIST_PORT="${ERL_DIST_PORT:-4321}"
 ERLANG_COOKIE_FILE="${ERLANG_COOKIE_FILE:-"$HOME/.erlang.cookie"}"
 INET_DIST_USE_INTERFACE="${INET_DIST_USE_INTERFACE:-"{$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"}"
+EPMD_MODULE="${EPMD_MODULE:-edeliver_epmd}"
+ERL_ZFLAGS="${ERL_ZFLAGS:-"-start_epmd false -epmd_module ${EPMD_MODULE} ${ADDITIONAL_ERL_ZFLAGS}"}"
 
 _info() {
   echo $@
@@ -72,6 +75,7 @@ case "$COMMAND" in
   console|start|foreground|daemon|exec)
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping
     DOCKER_OPTS+=" --hostname "$HOST_NAME"" # required for long node names
+    DOCKER_OPTS+=" --env ERL_DIST_PORT=$ERL_DIST_PORT" # pin port for distribution
     DOCKER_OPTS+=" --publish ${INTERNAL_INTERFACE}:${ERL_DIST_PORT}:${ERL_DIST_PORT}" # forward distribution port to allow connections from other nodes or remote_console 
     CONTAINER_NAME="$APP"
     DOCKER_OPTS+=" --name $CONTAINER_NAME"
@@ -89,9 +93,12 @@ case "$COMMAND" in
       echo "  Using container name $CONTAINER_NAME"
     fi
     ;;
-  *) # e.g. remote_console 
+  *) # e.g. remote_console | ping
     DOCKER_OPTS=" --network host"
-    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE=$INET_DIST_USE_INTERFACE"
+    DOCKER_OPTS+=" --env ERL_DIST_PORT=0" # use a random port for remote console / commands
+    DOCKER_OPTS+=" --env DEFAULT_DIST_PORT=${ERL_DIST_PORT}" # port to connect remote console to and default ports for all nodes
+    DOCKER_OPTS+=" --add-host ${HOST_NAME}:${INTERNAL_INTERFACE}" 
+    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE=$INTERNAL_INTERFACE"
     ;;
 esac
 
@@ -102,13 +109,12 @@ else
 fi
 
 if [ "$COMMAND" = "exec" ]; then
-  docker exec -ti $container_name bash
+  docker exec -ti $CONTAINER_NAME bash
 else
   docker run \
       $DOCKER_OPTS \
       --workdir "/${APP}" \
-      --env ERL_DIST_PORT="$ERL_DIST_PORT" \
-      --env ERL_ZFLAGS="-erl_epmd_port ${ERL_DIST_PORT} -start_epmd false" \
+      --env ERL_ZFLAGS="${ERL_ZFLAGS}" \
       --env DEBUG_BOOT="${DEBUG_BOOT}" \
       --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
