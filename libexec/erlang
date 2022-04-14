@@ -275,8 +275,8 @@ erlang_generate_release() {
           _upgrade_flag="${_upgrade_flag} --upfrom=\"$OLD_RELEASE_VERSION\""
         fi
       fi
-    else
-      [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbosity=normal" || local _mix_release_verbose_flag=" --verbosity=verbose"
+    else # using builtin `mix release`
+      [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag="" || local _mix_release_verbose_flag=" --quiet"
     fi
     [[ "$MODE" = "verbose" ]] && local _auto_release_verbose=" --verbose"
     local _auto_version_args="$(__get_auto_version_args)"
@@ -300,8 +300,16 @@ erlang_generate_release() {
       echo \"using relx to generate release\"
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD $_set_auto_version distillery.release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      if [ \"$USING_DISTILLERY\" = \"false\" ]; then
+        echo \"using mix to generate release\"
+        MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" \
+        BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" \
+        USING_DISTILLERY=\"$USING_DISTILLERY\" \
+        $MIX_CMD $_set_auto_version release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      else
+        echo \"using distillery to generate release\"
+        MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD $_set_auto_version distillery.release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      fi
     fi
   "
 
@@ -1306,24 +1314,29 @@ __detect_remote_release_dir() {
         error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO/_rel\n"
         exit 1
       fi
-    else # built with rebar
-      local _release_directories
+    else # built with rebar, mix or distillery
+      local _release_directories 
+      if [[ "$RELEASE_CMD" = "mix" && "$USING_DISTILLERY" = "false" ]]; then
+        _release_file="start_erl.data"
+      else
+        _release_file="RELEASES"
+      fi
       _release_directories=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
-        if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
+        if [ \"$RELEASE_CMD\" = \"rebar3\" ] || [[ \"$RELEASE_CMD\" = \"mix\" && \"$USING_DISTILLERY\" = \"false\" ]]; then
           cd _build
         fi
         OS_TYPE=\$(uname)
         if [[ \"\$OS_TYPE\" = \"Darwin\" ]]; then
-          find ./ -name RELEASES | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/RELEASES\$
+          find ./ -name $_release_file | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/$_release_file\$
         else
-          find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
+          find ./ -name $_release_file -exec readlink -f {} \; | grep -E $APP/releases/$_release_file\$
         fi
       ")) || error "Failed to detect generated release\n"
       if [ ${#_release_directories[@]} -eq 1 ]; then
-        RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
+        RELEASE_DIR=${_release_directories[0]/\/releases\/$_release_file/}
       else
         error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
         error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
