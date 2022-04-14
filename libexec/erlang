@@ -1095,6 +1095,11 @@ remote_extract_release_archive() {
       CONTAINER_START_SCRIPT="/$APP/bin/start_container"
     fi
     status "Extracting container start script into ${_archive_dir}"
+    if [ -n "$LINK_VM_ARGS" ]; then
+      local _vm_args_dest="/${APP}/releases/${_release_version}/vm.args"
+      info "Configure mounting of vm args from $LINK_VM_ARGS to ${_vm_args_dest}"
+      DOCKER_OPTS+=" --mount type=bind,source="${LINK_VM_ARGS}",target=${_vm_args_dest}"
+    fi
     cat "${BASE_PATH}/docker/start_container" \
       | sed "s/{{edeliver-version}}/${_release_version}/g" \
       | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
