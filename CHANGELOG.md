@@ -1,5 +1,18 @@
 eDeliver Versions
 =================
+__1.9.0__
+
+  - Enhancements
+    - support building in docker instead on a build host
+    - support building deployable docker containers containing the built release
+    - support `mix release` task
+    - run epmd-less in docker
+    - rebar3 support
+
+  - Fixes 
+    - consider env when fetching deps
+    - consider DEPLOY_ENVIRONMENT when globally set
+
 __1.8.0__
 
   - Backwards incompatible changes
