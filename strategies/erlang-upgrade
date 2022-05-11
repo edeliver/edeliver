@@ -73,7 +73,8 @@ set_deploy_hosts
 
 run() {
   [[ "$MODE" = "verbose" ]] && local _verbose="--verbose"
-  [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production" || export DEPLOY_ENVIRONMENT="staging"
+  [[ $ARGS =~ "production" ]] && export DEPLOY_ENVIRONMENT="production"
+  [[ $ARGS =~ "staging" || -z "$DEPLOY_ENVIRONMENT" ]] && export DEPLOY_ENVIRONMENT="staging"
   # detect revision to install on build host
   local _branch_to_install="$BRANCH" _revision_to_install=$(git rev-parse --short "$BRANCH")
   [[ -z "$_branch_to_install" || -z "$_revision_to_install" ]] && error "Failed to detect branch or revision to install."
