@@ -1,0 +1,14 @@
+name: Build Docker Release CI
+
+on: push
+
+jobs:
+
+  build-rebar3:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Release Container
+      run: test/docker/build.sh

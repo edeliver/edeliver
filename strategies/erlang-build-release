@@ -51,7 +51,9 @@ ${bldylw}Info:${txtrst}
 }
 
 run() {
-  authorize_hosts
+  [ "$BUILD_HOST" = "docker" ] \
+    && start_build_container \
+    || authorize_hosts
   init_app_remotely
   git_push
   git_reset_remote

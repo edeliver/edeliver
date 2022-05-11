@@ -83,16 +83,26 @@ then
 fi
 
 # command to compile the source the remote build host
-# rebar | mix
+# rebar3 | rebar | mix
 if [ -z "$BUILD_CMD" ]; then
-  [[ -f "./mix.exs" ]] && BUILD_CMD=${BUILD_CMD:=mix} || BUILD_CMD=${BUILD_CMD:=rebar}
+  if [ -f "./rebar.config" ] && [[ ! -f "./relx.config" ]]; then
+    BUILD_CMD=${BUILD_CMD:=rebar3}
+  elif [ -f "./mix.exs" ]; then
+    BUILD_CMD=${BUILD_CMD:=mix}
+  else
+    BUILD_CMD=${BUILD_CMD:=rebar}
+  fi
 fi
 
 # command to generate the release on the remote build host
-# mix | rebar | relx
+# mix | rebar3 | rebar | relx
 if [ -z "$RELEASE_CMD" ]; then
   if [[ -f "./relx.config" ]]; then
     RELEASE_CMD=${RELEASE_CMD:=relx}
+  elif [[ -f "./rebar.config" ]]; then
+    # and no relx.config, because release is configured
+    # in rebar.config for rebar3, but not for rebar2
+    RELEASE_CMD=${RELEASE_CMD:=rebar3}
   elif [[ -f "./mix.exs" ]]; then
     RELEASE_CMD=${RELEASE_CMD:=mix}
   else
