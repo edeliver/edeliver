@@ -424,6 +424,9 @@ do
     (production)
       DEPLOY_ENVIRONMENT="production"
     ;;
+    (locally|local|localhost)
+      DEPLOY_ENVIRONMENT="local"
+    ;;
     (check)
       CHECK=true
     ;;

@@ -43,6 +43,10 @@ set_deploy_hosts() {
   if [ "$DEPLOY_ENVIRONMENT" = "production" ]; then
     export HOSTS=$PRODUCTION_HOSTS
     export APP_USER=$PRODUCTION_USER
+  elif [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    export HOSTS="localhost"
+    export APP_USER="$(id -un)"
+    export DELIVER_TO="$TEST_LOCALLY_AT"
   else
     export HOSTS=$STAGING_HOSTS
     export APP_USER=$STAGING_USER
@@ -65,6 +69,7 @@ update_hosts_app_user() {
 require_deploy_config() {
   DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:=staging}"
   TEST_AT="${TEST_AT:=$DELIVER_TO}"
+  TEST_LOCALLY_AT="${TEST_LOCALLY_AT:="${PWD}/.local-release"}"
 
   REQUIRED_CONFIGS+=("APP")
 
@@ -72,6 +77,13 @@ require_deploy_config() {
     REQUIRED_CONFIGS+=("PRODUCTION_HOSTS")
     REQUIRED_CONFIGS+=("PRODUCTION_USER")
     REQUIRED_CONFIGS+=("DELIVER_TO")
+  elif [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    REQUIRED_CONFIGS+=("TEST_LOCALLY_AT")
+    PRODUCTION_HOSTS=""
+    STAGING_HOSTS=""
+    eval '__remote() {
+      __sync_local "$@"
+    }'
   else
     REQUIRED_CONFIGS+=("STAGING_HOSTS")
     REQUIRED_CONFIGS+=("STAGING_USER")
@@ -263,8 +275,8 @@ erlang_generate_release() {
           _upgrade_flag="${_upgrade_flag} --upfrom=\"$OLD_RELEASE_VERSION\""
         fi
       fi
-    else
-      [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag=" --verbosity=normal" || local _mix_release_verbose_flag=" --verbosity=verbose"
+    else # using builtin `mix release`
+      [[ "$MODE" = "verbose" ]] && local _mix_release_verbose_flag="" || local _mix_release_verbose_flag=" --quiet"
     fi
     [[ "$MODE" = "verbose" ]] && local _auto_release_verbose=" --verbose"
     local _auto_version_args="$(__get_auto_version_args)"
@@ -280,7 +292,7 @@ erlang_generate_release() {
     cd $DELIVER_TO
     if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       echo \"using rebar3 to generate release\"
-      $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
+      REBAR_PROFILE=\"$REBAR_PROFILE\" $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
     elif [ \"$RELEASE_CMD\" = \"rebar\" ]; then
       echo \"using rebar to generate release\"
       $REBAR_CMD $RELEASE_CMD_OPTIONS -f generate
@@ -288,8 +300,16 @@ erlang_generate_release() {
       echo \"using relx to generate release\"
       $RELX_CMD release
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
-      echo \"using mix to generate release\"
-      MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD $_set_auto_version distillery.release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      if [ \"$USING_DISTILLERY\" = \"false\" ]; then
+        echo \"using mix to generate release\"
+        MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" \
+        BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" \
+        USING_DISTILLERY=\"$USING_DISTILLERY\" \
+        $MIX_CMD $_set_auto_version release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      else
+        echo \"using distillery to generate release\"
+        MIX_ENV=\"$TARGET_MIX_ENV\" LINK_SYS_CONFIG=\"$LINK_SYS_CONFIG\" LINK_VM_ARGS=\"$LINK_VM_ARGS\" APP=\"$APP\" AUTO_VERSION=\"$AUTO_VERSION\" BRANCH=\"$BRANCH\" SKIP_RELUP_MODIFICATIONS=\"$SKIP_RELUP_MODIFICATIONS\" RELUP_MODIFICATION_MODULE=\"$RELUP_MODIFICATION_MODULE\" USING_DISTILLERY=\"$USING_DISTILLERY\" $MIX_CMD $_set_auto_version distillery.release${_force_no_interaction}${_mix_release_verbose_flag}${_env_flag}${_app_flag}${_upgrade_flag}
+      fi
     fi
   "
 
@@ -434,20 +454,23 @@ EOF
     [ -d "$_local_release_dir" ] || error "Local release dir '${_local_release_dir}' not found!"
     __docker cp "$_local_release_dir" "${_release_container}:/${APP}" || error "Failed to copy release into release container"
     [ "$VERBOSE" = "true" ] && __docker diff "$_release_container" || :
-    info "Commiting as ${RELEASE_VERSION}-latest"
-    local _committed_image="${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-latest"
+
+    local _valid_docker_tag
+    _valid_docker_tag="$(echo "$RELEASE_VERSION" | sed 's/[^0-9A-Za-z_.-]*//g')"
+    info "Commiting as ${_valid_docker_tag}-latest"
+    local _committed_image="${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-latest"
     __docker commit "$_release_container" "$_committed_image" \
       || error "Failed to commit release container"
 
     local _built_revision _build_branch
     _built_revision="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null)" && {
-      info "Tagging also as ${RELEASE_VERSION}-${_built_revision}"
-      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" \
+      info "Tagging also as ${_valid_docker_tag}-${_built_revision}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_revision}" \
         || error "Failed to tag image with built revision"
     } || hint_message "Failed to detect built revision"
     _built_branch="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null)" && {
-      info "Tagging also as ${RELEASE_VERSION}-${_built_branch}"
-      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" \
+      info "Tagging also as ${_valid_docker_tag}-${_built_branch}"
+      __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_branch}" \
         || error "Failed to tag image with branch name"
     } || hint_message "Failed to detect built branch"
 
@@ -455,10 +478,10 @@ EOF
       status "Pusing release image to registry"
       info "Pushing ${_committed_image}"
       __docker push "${_committed_image}" || error "Failed to push release image ${_committed_image}"
-      info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
-      __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_revision}"
-      info "Pushing ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
-      __docker push "${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${RELEASE_VERSION}-${_built_branch}"
+      info "Pushing ${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_revision}"
+      __docker push "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_revision}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_revision}"
+      info "Pushing ${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_branch}"
+      __docker push "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_branch}" || error "Failed to push release image ${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_branch}"
     fi
   else
     error_message "Cannot copy releases to store for store type ${RELEASE_STORE_TYPE}"; exit 2
@@ -669,7 +692,7 @@ select_release_from_store() {
   else
     [[ "$_release_type" = "release_or_upgrade_with_release" ]] && _release_type="*" && local _autoselect_release_if_relase_and_upgrade_exists="true"
     __detect_release_store_type
-    local _release_files=( $(__get_releases_in_store "$_release_type" | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n) )
+    local _release_files=( $(__get_releases_in_store "$_release_type") )
     if [ ${#_release_files[@]} -eq 1 ]; then
       RELEASE_FILE=$(basename ${_release_files[0]})
       VERSION=$(__release_version_from_archive_name "$RELEASE_FILE" "$_release_type")
@@ -779,12 +802,46 @@ __get_releases_in_store() {
       [ -f $PROFILE ] && source $PROFILE
       set -e
       cd $_release_store_path
-      ls -1 ${APP}_*.${_release_type}.tar.gz
+      ls -1 ${APP}_*.${_release_type}.tar.gz | sort -bt. -k1,1 -k2,2n -k3,3n -k4,4n -k5,5n
       exit
     "
     ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ] && [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
+    docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    local _registry _name _image _out _status _tags
+    IFS='/' read _registry _name _image < <(echo "$DOCKER_RUN_IMAGE")
+    if [ -n "$_registry" ] && [ -n "$_name" ] && [ -n "$_image" ]; then
+      :
+    else
+      _image="$_name"
+      _name="$_registry"
+      _registry="index.docker.io"
+    fi
+    if [ -n "$DOCKER_REGISTRY_TOKEN" ]; then
+      _out="$(curl --fail --silent -H "Authorization: Bearer $DOCKER_REGISTRY_TOKEN" "https://${_registry}/v2/${_name}/${_image}/tags/list")"
+    else
+      _out="$(curl --fail --silent "https://${_registry}/v2/${_name}/${_image}/tags/list")"
+    fi
+    _status=$?
+    if [ "$_status" != "0" ]; then
+      echo "Failed to detect tags of image ${_name}/${_image} from registry ${_registry}" >&2
+      if [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
+        echo "Maybe it is required to set DOCKER_REGISTRY_TOKEN in your edeliver config for authorization." >&2
+      fi
+      exit 2
+    else
+      local _image_info _tag _created_at
+      for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
+        _tag="$(echo "$_image_info" | grep -oe '\"tag\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " ")"
+        _created_at="$(echo "$_image_info" | grep -oe '\"timeCreatedMs\"\s*:\s*\"[^\"]\+\"' | cut -f2 -d ":" | grep -oe '"[^"]\+"' | tr -d '"')"
+        if [ -n "$_tag" ]; then
+          echo "$_created_at $_tag"
+        fi
+      done | sort -n | cut -d' ' -f 2-
+    fi
   else
-    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}"; exit 2
+    error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}" >&2; exit 2
   fi
 }
 
@@ -864,6 +921,21 @@ EOF
     "
     ssh -A -S none -o ConnectTimeout="$SSH_TIMEOUT" "$_release_store_host" "$_remote_job $SILENCE" || \
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
+  elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
+    __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e
+      mkdir -p ${_destination_directory} $SILENCE
+      cd ${_destination_directory} $SILENCE
+      if [[ -z \"\$(docker images -q \"$_image_name\")\" ]]; then
+        echo \"Pulling release image $_image_name\" $SILENCE
+        docker pull \"$_image_name\" $SILENCE || {
+          echo \"Failed to pull release image $_image_name\" >&2
+          exit 1
+        }
+      fi
+    "
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
@@ -935,66 +1007,71 @@ __get_node_command() {
   local _app_path="$2"
   local _config_arg="$3"
   local _rpc_command="rpc"
-  if [[ "$USING_DISTILLERY" = "true" ]]; then
-    local _rpc_open_brackets="["
-    local _rpc_close_brackets="]"
+  if declare -F "get_${_node_command}_node_command" > /dev/null; then
+    eval "get_${_node_command}_node_command $@"
   else
-    local _rpc_open_brackets="[["
-    local _rpc_close_brackets="]]"
-  fi
-  [[ "${_node_command}" = start* ]] && local _is_start_command="true" || :
-  [[ "${_node_command}" = restart* ]] && local _is_restart_command="true" || :
-  echo "
-    [ -f \$PROFILE ] && . \$PROFILE
-    set -e
-    cd ${_app_path}/${APP} $SILENCE
-    output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
-    if [ \"\$output_lines\" -gt 1 ]; then
-      output_filter_command='tail'
-      output_filter_command_options=\"-n+\$output_lines\"
+    if [[ "$USING_DISTILLERY" = "true" ]]; then
+      local _rpc_open_brackets="["
+      local _rpc_close_brackets="]"
     else
-      output_filter_command='cat'
-      output_filter_command_options=''
+      local _rpc_open_brackets="[["
+      local _rpc_close_brackets="]]"
     fi
-    __edeliver_node_running() {
-      bin/${APP} ping 2>/dev/null >/dev/null
-    }
-    __edeliver_synchronous_start() {
-      bin/${APP} start | \$output_filter_command \$output_filter_command_options
-      sleep 1
-      for i in 1 2 3 4 5 6 7 8 9 10; do
-        __edeliver_node_running && break || :
+    [[ "${_node_command}" = start* ]] && local _is_start_command="true" || :
+    [[ "${_node_command}" = restart* ]] && local _is_restart_command="true" || :
+    echo "
+      [ -f \"$PROFILE\" ] && . \"$PROFILE\"
+      set -e
+      cd ${_app_path}/${APP} $SILENCE
+      output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+      if [ \"\$output_lines\" -gt 1 ]; then
+        output_filter_command='tail'
+        output_filter_command_options=\"-n+\$output_lines\"
+      else
+        output_filter_command='cat'
+        output_filter_command_options=''
+      fi
+      __edeliver_node_running() {
+        bin/${APP} ping 2>/dev/null >/dev/null
+      }
+      __edeliver_synchronous_start() {
+        bin/${APP} start | \$output_filter_command \$output_filter_command_options
         sleep 1
-      done
-      bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
-    }
-    if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
-      ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
-      if __edeliver_node_running; then
-        echo \"${txtred}already running${txtrst}\" && exit 1
-      else
-        __edeliver_synchronous_start
-      fi
-    elif [ \"$_is_restart_command\" = \"true\" ]; then
-      # use stop / start instead of restart command to
-      # not just restart the applications but also the erlang vm
-      # with the most recent release
-      if __edeliver_node_running; then
-        STOP_OUTPUT=\"\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)\"
-        if [ \"\$?\" -ne 0 ]; then
-          cat \"\$STOP_OUTPUT\"
-          exit 1
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+          __edeliver_node_running && break || :
+          sleep 1
+        done
+        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+      }
+      if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
+        ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
+        if __edeliver_node_running; then
+          echo \"${txtred}already running${txtrst}\" && exit 1
+        else
+          __edeliver_synchronous_start
         fi
+      elif [ \"$_is_restart_command\" = \"true\" ]; then
+        # use stop / start instead of restart command to
+        # not just restart the applications but also the erlang vm
+        # with the most recent release
+        if __edeliver_node_running; then
+          STOP_OUTPUT=\"\$(${_node_env}bin/${APP} stop ${_config_arg} | \$output_filter_command \$output_filter_command_options)\"
+          if [ \"\$?\" -ne 0 ]; then
+            cat \"\$STOP_OUTPUT\"
+            exit 1
+          fi
+        fi
+        if [ \"$RELEASE_CMD\" = \"mix\" ]; then
+          __edeliver_synchronous_start
+        else
+          ${_node_env}bin/${APP} start ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
+        fi
+      else # no restart command
+        ${_node_env}bin/${APP} ${_node_command} ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
       fi
-      if [ \"$RELEASE_CMD\" = \"mix\" ]; then
-        __edeliver_synchronous_start
-      else
-        ${_node_env}bin/${APP} start ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
-      fi
-    else # no restart command
-      ${_node_env}bin/${APP} ${_node_command} ${_config_arg} > >(\$output_filter_command \$output_filter_command_options)
-    fi
-  "
+    "
+  fi
+  
 }
 
 # starts the deployed release. if release is already running,
@@ -1008,20 +1085,60 @@ force_start_release() {
   __exec_if_defined "post_start_deployed_release"
 }
 
-# installs a release at all production hosts
+# installs a release at all production hosts. if a docker registry is used as
+# release store, the start script is extracted from the image.
 remote_extract_release_archive() {
   local _release_version=${1:-"$VERSION"}
   local _archive_dir=${2:-"$DELIVER_TO"}
   local _archive="${APP}_${_release_version}.tar.gz"
   __exec_if_defined "pre_extract_release_archive"
-  status "Extracting archive ${_archive} into ${_archive_dir}"
-  # when building releases with mix, the tar does not contain the app name as subdirectory
-  [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
-  __remote "
-    [ -f $PROFILE ] && source $PROFILE
-    set -e
-    cd ${_archive_dir} $SILENCE
-    tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+  __detect_release_store_type
+  if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    _archive_dir="${_archive_dir}/${APP}/bin"
+    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
+    if [ -z "$CONTAINER_START_SCRIPT" ]; then
+      CONTAINER_START_SCRIPT="/$APP/bin/start_container"
+    fi
+    status "Extracting container start script into ${_archive_dir}"
+    if [ -n "$LINK_VM_ARGS" ]; then
+      local _vm_args_dest="/${APP}/releases/${_release_version}/vm.args"
+      info "Configure mounting of vm args from $LINK_VM_ARGS to ${_vm_args_dest}"
+      DOCKER_OPTS+=" --mount type=bind,source="${LINK_VM_ARGS}",target=${_vm_args_dest}"
+    fi
+    cat "${BASE_PATH}/docker/start_container" \
+      | sed "s/{{edeliver-version}}/${_release_version}/g" \
+      | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
+      | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
+      | sed "s/{{edeliver-app}}/${APP}/g" \
+      | __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e -o pipefail
+      mkdir -p \"${_archive_dir}\"
+      cd \"${_archive_dir}\" $SILENCE
+      docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
+         | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
+         | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
+         | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
+         | sed \"s/{{edeliver-app}}/${APP}/g\" \
+         > \"$APP\" && {
+        echo \"Extracted script\"
+      } || {
+        echo \"Copied edeliver default script\"
+        echo \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
+        cat >\"$APP\"
+      }
+      chmod 700 \"$APP\"
+    "
+  else
+    status "Extracting archive ${_archive} into ${_archive_dir}"
+    # when building releases with mix, the tar does not contain the app name as subdirectory
+    [[ "$RELEASE_CMD" = "mix" ]] && _archive_dir="${_archive_dir%%/}/${APP}"
+    __remote "
+      [ -f $PROFILE ] && source $PROFILE
+      set -e
+      cd ${_archive_dir} $SILENCE
+      tar -xzvf ${_archive} $SILENCE && rm ${_archive} $SILENCE"
+  fi
   __exec_if_defined "post_extract_release_archive"
 }
 
@@ -1207,24 +1324,29 @@ __detect_remote_release_dir() {
         error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO/_rel\n"
         exit 1
       fi
-    else # built with rebar
-      local _release_directories
+    else # built with rebar, mix or distillery
+      local _release_directories 
+      if [[ "$RELEASE_CMD" = "mix" && "$USING_DISTILLERY" = "false" ]]; then
+        _release_file="start_erl.data"
+      else
+        _release_file="RELEASES"
+      fi
       _release_directories=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
-        if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
+        if [ \"$RELEASE_CMD\" = \"rebar3\" ] || [[ \"$RELEASE_CMD\" = \"mix\" && \"$USING_DISTILLERY\" = \"false\" ]]; then
           cd _build
         fi
         OS_TYPE=\$(uname)
         if [[ \"\$OS_TYPE\" = \"Darwin\" ]]; then
-          find ./ -name RELEASES | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/RELEASES\$
+          find ./ -name $_release_file | cut -b3- | (echo -n "\$PWD" && cat) | grep -E $APP/releases/$_release_file\$
         else
-          find ./ -name RELEASES -exec readlink -f {} \; | grep -E $APP/releases/RELEASES\$
+          find ./ -name $_release_file -exec readlink -f {} \; | grep -E $APP/releases/$_release_file\$
         fi
       ")) || error "Failed to detect generated release\n"
       if [ ${#_release_directories[@]} -eq 1 ]; then
-        RELEASE_DIR=${_release_directories[0]/\/releases\/RELEASES/}
+        RELEASE_DIR=${_release_directories[0]/\/releases\/$_release_file/}
       else
         error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO\n"
         error_message "Please set RELEASE_DIR in the config file to fix that,\nor check that the APP variable is set correctly."
@@ -1326,10 +1448,14 @@ __create_directory_in_release_store() {
 __release_version_from_archive_name() {
   local _release_type=${2}
   _release_type=${_release_type:=*}
-  local _removed_app_name=${1/${APP}_/}
-  local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
-  local _removed_release_type=${_removed_archive_extension%.${_release_type}}
-  echo ${_removed_release_type}
+  if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+    echo $1
+  else
+    local _removed_app_name=${1/${APP}_/}
+    local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
+    local _removed_release_type=${_removed_archive_extension%.${_release_type}}
+    echo ${_removed_release_type}
+  fi
 }
 
 # copy a file to all remote production hosts in parallel

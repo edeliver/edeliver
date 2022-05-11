@@ -381,13 +381,15 @@ __sync_local() {
   local _hosts="${2:-"$HOSTS_APP_USER"}"
   __log "local : $__local_job"
   [[ $(wc -w <<< "$_hosts") -gt 1 ]] && error "Sync commands can be executed on one host only, but several hosts are configured ($_hosts)."
-  if [[ "$VERBOSE" = "true" ]]; then
+  if [ "$VERBOSE" = "true" ]; then
     /bin/sh -c "$_local_job" || error "\nFAILED $?:\n${_local_job}\n"
   else
-    local _output _status
-    _output=$($_local_job 2>&1)
-    _status=$?
-    [[ "$_status" -ne 0 ]] && echo "$_output" && error "\nFAILED $_status:\n${_local_job}\n"
+    local _output
+    _output="$(/bin/sh -c "$_local_job")" || {
+      echo $_output
+      echo
+      error "\nFAILED $?:\n${_local_job}\n"
+    }
   fi
 }
 

@@ -186,7 +186,7 @@ And link the `edeliver` binary to the root of your project directory:
     ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
 
 
-Then use the linked binary `./edeliver` to build and deploy releases.
+Then use the linked binary `./edeliver` to build and deploy releases. The `default` [rebar3 profile](https://rebar3.readme.io/docs/profiles) can be overridden by setting the `REBAR_PROFILE` environment variable in the edeliver config e.g. to `prod`.
 
 
 ### Rebar considerations
@@ -323,6 +323,7 @@ Deploy commands deliver the builds that were created with a build command to you
 
 Deploying to staging can be used to test your releases and upgrades before deploying them to the production hosts.  Staging is the default target if you don't pass the `[to] production` argument.
 
+If the `RELEASE_STORE` is a docker image, the deploy command pulls and starts the image with the given tag as version. See section __Deploy Docker Releases__ below for details.
 
 ### Deploy an initial/clean release
 
@@ -353,6 +354,24 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Deploy Docker Releases
+
+When embedding releases into docker containers, the deploy command pulls the docker image from the registry defined as `RELEASE_STORE` and __extracts the boot script__ from `/$APP/bin/start_container` (can be configured in `CONTAINER_START_SCRIPT`) to `$DELIVER_TO/bin` while replacing the string `{{edeliver-version}}` with the version which is deployed. The script should use that value to always start that tag of the image.
+
+The start script should handle the same commands as the [extended start script from relx/rebar](https://rebar3.readme.io/docs/releases#extensions), at least the `start`, `stop` and `version` commands.
+
+It could start the container with e.g. like this 
+
+```sh
+VERSION="{{edeliver-version}}"
+docker run --rm --detatch \
+           --workdir "/${APP}" \
+           --publish 127.0.0.1:8080:8080 \
+           --env ERL_DIST_PORT="${ERL_DIST_PORT:-9999}" \
+           --env INET_DIST_USE_INTERFACE='{0,0,0,0}' \
+           --mount type=bind,source=$HOME/.erlang.cookie,target=/root/.erlang.cookie
+       my-registry/my-image:$VERSION /$APP/bin/$APP console
+```
 
 ## Admin Commands
 
