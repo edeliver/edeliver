@@ -468,7 +468,8 @@ EOF
       __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_revision}" \
         || error "Failed to tag image with built revision"
     } || hint_message "Failed to detect built revision"
-    _built_branch="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null)" && {
+    # the built branch must not contain dashes '-' because it is treated as separator from the real release version.
+    _built_branch="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null | tr "-" "_")" && {
       info "Tagging also as ${_valid_docker_tag}-${_built_branch}"
       __docker tag "$_committed_image" "${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-${_built_branch}" \
         || error "Failed to tag image with branch name"
