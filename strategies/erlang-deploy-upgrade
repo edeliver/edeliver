@@ -33,7 +33,7 @@ run() {
   if [[ "$RELEASE_CMD" = "mix" ]]; then
     upload_release_archive "${DELIVER_TO}/${APP}/releases/${VERSION}"
     __remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       set -e
       cd ${DELIVER_TO}/${APP}/releases/${VERSION} $SILENCE
       mv \"${APP}_${VERSION}.tar.gz\" \"${APP}.tar.gz\"

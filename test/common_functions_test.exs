@@ -23,11 +23,11 @@ defmodule Edeliver.CommonFunctions.Test do
     with_env SET_RELEASE_VERSION: "1.2.3-beta.1" do
       assert "1.2.3-beta.1" = call "__get_auto_version_args"
     end
-    with_env AUTO_RELEASE_VERSION: "revison+branch" do
-      assert "revison+branch" = call "__get_auto_version_args"
+    with_env AUTO_RELEASE_VERSION: "revision+branch" do
+      assert "revision+branch" = call "__get_auto_version_args"
     end
-    with_env INCREMENT_RELEASE_VERSION: "minor", AUTO_RELEASE_VERSION: "revison+branch" do
-      assert "minor revison+branch" = call "__get_auto_version_args"
+    with_env INCREMENT_RELEASE_VERSION: "minor", AUTO_RELEASE_VERSION: "revision+branch" do
+      assert "minor revision+branch" = call "__get_auto_version_args"
     end
     with_env SET_RELEASE_VERSION: "1.2.3-beta.1", AUTO_RELEASE_VERSION: "commit-count" do
       assert "1.2.3-beta.1 commit-count" = call "__get_auto_version_args"

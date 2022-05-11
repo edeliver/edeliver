@@ -134,7 +134,7 @@ __execute_on_deploy_host() {
   local _command="$2"
 
   ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "
-    [ -f \"\$HOME/.profile\" ] && . \"\$HOME/.profile\"
+    [ -f \$PROFILE ] && . \$PROFILE
     set -e
     cd \"$DELIVER_TO/$APP\" $SILENCE
     $_command"
@@ -210,13 +210,13 @@ __is_upgrade_version_in_release_store() {
 # checks whether the version passed as first argument
 # is in the release store and is an upgrade or an release
 # this release or upgrade can be used to build an upgrade
-# the the current versoin
+# the the current version
 __is_original_version_in_release_store() {
   __is_version_is_release_store "$1" "*"
 }
 
 # checks whether the release with the version passed as first
-# arguement and the type of the second arguement exists in the
+# argument and the type of the second argument exists in the
 # release store. returns 0 if it exists and 1 if it doesn't.
 # the release type passed as second argument can be either
 # "release", "upgrade" or "*" for both types.

@@ -21,7 +21,7 @@ ${txtbld}Options:${txtrst}
              This release must have been built somewhen by the ${bldwht}build release${txtrst} command
              and must exist in the release store.
   --from=<git-revision> The revision to build the upgrade from ${txtylw}if that release
-             is not avaiable any more${txtrst} (in the release store). ${txtylw}Must be in the branch${txtrst}
+             is not available any more${txtrst} (in the release store). ${txtylw}Must be in the branch${txtrst}
              passed as ${bldwht}--branch=${txtrst} argument or in the master (default).
   --to=<git-tag> The revision to build the upgrade for. Default is the HEAD
              of the master branch or the branch passed as ${bldwht}--branch=${txtrst} argument.
@@ -87,12 +87,14 @@ run() {
     git_push
     git_reset_remote
     git_clean_remote
+    git_submodules
   elif [[ -n "$FROM" ]]; then
     # push current state
     init_app_remotely
     git_push
     git_reset_remote
     git_clean_remote
+    git_submodules
     # checkout old version
     git_checkout_remote $FROM
     # build old release
@@ -106,7 +108,7 @@ run() {
     erlang_generate_release
     [[ "$RELEASE_CMD" = "rebar" ]] && rename_release_add_version
     [[ "$RELEASE_CMD" = "mix" ]] && __detect_remote_release_dir && __detect_remote_release_version
-    # reset the option to auto-increment or setting the version for building the curent release for the upgrade
+    # reset the option to auto-increment or setting the version for building the current release for the upgrade
     INCREMENT_RELEASE_VERSION="$_increment_release_version_option"
     SET_RELEASE_VERSION="$_set_release_version_option"
     OLD_RELEASE_VERSION=${RELEASE_VERSION}
@@ -134,7 +136,7 @@ run() {
       local _version_command="release.version show"
     fi
     local _version_that_will_be_built=$(__remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       cd $BUILD_AT $SILENCE
       MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD $_version_command
     ")
@@ -156,7 +158,7 @@ run() {
     if [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]]; then
       status "Removing old releases which were included in upgrade package"
       __remote "
-        [ -f ~/.profile ] && source ~/.profile
+        [ -f $PROFILE ] && source $PROFILE
         set -e
         cd \"$(dirname $RELEASE_DIR)/${APP}/releases\" $SILENCE
         for release_dir in \$(ls -1); do

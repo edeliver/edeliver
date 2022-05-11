@@ -12,12 +12,12 @@ defmodule Releases.Plugin.ModifyRelup do
     end
     ```
   """
-  use Mix.Releases.Plugin
+  use Distillery.Releases.Plugin
   alias Edeliver.Relup.Instructions
 
   def before_assembly(_, _), do: nil
 
-  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Mix.Releases.Profile{output_dir: output_dir}}, _) do
+  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Distillery.Releases.Profile{output_dir: output_dir}}, _) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
       "true" -> nil
       _ ->

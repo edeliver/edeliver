@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-DELIVER_VERSION="1.4.5"
-HOMEPAGE="https://github.com/boldpoker/edeliver"
+DELIVER_VERSION="1.8.0"
+HOMEPAGE="https://github.com/edeliver/edeliver"
 CREATOR="bharendt"
 
 ARGS="$@"

@@ -57,7 +57,7 @@ defmodule Edeliver.Relup.Instructions.ResumeChannels do
 
     Because resume a process might take a while depending on the length
     of the message queue or duration of current operation processed by the pid, suspending is done
-    asynchronously for each process by spawing a new process which calls `:sys.resume/2` and then waiting
+    asynchronously for each process by spawning a new process which calls `:sys.resume/2` and then waiting
     for all results before returning from this function. Be careful when using `:infinity` as timeout,
     because this function might hang for infinite time if one of the process does not handle sys events.
   """

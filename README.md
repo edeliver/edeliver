@@ -1,4 +1,4 @@
-<img src="http://boldpoker.net/images/edeliver_500.png" width=120>
+<img src="https://raw.githubusercontent.com/edeliver/edeliver/master/docs/logo.png" width=120>
 
 # edeliver
 
@@ -9,10 +9,17 @@ _Deployment for Elixir and Erlang_
 
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
 
-The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines.  After being built, the release can then be deployed to one or more production machines.
+The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines - or in a [*docker*](https://www.docker.com/) container. After being built, the release can then be deployed to one or more production machines.
 
 Once built, the [release](http://www.erlang.org/doc/design_principles/release_handling.html) contains the full [erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html), all [dependencies (erlang or elixir applications)](http://www.erlang.org/doc/design_principles/applications.html), the Elixir runtime, native port drivers, and your erlang/elixir application(s) in a standalone embedded node.
 
+## Version compatibility
+
+| Edeliver  | Elixir |
+|---------- |--------|
+| 1.8.*     | 1.10.* |
+| 1.7.*     | 1.9.*  |
+| 1.6.*     | 1.8.*  |
 
 ## Community
 
@@ -116,15 +123,17 @@ It can be used with any one of these build systems:
 
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
   * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
-  * [rebar](https://github.com/basho/rebar) for pure erlang releases
+  * [rebar3](https://github.com/erlang/rebar3) for pure erlang releases or in conjunction with [rebar_mix plugin](https://github.com/Supersonido/rebar_mix) to build also Elixir sources and dependencies
+  * [rebar](https://github.com/basho/rebar) for legacy pure erlang releases
 
 Edeliver tries to autodetect which system to use:
 
   * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
   * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
-  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades.
+  * If a `./rebar.config` file exists but no `./relx.config`, [rebar3](https://github.com/erlang/rebar3) is used to fetch the dependencies, compile the sources and to build the release
+  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. It is recommended to [migrate to rebar3](https://rebar3.readme.io/docs/from-rebar-2x-to-rebar3) in that case.
 
-This can be overridden by the config variables `BUILD_CMD=rebar|mix`, `RELEASE_CMD=rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
+This can be overridden by the config variables `BUILD_CMD=rebar3|rebar|mix`, `RELEASE_CMD=rebar3|rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
 Edeliver uses ssh and scp to build and deploy the releases.  It is recommended that you use ssh and scp with key+passphrase only.  You can use `ssh-add` if you don't want to enter your passphrase every time.
 
@@ -161,6 +170,25 @@ def application, do: [
 ]
 ```
 
+### Rebar3 considerations
+
+When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as [rebar3 dependency](https://rebar3.readme.io/docs/dependencies). Just add it to your `rebar.config` (and ensure that a `./rebar3` binary/link is in your project directory):
+
+    {deps, [
+      % ...
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {ref, "e103c2b012058168857552562b158e1c76ebfbe9"}}}
+    ]}.
+
+And link the `edeliver` binary to the root of your project directory:
+
+    wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+    ./rebar3 get-deps
+    ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
+
+
+Then use the linked binary `./edeliver` to build and deploy releases. The `default` [rebar3 profile](https://rebar3.readme.io/docs/profiles) can be overridden by setting the `REBAR_PROFILE` environment variable in the edeliver config e.g. to `prod`.
+
+
 ### Rebar considerations
 
 When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) dependency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
@@ -188,7 +216,7 @@ Create a `.deliver` directory in your project folder and add the `config` file:
 
 APP="your-erlang-app" # name of your release
 
-BUILD_HOST="build-system.acme.org" # host where to build the release
+BUILD_HOST="build-system.acme.org" # host where to build the release, or "docker"
 BUILD_USER="build" # local user at build host
 BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
 
@@ -222,13 +250,13 @@ export MY_CUSTOM_DATABASE_PORT=5433
 For build commands the following **configuration** variables must be set:
 
 - `APP`: the name of your release which should be built
-- `BUILD_HOST`: the host where to build the release
+- `BUILD_HOST`: the host where to build the release, or "docker" to build in a docker container
 - `BUILD_USER`: the local user at build host
 - `BUILD_AT`: the directory on build host where to build the release. must exist.
 
 The built release is then **copied to your local directory** `.deliver/releases` and can then be **delivered to your production servers** by using one of the **deploy commands**.
 
-If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the __local__ `.deliver` __directory__ but you can configure any destination with the `RELEASE_STORE=` environment variables, also __remote ssh destinations__ (in your server network) like `RELEASE_STORE=user@releases.acme.org:/releases/` or **amazon s3** locations like `s3://AWS_ACCESS_KEY_ID@AWS_SECRET_ACCESS_KEY:bucket`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
+If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the __local__ `.deliver` __directory__ but you can configure any destination with the `RELEASE_STORE=` environment variables, also __remote ssh destinations__ (in your server network) like `RELEASE_STORE=user@releases.acme.org:/releases/`, **amazon s3** locations like `s3://AWS_ACCESS_KEY_ID@AWS_SECRET_ACCESS_KEY:bucket` or as a __docker image__ like `docker://edeliver/echo-server`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
 
 To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_PATHS` variable in your config file e.g. to something like `="_build rel priv/generated"` which defaults to `.`. That value means, that everything from the last build is reset (beam files, release files, deps, generated assets etc.) before the next build is started to ensure that no conflicts with old (e.g. removed or renamed) files might arise. You can also use the command line option `--skip-git-clean` to skip this step completely and in addition with the `--skip-mix-clean` option for full __incremental builds__.
 
@@ -239,6 +267,17 @@ To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_P
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
+### Build in a docker container
+
+If `BUILD_HOST` is set to `"docker"`, edeliver builds the release in a docker container instead of building on a build host. It uses the docker image set as `DOCKER_BUILD_IMAGE` which defaults to [elixir:1.13.3](https://hub.docker.com/_/elixir) with erlang 24, but can be overridden in your `.deliver/config`. When building in a docker container, the git repository to build is pushed to the local dir `.docker-build` which is then mounted into the container and edelivers build commands are executed as `docker exec` commands in the container.
+
+### Build as a docker container
+
+If `RELEASE_STORE` is a (private) docker image in a docker registry like `docker://edeliver/echo-server` the built release will be embedded into a docker image based on `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [`edeliver/release-base:1.0`](https://hub.docker.com/r/edeliver/release-base)) and pushed with that image name from the `RELEASE_STORE` to your registry (if `--push` is used). It creates (and optionally pushes) three image tags: *release version* + `latest`, *release version* + *git sha* and *release version* + *branch*. The release can then be started on a host authenticated at the same docker registry like this:
+
+```sh
+docker start -ti edeliver/echo-server:1.0-latest -p 8080:8080 echo-server/bin/echo-server console
+```
 
 ### Build an upgrade package
 
@@ -284,6 +323,7 @@ Deploy commands deliver the builds that were created with a build command to you
 
 Deploying to staging can be used to test your releases and upgrades before deploying them to the production hosts.  Staging is the default target if you don't pass the `[to] production` argument.
 
+If the `RELEASE_STORE` is a docker image, the deploy command pulls and starts the image with the given tag as version. See section __Deploy Docker Releases__ below for details.
 
 ### Deploy an initial/clean release
 
@@ -306,7 +346,7 @@ Deploys an upgrade at the production hosts and upgrades the running nodes to the
 
 Release archives in your release store that were created by the `build release` command **cannot be used to deploy an upgrade**.
 
-This comand requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands. Releases generated with [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [distillery](https://github.com/bitwalker/distillery) always contain the `upgrade` command.
+This command requires that your release start script was **generate** by a **recent rebar version** that supports the `upgrade` command in addition to the `start|stop|ping|attach` commands. Releases generated with [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [distillery](https://github.com/bitwalker/distillery) always contain the `upgrade` command.
 
 If using rebar, make sure that the [install_upgrade.escript](https://github.com/basho/rebar/blob/master/priv/templates/simplenode.install_upgrade.escript) file which was generated by rebar is included in your release. So ensure, that the following line is in your `reltool.config`:
 
@@ -314,6 +354,24 @@ If using rebar, make sure that the [install_upgrade.escript](https://github.com/
            {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
     ]}.
 
+### Deploy Docker Releases
+
+When embedding releases into docker containers, the deploy command pulls the docker image from the registry defined as `RELEASE_STORE` and __extracts the boot script__ from `/$APP/bin/start_container` (can be configured in `CONTAINER_START_SCRIPT`) to `$DELIVER_TO/bin` while replacing the string `{{edeliver-version}}` with the version which is deployed. The script should use that value to always start that tag of the image.
+
+The start script should handle the same commands as the [extended start script from relx/rebar](https://rebar3.readme.io/docs/releases#extensions), at least the `start`, `stop` and `version` commands.
+
+It could start the container with e.g. like this 
+
+```sh
+VERSION="{{edeliver-version}}"
+docker run --rm --detatch \
+           --workdir "/${APP}" \
+           --publish 127.0.0.1:8080:8080 \
+           --env ERL_DIST_PORT="${ERL_DIST_PORT:-9999}" \
+           --env INET_DIST_USE_INTERFACE='{0,0,0,0}' \
+           --mount type=bind,source=$HOME/.erlang.cookie,target=/root/.erlang.cookie
+       my-registry/my-image:$VERSION /$APP/bin/$APP console
+```
 
 ## Admin Commands
 

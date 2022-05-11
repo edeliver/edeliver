@@ -1,7 +1,7 @@
 ### Using Auto-Versioning
 
 edeliver provides a way to automatically __increment__ the current __version__ for the __current build__ and/or to __append__ the __git commit count__ and/or __revision__ as [version metadata](http://semver.org/#spec-item-10).
-__Using a different versions for each release is essential__ especially if you build hot code __upgrades__, but also makes sense to see wich version is running, e.g. when using `mix edeliver version [staging|production]`.
+__Using a different versions for each release is essential__ especially if you build hot code __upgrades__, but also makes sense to see which version is running, e.g. when using `mix edeliver version [staging|production]`.
 
 Notice: This feature cannot be used in conjunction with the `--skip-mix-clean` command line option or the `SKIP_MIX_CLEAN=true` config respectively*.
 
@@ -36,9 +36,9 @@ Notice: This feature cannot be used in conjunction with the `--skip-mix-clean` c
   # creates version 1.0.0+82a5834-20160414
 ```
 
-##### Append metadata to version permanentely
+##### Append metadata to version permanently
 
-To append metadata permanentely you can set the `AUTO_VERSION` configuration variable in your `.deliver/config` file. This can be overridden by the `--auto-version=` command line argument.
+To append metadata permanently you can set the `AUTO_VERSION` configuration variable in your `.deliver/config` file. This can be overridden by the `--auto-version=` command line argument.
 
 ```sh
  # ./deliver/config
@@ -61,7 +61,7 @@ To append metadata permanentely you can set the `AUTO_VERSION` configuration var
     conflicts from different branches.
 
 
-Using __commit count accross all branches__ (`commit-count[-all[-branches]`) __or__ using the __build date__ (`[build-]date`) __as first metadata__ to append, enables edeliver to __consider__ that values __when sorting__ versions. Using `[git-]revision` or commit count for the current branch in conjunction with the branch name (`commit-count-branch+branch`) enables you to __uniquely identify__ the built/deployed __version__. If the revision is used, __edeliver can display the commit message for that version__ (and the 5 previous commit messages) if `edeliver version [staging|production]` is used. To achieve both (sorting and identifying versions) and to see whether a feature branch is built/deployed, the following permanent auto-versioning option is recommended: `AUTO_VERSION=commit-count+git-revision+branch-unless-master`.
+Using __commit count across all branches__ (`commit-count[-all[-branches]`) __or__ using the __build date__ (`[build-]date`) __as first metadata__ to append, enables edeliver to __consider__ that values __when sorting__ versions. Using `[git-]revision` or commit count for the current branch in conjunction with the branch name (`commit-count-branch+branch`) enables you to __uniquely identify__ the built/deployed __version__. If the revision is used, __edeliver can display the commit message for that version__ (and the 5 previous commit messages) if `edeliver version [staging|production]` is used. To achieve both (sorting and identifying versions) and to see whether a feature branch is built/deployed, the following permanent auto-versioning option is recommended: `AUTO_VERSION=commit-count+git-revision+branch-unless-master`.
 
 
 For more information also try `mix edeliver help upgrade`, `mix edeliver help release` or `mix help release.version`.
@@ -142,7 +142,7 @@ It is required to clean the build output before* and to run the `release.version
   1.2.3
   mix do clean, release.version increase major revision branch --dry-run
   Would update version from 1.2.3 to 2.0.0+82a5834-test
-  # prints only the info above. You can always ommit the 'append-git-' part.
+  # prints only the info above. You can always omit the 'append-git-' part.
   mix do clean, release.version append-git-revision, release
   # creates version 1.2.3+82a5834
   mix do clean, release.version append-commit-count append-git-revision append-git-branch, release

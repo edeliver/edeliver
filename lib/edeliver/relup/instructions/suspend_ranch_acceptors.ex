@@ -18,7 +18,7 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
     cannot be found. Because real suspending of ranch acceptors
     is not possible because ranch acceptors do not handle sys
     messages, they are actually terminated. Unfortunately the ranch
-    acceptor supervisor cannot be suspended in adition to avoid
+    acceptor supervisor cannot be suspended in addition to avoid
     starting new acceptors, because supervisors can't be suspended
     because the supervision tree is used to find processes which
     uses callback modules. Since no acceptors are started dynamically
@@ -26,7 +26,7 @@ defmodule Edeliver.Relup.Instructions.SuspendRanchAcceptors do
 
     `Edeliver.Relup.Instructions.ResumeRanchAcceptors`
 
-    instruction at the end of your instructions list to reenable
+    instruction at the end of your instructions list to re-enable
     accepting tcp connection when the upgrade is done.
 
   """

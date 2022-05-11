@@ -20,7 +20,7 @@ defmodule Edeliver.Relup.Instructions do
 
   @typedoc """
     [Appup instructions](http://erlang.org/doc/man/appup.html) from the `relup` file which can
-    be modified. They are seperated into instructions for the upgrade and instructions for the
+    be modified. They are separated into instructions for the upgrade and instructions for the
     downgrade and will be later written back to the relup file. `changed_modules` contains a
     list of all code modules which changed in the new version and will be loaded during the
     upgrade.

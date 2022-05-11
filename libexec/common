@@ -55,7 +55,7 @@ authorize_deploy_hosts_on_release_store() {
     status "Authorizing deploy hosts on release store"
     local _release_store_host=${RELEASE_STORE%:*}
     __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
+      [ -f $PROFILE ] && source $PROFILE
       set -e
       for _host in $HOSTS_APP_USER
       do
@@ -81,18 +81,30 @@ authorize_deploy_hosts_on_release_store() {
 authorize_release_store_on_build_host() {
   __detect_release_store_type
   if [[ "$AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST" != "true" && "$RELEASE_STORE_TYPE" = "remote" ]]; then
-    status "Authorizing release store on build host"
     local _release_store_host=${RELEASE_STORE%:*}
     _release_store_host=${_release_store_host#*@}
-    __sync_remote "
-      [ -f ~/.profile ] && source ~/.profile
-      set -e
-      if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
-        echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
-        ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
-        ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
-      fi
-    "
+    if [ "$BUILD_HOST" = "docker" ]; then
+      status "Authorizing release store on localhost"
+      __sync_local "
+          set -e
+          if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
+            echo \"Authorizing $_release_store_host on \$(hostname -f):\" $SILENCE
+            ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
+            ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
+          fi
+        "
+    else
+      status "Authorizing release store on build host"
+      __sync_remote "
+        [ -f $PROFILE ] && source $PROFILE
+        set -e
+        if [[ \$(ssh-keygen -F \"$_release_store_host\" | grep -c found) = 0 ]]; then
+          echo \"Authorizing $_release_store_host on $HOSTS_APP_USER:\" $SILENCE
+          ssh-keyscan \"$_release_store_host\" 2>/dev/null $SILENCE
+          ssh-keyscan \"$_release_store_host\" 2>/dev/null >> ~/.ssh/known_hosts
+        fi
+      "
+    fi
     AUTHORIZED_RELEASE_STORE_HOST_ON_BUILD_HOST="true"
   fi
 }
@@ -124,39 +136,52 @@ init_app_remotely() {
 
   for _host in $HOSTS_APP_USER
   do
-    local _remote_url="$_host:$DELIVER_TO"
+    local _remote_url
+    if [ "$BUILD_HOST" = "docker" ]; then
+      _remote_url="file://$DOCKER_BUILD_DIR"
+    else 
+      _remote_url="$_host:$DELIVER_TO"
+    fi
     if [[ ! "$git_remote" =~ "$_host $_remote_url" ]]; then
       [[ "$git_remote" =~ "$_host" ]] && git remote rm "$_host"
       git remote add "$_host" "$_remote_url"
     fi
   done
-  __sync_remote "
-    current_shell=\"\$0\" || :
-    [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
-    case \"\$current_shell\" in
-      (*bash*) echo 'bash is installed and the default shell' $SILENCE ;;
-      (*zsh*)  echo  'zsh is installed and the default shell' $SILENCE ;;
-      (*)
-       echo
-       echo \"${txtred}You are using an unsupported shell: '\$current_shell'\"
-       echo \"edeliver requires either bash or zsh to be installed\"
-       echo \"and the default shell for the build user '$BUILD_USER'\"
-       echo \"on your build host: '$BUILD_HOST'.${txtrst}\"
-       exit 1
-       ;;
-    esac
-    set -e
-    if [ ! -d $DELIVER_TO ]
-    then
-      mkdir -p $DELIVER_TO
-      cd $DELIVER_TO
-      git init $SILENCE
-      git config receive.denyCurrentBranch ignore
-    else
-      cd $DELIVER_TO
-      git config receive.denyCurrentBranch ignore
-    fi
-  "
+  if [ "$BUILD_HOST" = "docker" ]; then
+    ( [ "$VERBOSE" != "true" ] && exec >/dev/null;
+      cd "$DOCKER_BUILD_DIR" \
+      && git init --quiet \
+      && git config receive.denyCurrentBranch ignore
+    ) || error "Failed to initialize local git repository which will be mounted into the build container"
+  else 
+    __sync_remote "
+      current_shell=\"\$0\" || :
+      [ -z \"\$current_shell\" ] && current_shell=\"\$SHELL\"
+      case \"\$current_shell\" in
+        (*bash*) echo 'bash is installed and the default shell' $SILENCE ;;
+        (*zsh*)  echo  'zsh is installed and the default shell' $SILENCE ;;
+        (*)
+         echo
+         echo \"${txtred}You are using an unsupported shell: '\$current_shell'\"
+         echo \"edeliver requires either bash or zsh to be installed\"
+         echo \"and the default shell for the build user '$BUILD_USER'\"
+         echo \"on your build host: '$BUILD_HOST'.${txtrst}\"
+         exit 1
+         ;;
+      esac
+      set -e
+      if [ ! -d $DELIVER_TO ]
+      then
+        mkdir -p $DELIVER_TO
+        cd $DELIVER_TO
+        git init $SILENCE
+        git config receive.denyCurrentBranch ignore
+      else
+        cd $DELIVER_TO
+        git config receive.denyCurrentBranch ignore
+      fi
+    "
+  fi
   __exec_if_defined "post_init_app_remotely"
 }
 
@@ -177,7 +202,7 @@ git_reset_remote() {
   __sync_remote "
     set -e
     cd $DELIVER_TO
-    git reset --hard $REVISION
+    git reset --hard $REVISION 2>&1
   "
 }
 
@@ -217,7 +242,7 @@ rvmrc_trust() {
 
     status "Trusting rvmrc in $DELIVER_TO"
     __remote "
-      source ~/.profile
+      source $PROFILE
       set -e
       rvm rvmrc trust $DELIVER_TO $SILENCE
     "
@@ -232,7 +257,7 @@ bundle_install() {
 
   status "Installing gems with bundler"
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     if [[ \$APP_ENV = production ]] || [[ \$RACK_ENV = production ]] || [[ \$RAILS_ENV = production ]]
@@ -251,7 +276,7 @@ npm_install() {
 
   status "Installing modules with npm"
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     npm install $SILENCE
@@ -269,7 +294,7 @@ foreman_export() {
   test -n "$FOREMAN_EXTRAS" && _foreman="$_foreman $FOREMAN_EXTRAS"
 
   __remote "
-    source ~/.profile
+    source $PROFILE
     set -e
     cd $DELIVER_TO $SILENCE
     $_foreman $SILENCE
@@ -286,7 +311,7 @@ launch() {
   # You should be able to log in with $USER to the remote servers, and you
   # should be able to run sudo without needing a password.
   #
-  # I will be tackling this shortly, you really shouldn't neeed sudo
+  # I will be tackling this shortly, you really shouldn't need sudo
   # privileges to deliver an app. What was I thinking?!?
   if [[ "$SUPERVISOR" == "bluepill" ]]; then
     __remote "
