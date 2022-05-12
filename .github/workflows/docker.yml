@@ -2,6 +2,9 @@ name: Build Docker Release CI
 
 on: push
 
+env:
+  TERM: vt100 
+
 jobs:
 
   build-rebar3:
