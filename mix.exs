@@ -2,7 +2,7 @@ defmodule Edeliver.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/boldpoker/edeliver"
-  @version "1.9.0-rc.1"
+  @version "1.9.0-rc.2"
 
   def project do
     [
@@ -29,7 +29,7 @@ defmodule Edeliver.Mixfile do
     [
       {:distillery, "~> 2.1.0", optional: true, warn_missing: false},
       {:meck, "~> 0.8.13", only: :test},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.28.4", only: :dev, runtime: false}
     ]
   end
 
@@ -38,6 +38,7 @@ defmodule Edeliver.Mixfile do
       extras: [
         "CHANGELOG.md": [title: "Changelog"],
         "README.md": [title: "Usage"],
+        "guides/docker.md": [title: "Docker Support"],
         "guides/auto-versioning.md": [title: "Auto-Versioning"],
         "guides/relup-patching.md": [title: "Relup-Patching"]
       ],
