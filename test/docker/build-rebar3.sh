@@ -47,7 +47,7 @@ BUILD_AT="/echo-server" \
 BUILD_USER="root" \
 REBAR_PROFILE="prod" \
 DOCKER_BUILD_IMAGE="elixir:1.11.4" \
-"$EDELIVER" build release --revision="$GIT_REF"
+"$EDELIVER" build release --verbose --revision="$GIT_REF"
 
 _info ""
 _info "Checking whether image was built successfully…"
