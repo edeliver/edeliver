@@ -4,6 +4,7 @@ on: push
 
 env:
   TERM: vt100 
+  APP: eco
 
 jobs:
 
@@ -11,22 +12,23 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    outputs: 
-      image: ${{steps.build.outputs.image}} 
+    env:
+      TEST_LOCALLY_AT: /opt/eco/rebar3
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
-      id: build
       run: test/docker/build-rebar3.sh
 
-  run-rebar3:
-
-    runs-on: ubuntu-latest
-
-    needs: build-rebar3
-    steps:
+    - name: Preparing Deploy
+      run: mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
+    - name: Deploying image locally
+      env:
+        RELEASE_VERSION: ${{env.release_version}}
+        RELEASE_STORE: ${{env.release_store}}
+      run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
     - name: Running rebar3 Release Container
-      run: echo "Docker image ${{needs.build-rebar3.outputs.image}}"
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco console
+
 
   build-distillery:
 
