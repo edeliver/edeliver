@@ -29,7 +29,7 @@ defmodule Edeliver.Mixfile do
     [
       {:distillery, "~> 2.1.0", optional: true, warn_missing: false},
       {:meck, "~> 0.8.13", only: :test},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.28.4", only: :dev, runtime: false}
     ]
   end
 
