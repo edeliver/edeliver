@@ -12,3 +12,12 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build Release Container
       run: test/docker/build-rebar3.sh
+
+  build-distillery:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Release Container
+      run: test/docker/build-distillery.sh
