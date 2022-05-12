@@ -11,4 +11,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
-      run: test/docker/build.sh
+      run: test/docker/build-rebar3.sh

@@ -11,7 +11,7 @@ TESTS_DIR="$( cd "${0%/*}" && pwd -P )"
 DEFAULT_PROJECT_DIR="${BASE_DIR}/.test/echo-server"
 EDELIVER="${BASE_DIR}/bin/edeliver"
 PROJECT_DIR="${PROJECT_DIR:-"$DEFAULT_PROJECT_DIR"}"
-DOCKER_IMAGE_NAME="edeliver/echo-server"
+DOCKER_IMAGE_NAME="edeliver/echo-server-rebar3"
 
 _info() {
   echo $@
