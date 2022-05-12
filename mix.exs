@@ -38,6 +38,7 @@ defmodule Edeliver.Mixfile do
       extras: [
         "CHANGELOG.md": [title: "Changelog"],
         "README.md": [title: "Usage"],
+        "guides/docker.md": [title: "Docker Support"],
         "guides/auto-versioning.md": [title: "Auto-Versioning"],
         "guides/relup-patching.md": [title: "Relup-Patching"]
       ],
