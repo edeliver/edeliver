@@ -53,6 +53,8 @@ _info ""
 _info "Checking whether image was built successfully…"
 if [ -n "$(docker images -q ${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-${GIT_REF})" ]; then
   _info "Image was built successfully"
+  echo
+  echo "::set-output name=image::${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-${GIT_REF}"
 else
   _error "Building image failed!"
 fi
