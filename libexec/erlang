@@ -1135,7 +1135,7 @@ remote_extract_release_archive() {
          | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
          | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
          | sed \"s/{{edeliver-app}}/${APP}/g\" \
-         > \"$APP\" && {
+         > \"$APP\" && [ -s \"$APP\" ] && { # set -o pipefail is not avialble on non-bash shells, so file might be empty
         echo \"Extracted script\"
       } || {
         echo \"Copied edeliver default script\"
