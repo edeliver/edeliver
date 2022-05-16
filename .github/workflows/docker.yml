@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TEST_LOCALLY_AT: /opt/eco/rebar3
+      TEST_LOCALLY_AT: /tmp/eco/rebar3
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
