@@ -858,7 +858,15 @@ upload_release_archive() {
   __detect_release_store_type
   status "Uploading archive of release $_release_version from $RELEASE_STORE_TYPE release store"
   # when building releases with mix, the tar does not contain the app name as subdirectory
-  [[ "$RELEASE_CMD" = "mix" ]] && [[ ! "$_release_file" =~ upgrade\.tar\.gz$ ]] && _destination_directory="${_destination_directory%%/}/${APP}"
+  if [ "$RELEASE_CMD" = "mix" ]; then
+    case "$_release_file" in
+      *upgrade.tar.gz)
+        ;;
+      *)
+        _destination_directory="${_destination_directory%%/}/${APP}"
+        ;;
+    esac
+  fi
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
@@ -925,11 +933,11 @@ EOF
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
     __remote "
-      [ -f $PROFILE ] && source $PROFILE
+      [ -f $PROFILE ] && . $PROFILE
       set -e
       mkdir -p ${_destination_directory} $SILENCE
       cd ${_destination_directory} $SILENCE
-      if [[ -z \"\$(docker images -q \"$_image_name\")\" ]]; then
+      if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
         echo \"Pulling release image $_image_name\" $SILENCE
         docker pull \"$_image_name\" $SILENCE || {
           echo \"Failed to pull release image $_image_name\" >&2
@@ -1113,8 +1121,13 @@ remote_extract_release_archive() {
       | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
       | sed "s/{{edeliver-app}}/${APP}/g" \
       | __remote "
-      [ -f $PROFILE ] && source $PROFILE
-      set -e -o pipefail
+      if [ \"\$0\" = \"/bin/sh\" ]; then
+        [ -f $PROFILE ] && . $PROFILE
+        set -e
+      else
+        [ -f $PROFILE ] && source $PROFILE
+        set -e -o pipefail
+      fi
       mkdir -p \"${_archive_dir}\"
       cd \"${_archive_dir}\" $SILENCE
       docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
