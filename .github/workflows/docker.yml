@@ -27,7 +27,7 @@ jobs:
         RELEASE_STORE: ${{env.release_store}}
       run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
     - name: Running rebar3 Release Container
-      run: ${TEST_LOCALLY_AT}/eco/bin/eco console
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco help
 
 
   build-distillery:
