@@ -40,7 +40,7 @@ fi
 #
 if [ -z "$REVISION" ]
 then
-  REVISION="$(git rev-parse $BRANCH)"
+  REVISION="$(git rev-parse $BRANCH 2>/dev/null)"
 fi
 
 # Ruby is the default deliver strategy.
