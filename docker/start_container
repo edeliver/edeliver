@@ -108,7 +108,7 @@ esac
 
 if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
-else
+elif [ -t 0 ]; then # terminal attatched
   DOCKER_OPTS+=" --tty --interactive" 
 fi
 
