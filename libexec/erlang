@@ -1130,7 +1130,7 @@ remote_extract_release_archive() {
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-    "
+    " || error "Failed to extract remote start script!"
   else
     status "Extracting archive ${_archive} into ${_archive_dir}"
     # when building releases with mix, the tar does not contain the app name as subdirectory
