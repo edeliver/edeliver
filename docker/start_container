@@ -16,6 +16,7 @@ ERLANG_COOKIE_FILE="${ERLANG_COOKIE_FILE:-"$HOME/.erlang.cookie"}"
 INET_DIST_USE_INTERFACE="${INET_DIST_USE_INTERFACE:-"{$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"}"
 EPMD_MODULE="${EPMD_MODULE:-edeliver_epmd}"
 ERL_ZFLAGS="${ERL_ZFLAGS:-"-start_epmd false -epmd_module ${EPMD_MODULE} ${ADDITIONAL_ERL_ZFLAGS}"}"
+BASE_DIR=$( cd "${0%/*}/.." && pwd -P )
 
 
 _info() {
@@ -41,6 +42,9 @@ fi
 CONTAINER_NAME="${CONTAINER_NAME:-$APP}"
 
 COMMAND="$1"
+
+PIPE_DIR="${BASE_DIR}/pipes/${APP}"
+mkdir -p "$PIPE_DIR"
 
 if ! [ -f "$ERLANG_COOKIE_FILE" ]; then
   echo 
@@ -142,7 +146,9 @@ else
       --workdir "/${APP}" \
       --env ERL_ZFLAGS="${ERL_ZFLAGS}" \
       --env DEBUG_BOOT="${DEBUG_BOOT}" \
+      --env PIPE_DIR=/${APP}/pipes \
       --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
+      --mount type=bind,source="${PIPE_DIR}",target=/${APP}/pipes \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
 fi
 
