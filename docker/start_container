@@ -42,6 +42,18 @@ CONTAINER_NAME="${CONTAINER_NAME:-$APP}"
 
 COMMAND="$1"
 
+if ! [ -f "$ERLANG_COOKIE_FILE" ]; then
+  echo 
+  echo "  Warning: No cookie file found: $ERLANG_COOKIE_FILE"
+  echo "           Creating random cookie file at $ERLANG_COOKIE_FILE"
+  echo "           Please regenerate it or set \$ERLANG_COOKIE_FILE"
+  echo "           to a custom cookie file."
+  echo
+  LC_ALL=C tr -dc A-Za-z0-9 </dev/random | head -c 30 > "$ERLANG_COOKIE_FILE"
+  echo '' >> "$ERLANG_COOKIE_FILE"
+  chmod 400 "$ERLANG_COOKIE_FILE"
+fi
+
 ARGS=()
 for ARG in $@; do
   case "$ARG" in

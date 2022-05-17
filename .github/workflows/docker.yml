@@ -20,13 +20,8 @@ jobs:
       run: test/docker/build-rebar3.sh
 
     - name: Preparing Local Deploy
-      env:
-        COOKIE_FILE: /home/runner/.erlang.cookie
       run: |
         mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
-        LC_ALL=C tr -dc A-Za-z0-9 </dev/random | head -c 30 > "$COOKIE_FILE"
-        echo '' >> "$COOKIE_FILE"
-        chmod 400 "$COOKIE_FILE"
     - name: Deploying Image Locally
       env:
         RELEASE_VERSION: ${{env.release_version}}
