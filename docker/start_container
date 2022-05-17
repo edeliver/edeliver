@@ -50,12 +50,12 @@ if ! [ -f "$ERLANG_COOKIE_FILE" ]; then
   echo "           to a custom cookie file."
   ( # run in subshell to disable pipefail only temporarily
     set +o pipefail # disable pipefail because head command closes pipe
-    LC_ALL=C tr -dc A-Za-z0-9 </dev/random | head -c 30 > "$ERLANG_COOKIE_FILE" || {
+    LC_ALL=C tr -dc A-Za-z0-9 </dev/random 2>/dev/null | head -c 30 > "$ERLANG_COOKIE_FILE" || {
       echo
       echo "  Warning: Not enough entropy to generate secure random cookie."
       echo "           Using /dev/urandom instead. Please recreate cookie."
       echo            
-      LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 30 > "$ERLANG_COOKIE_FILE"
+      LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom 2>/dev/null | head -c 30 > "$ERLANG_COOKIE_FILE"
     }
   )
   echo '' >> "$ERLANG_COOKIE_FILE"
