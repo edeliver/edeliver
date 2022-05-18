@@ -125,7 +125,7 @@ case "$COMMAND" in
     ;;
   *) # e.g. remote_console | ping
     DOCKER_OPTS=" --network host"
-    DOCKER_OPTS+=" --env ERL_DIST_PORT=0" # use a random port for remote console / commands
+    DOCKER_OPTS+=" --env ERL_DIST_PORT=${ERL_DIST_PORT}" 
     DOCKER_OPTS+=" --env DEFAULT_DIST_PORT=${ERL_DIST_PORT}" # port to connect remote console to and default ports for all nodes
     DOCKER_OPTS+=" --add-host ${HOST_NAME}:${INTERNAL_INTERFACE}" 
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE={$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"
