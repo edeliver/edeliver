@@ -43,12 +43,14 @@ git checkout "$GIT_REF"
 _info "Applying custom rebar3 config…"
 # copy overwrite rebar.config
 cp "${TESTS_DIR}/../configs/rebar3.config" "${PROJECT_DIR}/rebar.config"
+cp "${TESTS_DIR}/../configs/rebar3-vm.args.src" "${PROJECT_DIR}/config/vm.args.src"
 
 # commit new config
 git add "${PROJECT_DIR}/rebar.config"
+git add "${PROJECT_DIR}/config/vm.args.src"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
-git commit -m "Add custom rebar3 config file"
+git commit -m "Add custom rebar3 configs"
 git branch -d "$BRANCH_NAME" 2>/dev/null || :
 git checkout -b "$BRANCH_NAME"
 

@@ -1,0 +1,14 @@
+-sname eco
+
+## Must be set when connecting a remote console to
+## release running in docker which maps the epmd
+## port to the hosts internal interface. The rebar3 extended
+## start script ignores an already set INET_DIST_USE_INTERFACE
+## env but reads the value from this vm.args file, to we must
+## use an vm.args.src file which is used to replace the
+## vars with the corresponding env vars.
+-kernel inet_dist_use_interface ${INET_DIST_USE_INTERFACE}
+
+
++K true
++A30
