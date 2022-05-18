@@ -47,7 +47,7 @@ git rm "${PROJECT_DIR}/rebar.config"
 # create distillery release config
 mkdir -p "${PROJECT_DIR}/rel"
 cp "${TESTS_DIR}/../configs/distillery-rel-config.exs" "${PROJECT_DIR}/rel/config.exs"
-touch "${PROJECT_DIR}/rel/vm.args"
+cp "${TESTS_DIR}/../configs/distillery-vm.args" "${PROJECT_DIR}/rel/vm.args"
 # create app config
 mkdir -p "${PROJECT_DIR}/config"
 cp "${TESTS_DIR}/../configs/distillery-app-config.exs" "${PROJECT_DIR}/config/config.exs"
