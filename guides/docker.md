@@ -38,7 +38,7 @@ DOCKER_RELEASE_BASE_IMAGE="edeliver/release-base:1.0" # default
 
 # Forward port 8080 from the host to the container or any other
 # port(s) your app exposes
-DOCKER_OPTS="--publish 8080"
+DOCKER_OPTS="--publish 8080:8080"
 
 # Links or actually mounts the vm.args file from the (deploy) host 
 # into the container at /$APP/releases/$VERSION/vm.args
