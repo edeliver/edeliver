@@ -72,7 +72,7 @@ ARGS=()
 for ARG in $@; do
   case "$ARG" in
     start|daemon)
-      args+=("console")
+      ARGS+=("console")
       ;;
     --debug)
       DEBUG=1

@@ -32,7 +32,7 @@ jobs:
     - name: Running rebar3 Release Container
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
-      run: ${TEST_LOCALLY_AT}/eco/bin/eco daemon
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco start
     - name: Validating App responds to PINGs
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
