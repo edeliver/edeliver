@@ -54,7 +54,7 @@ cp "${TESTS_DIR}/../configs/distillery-app-config.exs" "${PROJECT_DIR}/config/co
 
 # commit new configs
 git add "${PROJECT_DIR}/mix.exs" "${PROJECT_DIR}/rel" "${PROJECT_DIR}/rel/vm.args"
-git add "${PROJECT_DIR}/config/config.exs"
+git add "${PROJECT_DIR}/config/config.exs" "${PROJECT_DIR}/rel/config.exs"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
 git commit -m "Add distillery mix file"
