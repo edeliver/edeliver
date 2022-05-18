@@ -14,6 +14,8 @@ jobs:
 
     env:
       TEST_LOCALLY_AT: /tmp/eco/rebar3
+      ECO_PORT: 1883
+      DOCKER_OPTS: --publish 1883:1883
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
@@ -33,6 +35,10 @@ jobs:
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
       run: ${TEST_LOCALLY_AT}/eco/bin/eco start
+    - name: Validating App echoes Request
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: sleep 10; echo "hello edeliver" | netcat -v localhost $ECO_PORT | tee /dev/stderr | grep hello
     - name: Validating App responds to PINGs
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
