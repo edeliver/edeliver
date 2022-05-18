@@ -77,6 +77,8 @@ _info ""
 _info "Checking whether image was built successfully…"
 if [ -n "$(docker images -q ${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-${GIT_REF})" ]; then
   _info "Image was built successfully"
+  echo "release_version=${RELEASE_VERSION}-${GIT_REF}" >> $GITHUB_ENV
+  echo "release_store=docker://${DOCKER_IMAGE_NAME}" >> $GITHUB_ENV
 else
   _error "Building image failed!"
 fi
