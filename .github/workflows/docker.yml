@@ -22,13 +22,25 @@ jobs:
     - name: Preparing Local Deploy
       run: |
         mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
+        echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Deploying Image Locally
       env:
         RELEASE_VERSION: ${{env.release_version}}
         RELEASE_STORE: ${{env.release_store}}
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
       run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
     - name: Running rebar3 Release Container
-      run: ${TEST_LOCALLY_AT}/eco/bin/eco help
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco daemon
+    - name: Validating App responds to PINGs
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco ping
+
+
+
+
 
 
   build-distillery:
