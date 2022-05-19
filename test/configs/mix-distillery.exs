@@ -7,7 +7,7 @@ defmodule EcoDistillery.Mixfile do
      elixir: "~> 1.11",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     compilers: [:erlang],
+     compilers: [:app, :erlang],
      erlc_paths: ["apps/eco/src"],
      deps: deps()]
   end
