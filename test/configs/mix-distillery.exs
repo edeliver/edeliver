@@ -9,6 +9,7 @@ defmodule EcoDistillery.Mixfile do
      start_permanent: Mix.env == :prod,
      compilers: [:app, :erlang],
      erlc_paths: ["apps/eco/src"],
+     erlc_options: [:debug_info, {:parse_transform, :lager_transform}],
      deps: deps()]
   end
 
