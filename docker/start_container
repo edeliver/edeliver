@@ -17,7 +17,7 @@ INET_DIST_USE_INTERFACE="${INET_DIST_USE_INTERFACE:-"{$(echo "$INTERNAL_INTERFAC
 EPMD_MODULE="${EPMD_MODULE:-edeliver_epmd}"
 ERL_ZFLAGS="${ERL_ZFLAGS:-"-start_epmd false -epmd_module ${EPMD_MODULE} ${ADDITIONAL_ERL_ZFLAGS}"}"
 BASE_DIR=$( cd "${0%/*}/.." && pwd -P )
-
+REPLACE_OS_VARS=${REPLACE_OS_VARS:-true}
 
 _info() {
   echo $@
@@ -102,10 +102,11 @@ DOCKER_OPTS="${DOCKER_OPTS:-"{{edeliver-docker-opts}}"}"
 if [[ "$DOCKER_OPTS" == *edeliver-docker-opts* ]]; then
   DOCKER_OPTS=""
 fi
+
 case "$COMMAND" in
   console|start|foreground|daemon|exec)
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping
-    DOCKER_OPTS+=" --hostname "$HOST_NAME"" # required for long node names
+    DOCKER_OPTS+=" --hostname ${HOST_NAME}" # required for long node names
     DOCKER_OPTS+=" --env ERL_DIST_PORT=$ERL_DIST_PORT" # pin port for distribution
     DOCKER_OPTS+=" --publish ${INTERNAL_INTERFACE}:${ERL_DIST_PORT}:${ERL_DIST_PORT}" # forward distribution port to allow connections from other nodes or remote_console 
     DOCKER_OPTS+=" --name $CONTAINER_NAME"
@@ -133,6 +134,12 @@ case "$COMMAND" in
     
     ;;
 esac
+
+# distillery specific, mainly to set the host name of the long
+# node name
+DOCKER_OPTS+=" --env HOST_NAME=${HOST_NAME}"
+DOCKER_OPTS+=" --env REPLACE_OS_VARS=${REPLACE_OS_VARS}"
+
 
 if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"

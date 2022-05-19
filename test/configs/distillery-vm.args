@@ -1,4 +1,4 @@
--name eco@127.0.0.1
+-name eco@${HOST_NAME}
 
 +K true
 +A30
