@@ -1,4 +1,4 @@
-defmodule Mydist.Mixfile do
+defmodule EcoDistillery.Mixfile do
   use Mix.Project
 
   def project do
