@@ -18,7 +18,7 @@ defmodule EcoDistillery.Mixfile do
   end
 
   defp deps do
-    [{:lager, "~> 3.6.7"},
+    [{:lager, "== 3.6.7"},
      {:ranch, "~> 1.6.2"},
      {:distillery, "~> 2.0"},
      {:edeliver, "~> 1.9.0-rc.2"}]
