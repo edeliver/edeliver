@@ -102,6 +102,10 @@ DOCKER_OPTS="${DOCKER_OPTS:-"{{edeliver-docker-opts}}"}"
 if [[ "$DOCKER_OPTS" == *edeliver-docker-opts* ]]; then
   DOCKER_OPTS=""
 fi
+RELEASE_CMD="${RELEASE_CMD:-"{{edeliver-release-command}}"}"
+if [[ "$DOCKER_OPTS" == *edeliver-release-command* ]]; then
+  RELEASE_CMD="distillery" # | mix | rebar3
+fi
 
 case "$COMMAND" in
   console|start|foreground|daemon|exec)
@@ -127,7 +131,15 @@ case "$COMMAND" in
     ;;
   *) # e.g. remote_console | ping
     DOCKER_OPTS=" --network host"
-    DOCKER_OPTS+=" --env ERL_DIST_PORT=$$" 
+    if [ "$RELEASE_CMD" = "rebar3" ]; then
+      # extended start script from rebar uses this to connecto to the
+      # remote node for ping or remote_console command
+      DOCKER_OPTS+=" --env ERL_DIST_PORT=${ERL_DIST_PORT}" 
+    else
+      # use random port to bind remote_console node to for distillery
+      # and mix releases
+      DOCKER_OPTS+=" --env ERL_DIST_PORT=0" 
+    fi
     DOCKER_OPTS+=" --env DEFAULT_DIST_PORT=${ERL_DIST_PORT}" # port to connect remote console to and default ports for all nodes
     DOCKER_OPTS+=" --add-host ${HOST_NAME}:${INTERNAL_INTERFACE}" 
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE={$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"
