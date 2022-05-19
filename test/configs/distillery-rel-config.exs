@@ -48,7 +48,9 @@ release :eco do
   set version: current_version(:eco)
   set applications: [
     :runtime_tools,
-    :edeliver
+    :edeliver,
+    :lager, 
+    :ranch
   ]
 end
 

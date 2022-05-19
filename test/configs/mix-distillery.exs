@@ -13,7 +13,7 @@ defmodule EcoDistillery.Mixfile do
   end
 
   def application do
-    [applications: [:sasl, :edeliver],
+    [applications: [:sasl, :edeliver, :lager, :ranch],
      mod: {:eco_app, []}]
   end
 
