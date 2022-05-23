@@ -98,3 +98,87 @@ node `baz@bar.local` at port `4323`. Same can be achieved when setting it in the
   {edeliver, [{nodes, ['foo@bar.local', 'baz@bar.local:4323']},
   …]}]
 ```
+
+The docker container listens by default on `127.0.0.1` for connections from other nodes. To connect nodes from different hosts, you can bind to the internal IP of the host by setting the `INTERNAL_INTERFACE` environment variable, e.g. in `/etc/environment` on the host.
+
+## Distillery Considerations
+
+When using distillery to build a docker release with edeliver, you must use long node names while edeliver will configre distillery to replace the `$HOST` env in the `vm.args` file, which should look like this:
+
+```
+-name my_app@${HOST_NAME}
+
++K true
+#…
+```
+
+Ensure edeliver is added as dependency and included into the release:
+
+```elixir
+  # ./mix.exs
+
+  def application do
+    [applications: [:sasl, :edeliver, …],
+     mod: {:my_app, []}]
+  end
+
+  …
+
+  defp deps do
+    […
+     {:distillery, "~> 2.0"},
+     {:edeliver, "~> 1.9.0-rc.2"}]
+  end
+
+```
+
+## rebar3 Considerations
+
+When using rebar3 to build a docker release with edeliver, you can use short node names but need to configure the `inet_dist_use_interface` in your `vm.args.src` file, while edeliver will configre rebar3 to replace the `$INET_DIST_USE_INTERFACE` env in the `vm.args.src` file. It should look like this:
+
+```
+-sname eco
+
+-kernel inet_dist_use_interface ${INET_DIST_USE_INTERFACE}
+
++K true
+#…
+```
+
+Using a `vm.args.src` file which replaces env vars is enabled in the `rebar3.config` like this:
+
+```
+{relx, [{release, { my_app, "0.1.0" }, [sasl, edeliver, …]},
+
+        …
+        {vm_args_src, "./config/vm.args.src"},
+
+        …
+        {include_erts, false},
+        {extended_start_script, true}]
+}.
+
+```
+
+## mix Considerations
+
+When using mix to build a docker release with edeliver, just ensure that edeliver is added as dependency and included into the release and distillery as build time dependency which is required to build edeliver, but should not be included into the release:
+
+```elixir
+ # ./mix.exs
+ 
+  def application do
+    [applications: [:sasl, :edeliver, …],
+     mod: {:my_app, []}]
+  end
+
+  …
+
+  defp deps do
+    […
+     {:distillery, "~> 2.0", runtime: false},
+     {:edeliver, "~> 1.9.0-rc.2"}]
+  end
+```
+
+
