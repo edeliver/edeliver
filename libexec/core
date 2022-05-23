@@ -430,7 +430,7 @@ Error output is displayed above.
     else # not verbose
       local _stdout
       _stdout="$(docker $@)" || error "
-$_stderr
+$_stdout
 
 Command 'docker $@'
 
