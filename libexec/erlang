@@ -1158,7 +1158,7 @@ remote_extract_release_archive() {
     # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
     # as releases built with distillery. For distillery it needs to be a random port (0) while
     # for rebar3 it needs to be the port the actual server listens on.
-    _release_command="$(__docker inspect --format '{{ index .Config.Labels "edeliver.release.command"}}' "${_image_name}")"
+    _release_command="$(docker inspect --format '{{ index .Config.Labels "edeliver.release.command"}}' "${_image_name}")"
     # if release command was not found in image labels, fall back to edeliver configuration if available
     if [[ -z "${_release_command// }" ]]; then
       _release_command="$RELEASE_CMD"
