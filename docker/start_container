@@ -13,10 +13,12 @@ INTERNAL_INTERFACE="${INTERNAL_INTERFACE:-127.0.0.1}"
 HOST_NAME="${HOST_NAME:-$(hostname -f)}"
 ERL_DIST_PORT="${ERL_DIST_PORT:-4321}"
 ERLANG_COOKIE_FILE="${ERLANG_COOKIE_FILE:-"$HOME/.erlang.cookie"}"
+DEFAULT_ERLANG_COOKIE_TARGET="/root/.erlang.cookie"
 INET_DIST_USE_INTERFACE="${INET_DIST_USE_INTERFACE:-"{$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"}"
 EPMD_MODULE="${EPMD_MODULE:-edeliver_epmd}"
 ERL_ZFLAGS="${ERL_ZFLAGS:-"-start_epmd false -epmd_module ${EPMD_MODULE} ${ADDITIONAL_ERL_ZFLAGS}"}"
-
+BASE_DIR=$( cd "${0%/*}/.." && pwd -P )
+REPLACE_OS_VARS=${REPLACE_OS_VARS:-true}
 
 _info() {
   echo $@
@@ -42,11 +44,49 @@ CONTAINER_NAME="${CONTAINER_NAME:-$APP}"
 
 COMMAND="$1"
 
+PIPE_DIR="${BASE_DIR}/pipes/${APP}"
+mkdir -p "$PIPE_DIR"
+
+if ! [ -f "$ERLANG_COOKIE_FILE" ]; then
+  echo 
+  echo "  Warning: No cookie file found: $ERLANG_COOKIE_FILE"
+  echo "           Creating random cookie file at $ERLANG_COOKIE_FILE"
+  echo "           Please regenerate it or set \$ERLANG_COOKIE_FILE"
+  echo "           to a custom cookie file."
+  ( # run in subshell to disable pipefail only temporarily
+    set +o pipefail # disable pipefail because head command closes pipe
+    LC_ALL=C tr -dc A-Za-z0-9 </dev/random 2>/dev/null | head -c 30 > "$ERLANG_COOKIE_FILE" || {
+      echo
+      echo "  Warning: Not enough entropy to generate secure random cookie."
+      echo "           Using /dev/urandom instead. Please recreate cookie."
+      echo            
+      LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom 2>/dev/null | head -c 30 > "$ERLANG_COOKIE_FILE"
+    }
+  )
+  echo '' >> "$ERLANG_COOKIE_FILE"
+  chmod 400 "$ERLANG_COOKIE_FILE"
+  echo
+
+fi
+
+RELEASE_CMD="${RELEASE_CMD:-"{{edeliver-release-command}}"}"
+if [[ "$DOCKER_OPTS" == *edeliver-release-command* ]]; then
+  RELEASE_CMD="distillery" # | mix | rebar3
+fi
+
+if [ "$RELEASE_CMD" = "mix" ]; then
+  DEFAULT_ERLANG_COOKIE_TARGET="/${APP}/releases/COOKIE"
+fi
+
 ARGS=()
 for ARG in $@; do
   case "$ARG" in
     start|daemon)
-      args+=("console")
+      if [ "$RELEASE_CMD" = "mix" ]; then
+        ARGS+=("start")
+      else
+        ARGS+=("console")
+      fi
       ;;
     --debug)
       DEBUG=1
@@ -76,14 +116,16 @@ DOCKER_OPTS="${DOCKER_OPTS:-"{{edeliver-docker-opts}}"}"
 if [[ "$DOCKER_OPTS" == *edeliver-docker-opts* ]]; then
   DOCKER_OPTS=""
 fi
+
 case "$COMMAND" in
-  console|start|foreground|daemon|exec)
+  console|start|foreground|daemon|daemon_iex|exec|start_iex)
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping
-    DOCKER_OPTS+=" --hostname "$HOST_NAME"" # required for long node names
+    DOCKER_OPTS+=" --hostname ${HOST_NAME}" # required for long node names
     DOCKER_OPTS+=" --env ERL_DIST_PORT=$ERL_DIST_PORT" # pin port for distribution
     DOCKER_OPTS+=" --publish ${INTERNAL_INTERFACE}:${ERL_DIST_PORT}:${ERL_DIST_PORT}" # forward distribution port to allow connections from other nodes or remote_console 
     DOCKER_OPTS+=" --name $CONTAINER_NAME"
     EXISTING_CONTAINER="$(docker ps -aq --filter name="${CONTAINER_NAME}")"
+    echo "  Using hostname $HOST_NAME"
     if [ "$COMMAND" != "exec" ] && [ -n "$EXISTING_CONTAINER" ]; then
       echo "  Removing old container $CONTAINER_NAME ($EXISTING_CONTAINER)"
       docker rm "$EXISTING_CONTAINER" >/dev/null 2>&1 || {
@@ -97,20 +139,44 @@ case "$COMMAND" in
       echo "  Using container name $CONTAINER_NAME"
     fi
     ;;
-  *) # e.g. remote_console | ping
+  *) # e.g. remote | remote_console | ping
     DOCKER_OPTS=" --network host"
-    DOCKER_OPTS+=" --env ERL_DIST_PORT=0" # use a random port for remote console / commands
+    if [ "$RELEASE_CMD" = "rebar3" ]; then
+      # extended start script from rebar uses this to connecto to the
+      # remote node for ping or remote_console command
+      DOCKER_OPTS+=" --env ERL_DIST_PORT=${ERL_DIST_PORT}" 
+    else
+      # use random port to bind remote_console node to for distillery
+      # and mix releases
+      DOCKER_OPTS+=" --env ERL_DIST_PORT=0" 
+    fi
     DOCKER_OPTS+=" --env DEFAULT_DIST_PORT=${ERL_DIST_PORT}" # port to connect remote console to and default ports for all nodes
     DOCKER_OPTS+=" --add-host ${HOST_NAME}:${INTERNAL_INTERFACE}" 
-    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE=$INTERNAL_INTERFACE"
+    DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE={$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"
+    
     ;;
 esac
 
+# distillery specific, mainly to set the host name of the long
+# node name
+DOCKER_OPTS+=" --env HOST_NAME=${HOST_NAME}"
+DOCKER_OPTS+=" --env REPLACE_OS_VARS=${REPLACE_OS_VARS}"
+
+# mix specific, mainly to set the host name of the long
+# node name
+RELEASE_DISTRIBUTION="${RELEASE_DISTRIBUTION:-name}"
+RELEASE_NODE="${RELEASE_NODE:-${APP}@${HOST_NAME}}"
+DOCKER_OPTS+=" --env RELEASE_DISTRIBUTION=${RELEASE_DISTRIBUTION}"
+DOCKER_OPTS+=" --env RELEASE_NODE=${RELEASE_NODE}"
+
+
 if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
-else
+elif [ -t 0 ]; then # terminal attatched
   DOCKER_OPTS+=" --tty --interactive" 
 fi
+
+ERLANG_COOKIE_TARGET="${ERLANG_COOKIE_TARGET:-$DEFAULT_ERLANG_COOKIE_TARGET}"
 
 if [ "$COMMAND" = "exec" ]; then
   docker exec -ti $CONTAINER_NAME bash
@@ -120,7 +186,9 @@ else
       --workdir "/${APP}" \
       --env ERL_ZFLAGS="${ERL_ZFLAGS}" \
       --env DEBUG_BOOT="${DEBUG_BOOT}" \
-      --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
+      --env PIPE_DIR=/${APP}/pipes \
+      --mount type=bind,source="${ERLANG_COOKIE_FILE},target=${ERLANG_COOKIE_TARGET}" \
+      --mount type=bind,source="${PIPE_DIR}",target=/${APP}/pipes \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
 fi
 

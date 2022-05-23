@@ -9,6 +9,7 @@ RELEASE_VERSION="0.1.0"
 BASE_DIR="$( cd "${0%/*}/../.." && pwd -P )"
 TESTS_DIR="$( cd "${0%/*}" && pwd -P )"
 DEFAULT_PROJECT_DIR="${BASE_DIR}/.test/echo-server-rebar3"
+BRANCH_NAME="rebar3-release"
 EDELIVER="${BASE_DIR}/bin/edeliver"
 PROJECT_DIR="${PROJECT_DIR:-"$DEFAULT_PROJECT_DIR"}"
 DOCKER_IMAGE_NAME="edeliver/echo-server-rebar3"
@@ -39,6 +40,22 @@ git clone "$GIT_URL" .
 _info "Checking out $GIT_REF"
 git checkout "$GIT_REF"
 
+_info "Applying custom rebar3 config…"
+# copy overwrite rebar.config
+cp "${TESTS_DIR}/../configs/rebar3.config" "${PROJECT_DIR}/rebar.config"
+cp "${TESTS_DIR}/../configs/rebar3-vm.args.src" "${PROJECT_DIR}/config/vm.args.src"
+
+# commit new config
+git add "${PROJECT_DIR}/rebar.config"
+git add "${PROJECT_DIR}/config/vm.args.src"
+git config user.email "edeliver-test@github.com"
+git config user.name "Edeliver Test"
+git commit -m "Add custom rebar3 configs"
+git branch -d "$BRANCH_NAME" 2>/dev/null || :
+git checkout -b "$BRANCH_NAME"
+
+GIT_REF="$(git rev-parse --short HEAD)"
+
 _info "Building release…"
 BUILD_HOST="docker" \
 APP="eco" \
@@ -47,12 +64,14 @@ BUILD_AT="/echo-server" \
 BUILD_USER="root" \
 REBAR_PROFILE="prod" \
 DOCKER_BUILD_IMAGE="elixir:1.11.4" \
-"$EDELIVER" build release --verbose --revision="$GIT_REF"
+"$EDELIVER" build release --verbose --branch="$BRANCH_NAME"
 
 _info ""
 _info "Checking whether image was built successfully…"
 if [ -n "$(docker images -q ${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-${GIT_REF})" ]; then
   _info "Image was built successfully"
+  echo "release_version=${RELEASE_VERSION}-${GIT_REF}" >> $GITHUB_ENV
+  echo "release_store=docker://${DOCKER_IMAGE_NAME}" >> $GITHUB_ENV
 else
   _error "Building image failed!"
 fi

@@ -458,9 +458,43 @@ EOF
     local _valid_docker_tag
     _valid_docker_tag="$(echo "$RELEASE_VERSION" | sed 's/[^0-9A-Za-z_.-]*//g')"
     info "Commiting as ${_valid_docker_tag}-latest"
+    local _release_command="$RELEASE_CMD"
+    if [ "$_release_command" = "mix" ]; then
+      if ! [ "$USING_DISTILLERY" = "false" ]; then
+        _release_command="distillery"
+      fi
+    fi
     local _committed_image="${DOCKER_RUN_IMAGE}:${_valid_docker_tag}-latest"
-    __docker commit "$_release_container" "$_committed_image" \
-      || error "Failed to commit release container"
+    # __docker() function cannot be used here, because passing the -c="LABEL …" args causes
+    # "docker commit requires at least 1 and at most 2 arguments" error, see:
+    # https://stackoverflow.com/questions/60008200/docker-commit-requires-at-least-1-and-at-most-2-arguments
+    # and no quoting helps unfortunately. Setting the release command is required when installing the default
+    # container start script (if no custom script is embedded into the image) because releases built with distillery
+    # needs a different ERL_DIST_PORT configuration as releases built with rebar3. See: remote_extract_release_archive()
+    if [ "$VERBOSE" = "true" ]; then
+      docker commit -c="LABEL edeliver.release.command=$_release_command" "$_release_container" "$_committed_image" || error "
+
+Failed to commit release container.      
+
+Command 'docker commit -c=\"LABEL edeliver.release.command=$_release_command\" $_release_container $_committed_image'
+
+failed with status code $?!
+
+Error output is displayed above.
+"
+    else # not verbose
+      local _stdout
+      _stdout="$(docker commit -c="LABEL edeliver.release.command=$_release_command" "$_release_container" "$_committed_image")" || error "
+$_stdout
+
+Failed to commit release container.
+
+Command 'docker commit -c=\"LABEL edeliver.release.command=$_release_command\" $_release_container $_committed_image'
+
+failed with status code $?!
+
+Stdout and error output is displayed above."
+    fi
 
     local _built_revision _build_branch
     _built_revision="$([ -n "$DOCKER_BUILD_DIR" ] && cd "$DOCKER_BUILD_DIR" 2>/dev/null && git rev-parse --short HEAD 2>/dev/null)" && {
@@ -858,7 +892,15 @@ upload_release_archive() {
   __detect_release_store_type
   status "Uploading archive of release $_release_version from $RELEASE_STORE_TYPE release store"
   # when building releases with mix, the tar does not contain the app name as subdirectory
-  [[ "$RELEASE_CMD" = "mix" ]] && [[ ! "$_release_file" =~ upgrade\.tar\.gz$ ]] && _destination_directory="${_destination_directory%%/}/${APP}"
+  if [ "$RELEASE_CMD" = "mix" ]; then
+    case "$_release_file" in
+      *upgrade.tar.gz)
+        ;;
+      *)
+        _destination_directory="${_destination_directory%%/}/${APP}"
+        ;;
+    esac
+  fi
   if [ "$RELEASE_STORE_TYPE" = "s3" ]; then
     local _aws_script_content=$(cat $BASE_PATH/libexec/aws)
     __remote "
@@ -925,11 +967,11 @@ EOF
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
     __remote "
-      [ -f $PROFILE ] && source $PROFILE
+      [ -f $PROFILE ] && . $PROFILE
       set -e
       mkdir -p ${_destination_directory} $SILENCE
       cd ${_destination_directory} $SILENCE
-      if [[ -z \"\$(docker images -q \"$_image_name\")\" ]]; then
+      if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
         echo \"Pulling release image $_image_name\" $SILENCE
         docker pull \"$_image_name\" $SILENCE || {
           echo \"Failed to pull release image $_image_name\" >&2
@@ -1096,7 +1138,12 @@ remote_extract_release_archive() {
   __detect_release_store_type
   if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     _archive_dir="${_archive_dir}/${APP}/bin"
-    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
+    local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}" _release_command="$RELEASE_CMD"
+    if [ "$_release_command" = "mix" ]; then
+      if ! [ "$USING_DISTILLERY" = "false" ]; then
+        _release_command="distillery"
+      fi
+    fi
     if [ -z "$CONTAINER_START_SCRIPT" ]; then
       CONTAINER_START_SCRIPT="/$APP/bin/start_container"
     fi
@@ -1107,22 +1154,43 @@ remote_extract_release_archive() {
       info "Configure mounting of vm args from $LINK_VM_ARGS to ${_vm_args_dest}"
       DOCKER_OPTS+=" --mount type=bind,source="${LINK_VM_ARGS}",target=${_vm_args_dest}"
     fi
+    # read which release command was used from the docker image lables because
+    # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
+    # as releases built with distillery. For distillery it needs to be a random port (0) while
+    # for rebar3 it needs to be the port the actual server listens on.
+    _release_command="$(docker inspect --format '{{ index .Config.Labels "edeliver.release.command"}}' "${_image_name}")"
+    # if release command was not found in image labels, fall back to edeliver configuration if available
+    if [[ -z "${_release_command// }" ]]; then
+      _release_command="$RELEASE_CMD"
+      if [ "$_release_command" = "mix" ]; then
+        if ! [ "$USING_DISTILLERY" = "false" ]; then
+          _release_command="distillery"
+        fi
+      fi
+    fi
     cat "${BASE_PATH}/docker/start_container" \
       | sed "s/{{edeliver-version}}/${_release_version}/g" \
       | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
       | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
+      | sed "s\${{edeliver-release-command}}\$${_release_command}\$g" \
       | sed "s/{{edeliver-app}}/${APP}/g" \
       | __remote "
-      [ -f $PROFILE ] && source $PROFILE
-      set -e -o pipefail
+      if [ \"\$0\" = \"/bin/sh\" ]; then
+        [ -f $PROFILE ] && . $PROFILE
+        set -e
+      else
+        [ -f $PROFILE ] && source $PROFILE
+        set -e -o pipefail
+      fi
       mkdir -p \"${_archive_dir}\"
       cd \"${_archive_dir}\" $SILENCE
       docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
          | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
          | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
          | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
+         | sed \"s\\\${{edeliver-release-command}}\\\$${_release_command}\\\$g\" \
          | sed \"s/{{edeliver-app}}/${APP}/g\" \
-         > \"$APP\" && {
+         > \"$APP\" && [ -s \"$APP\" ] && { # set -o pipefail is not avialble on non-bash shells, so file might be empty
         echo \"Extracted script\"
       } || {
         echo \"Copied edeliver default script\"
@@ -1130,7 +1198,7 @@ remote_extract_release_archive() {
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-    "
+    " || error "Failed to extract remote start script!"
   else
     status "Extracting archive ${_archive} into ${_archive_dir}"
     # when building releases with mix, the tar does not contain the app name as subdirectory

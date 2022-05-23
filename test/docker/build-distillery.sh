@@ -47,14 +47,14 @@ git rm "${PROJECT_DIR}/rebar.config"
 # create distillery release config
 mkdir -p "${PROJECT_DIR}/rel"
 cp "${TESTS_DIR}/../configs/distillery-rel-config.exs" "${PROJECT_DIR}/rel/config.exs"
-touch "${PROJECT_DIR}/rel/vm.args"
+cp "${TESTS_DIR}/../configs/distillery-vm.args" "${PROJECT_DIR}/rel/vm.args"
 # create app config
 mkdir -p "${PROJECT_DIR}/config"
 cp "${TESTS_DIR}/../configs/distillery-app-config.exs" "${PROJECT_DIR}/config/config.exs"
 
 # commit new configs
 git add "${PROJECT_DIR}/mix.exs" "${PROJECT_DIR}/rel" "${PROJECT_DIR}/rel/vm.args"
-git add "${PROJECT_DIR}/config/config.exs"
+git add "${PROJECT_DIR}/config/config.exs" "${PROJECT_DIR}/rel/config.exs"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
 git commit -m "Add distillery mix file"
@@ -77,6 +77,8 @@ _info ""
 _info "Checking whether image was built successfully…"
 if [ -n "$(docker images -q ${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-${GIT_REF})" ]; then
   _info "Image was built successfully"
+  echo "release_version=${RELEASE_VERSION}-${GIT_REF}" >> $GITHUB_ENV
+  echo "release_store=docker://${DOCKER_IMAGE_NAME}" >> $GITHUB_ENV
 else
   _error "Building image failed!"
 fi

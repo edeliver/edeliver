@@ -2,31 +2,119 @@ name: Build Docker Release CI
 
 on: push
 
+env:
+  TERM: vt100 
+  APP: eco
+
 jobs:
 
   build-rebar3:
 
     runs-on: ubuntu-latest
 
+    env:
+      TEST_LOCALLY_AT: /tmp/eco/rebar3
+      ECO_PORT: 1883
+      DOCKER_OPTS: --publish 1883:1883
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
       run: test/docker/build-rebar3.sh
 
+    - name: Preparing Local Deploy
+      run: |
+        mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
+        echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
+    - name: Deploying Image Locally
+      env:
+        RELEASE_VERSION: ${{env.release_version}}
+        RELEASE_STORE: ${{env.release_store}}
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
+    - name: Running rebar3 Release Container
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco start
+    - name: Validating App echoes Request
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: sleep 10; echo "hello edeliver rebar3 server" | netcat -v localhost $ECO_PORT | tee /dev/stderr | grep rebar3
+    - name: Validating App responds to PINGs
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco ping
+
+
+
   build-distillery:
 
     runs-on: ubuntu-latest
 
+    env:
+      TEST_LOCALLY_AT: /tmp/eco/distillery
+      ECO_PORT: 1883
+      DOCKER_OPTS: --publish 1883:1883
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
       run: test/docker/build-distillery.sh
+    - name: Preparing Local Deploy
+      run: |
+        mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
+        echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
+    - name: Deploying Image Locally
+      env:
+        RELEASE_VERSION: ${{env.release_version}}
+        RELEASE_STORE: ${{env.release_store}}
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
+    - name: Running distillery Release Container
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco start
+    - name: Validating App echoes Request
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: sleep 10; echo "hello edeliver distillery server" | netcat -v localhost $ECO_PORT | tee /dev/stderr | grep distillery
+    - name: Validating App responds to PINGs
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco ping
+
 
   build-mix:
 
     runs-on: ubuntu-latest
 
+    env:
+      TEST_LOCALLY_AT: /tmp/eco/mix
+      ECO_PORT: 1883
+      DOCKER_OPTS: --publish 1883:1883    
+
     steps:
     - uses: actions/checkout@v2
     - name: Build Release Container
       run: test/docker/build-mix.sh
+
+    - name: Preparing Local Deploy
+      run: |
+        mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
+        echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
+    - name: Deploying Image Locally
+      env:
+        RELEASE_VERSION: ${{env.release_version}}
+        RELEASE_STORE: ${{env.release_store}}
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ./bin/edeliver deploy release locally --version=$RELEASE_VERSION --verbose
+    - name: Running mix Release Container
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco start
+    - name: Validating App echoes Request
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: sleep 10; echo "hello edeliver mix server" | netcat -v localhost $ECO_PORT | tee /dev/stderr | grep mix
+    - name: Validating App has running PID
+      env:
+        INTERNAL_INTERFACE: ${{env.internal_ip}}
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco pid      
