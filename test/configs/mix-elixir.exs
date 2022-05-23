@@ -18,6 +18,7 @@ defmodule Eco.Mixfile do
   defp deps do
     [{:lager, "~> 3.6.7"},
      {:ranch, "~> 1.6.2"},
+     {:distillery, "~> 2.0", runtime: false},
      {:edeliver, "~> 1.9.0-rc.2"}]
   end
 end
