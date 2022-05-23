@@ -114,7 +114,7 @@ jobs:
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
       run: sleep 10; echo "hello edeliver mix server" | netcat -v localhost $ECO_PORT | tee /dev/stderr | grep mix
-    - name: Validating App responds to PINGs
+    - name: Validating App has running PID
       env:
         INTERNAL_INTERFACE: ${{env.internal_ip}}
-      run: ${TEST_LOCALLY_AT}/eco/bin/eco ping      
+      run: ${TEST_LOCALLY_AT}/eco/bin/eco pid      
