@@ -13,6 +13,7 @@ INTERNAL_INTERFACE="${INTERNAL_INTERFACE:-127.0.0.1}"
 HOST_NAME="${HOST_NAME:-$(hostname -f)}"
 ERL_DIST_PORT="${ERL_DIST_PORT:-4321}"
 ERLANG_COOKIE_FILE="${ERLANG_COOKIE_FILE:-"$HOME/.erlang.cookie"}"
+DEFAULT_ERLANG_COOKIE_TARGET="/root/.erlang.cookie"
 INET_DIST_USE_INTERFACE="${INET_DIST_USE_INTERFACE:-"{$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"}"
 EPMD_MODULE="${EPMD_MODULE:-edeliver_epmd}"
 ERL_ZFLAGS="${ERL_ZFLAGS:-"-start_epmd false -epmd_module ${EPMD_MODULE} ${ADDITIONAL_ERL_ZFLAGS}"}"
@@ -73,6 +74,9 @@ if [[ "$DOCKER_OPTS" == *edeliver-release-command* ]]; then
   RELEASE_CMD="distillery" # | mix | rebar3
 fi
 
+if [ "$RELEASE_CMD" = "mix" ]; then
+  DEFAULT_ERLANG_COOKIE_TARGET="/${APP}/releases/COOKIE"
+fi
 
 ARGS=()
 for ARG in $@; do
@@ -165,6 +169,8 @@ elif [ -t 0 ]; then # terminal attatched
   DOCKER_OPTS+=" --tty --interactive" 
 fi
 
+ERLANG_COOKIE_TARGET="${ERLANG_COOKIE_TARGET:-$DEFAULT_ERLANG_COOKIE_TARGET}"
+
 if [ "$COMMAND" = "exec" ]; then
   docker exec -ti $CONTAINER_NAME bash
 else
@@ -174,7 +180,7 @@ else
       --env ERL_ZFLAGS="${ERL_ZFLAGS}" \
       --env DEBUG_BOOT="${DEBUG_BOOT}" \
       --env PIPE_DIR=/${APP}/pipes \
-      --mount type=bind,source="${ERLANG_COOKIE_FILE},target=/root/.erlang.cookie" \
+      --mount type=bind,source="${ERLANG_COOKIE_FILE},target=${ERLANG_COOKIE_TARGET}" \
       --mount type=bind,source="${PIPE_DIR}",target=/${APP}/pipes \
       "${DOCKER_RUN_IMAGE}:${TAG}" bin/${APP} ${ARGS[@]}
 fi
