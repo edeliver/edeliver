@@ -68,11 +68,21 @@ if ! [ -f "$ERLANG_COOKIE_FILE" ]; then
 
 fi
 
+RELEASE_CMD="${RELEASE_CMD:-"{{edeliver-release-command}}"}"
+if [[ "$DOCKER_OPTS" == *edeliver-release-command* ]]; then
+  RELEASE_CMD="distillery" # | mix | rebar3
+fi
+
+
 ARGS=()
 for ARG in $@; do
   case "$ARG" in
     start|daemon)
-      ARGS+=("console")
+      if [ "$RELEASE_CMD" = "mix" ]; then
+        ARGS+=("start")
+      else
+        ARGS+=("console")
+      fi
       ;;
     --debug)
       DEBUG=1
@@ -102,13 +112,9 @@ DOCKER_OPTS="${DOCKER_OPTS:-"{{edeliver-docker-opts}}"}"
 if [[ "$DOCKER_OPTS" == *edeliver-docker-opts* ]]; then
   DOCKER_OPTS=""
 fi
-RELEASE_CMD="${RELEASE_CMD:-"{{edeliver-release-command}}"}"
-if [[ "$DOCKER_OPTS" == *edeliver-release-command* ]]; then
-  RELEASE_CMD="distillery" # | mix | rebar3
-fi
 
 case "$COMMAND" in
-  console|start|foreground|daemon|exec)
+  console|start|foreground|daemon|daemon_iex|exec|start_iex)
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE='{0,0,0,0}'" # bind to all interfaces in container to allow port mapping
     DOCKER_OPTS+=" --hostname ${HOST_NAME}" # required for long node names
     DOCKER_OPTS+=" --env ERL_DIST_PORT=$ERL_DIST_PORT" # pin port for distribution
@@ -129,7 +135,7 @@ case "$COMMAND" in
       echo "  Using container name $CONTAINER_NAME"
     fi
     ;;
-  *) # e.g. remote_console | ping
+  *) # e.g. remote | remote_console | ping
     DOCKER_OPTS=" --network host"
     if [ "$RELEASE_CMD" = "rebar3" ]; then
       # extended start script from rebar uses this to connecto to the
