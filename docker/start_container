@@ -162,6 +162,13 @@ esac
 DOCKER_OPTS+=" --env HOST_NAME=${HOST_NAME}"
 DOCKER_OPTS+=" --env REPLACE_OS_VARS=${REPLACE_OS_VARS}"
 
+# mix specific, mainly to set the host name of the long
+# node name
+RELEASE_DISTRIBUTION="${RELEASE_DISTRIBUTION:-name}"
+RELEASE_NODE="${RELEASE_NODE:-${APP}@${HOST_NAME}}"
+DOCKER_OPTS+=" --env RELEASE_DISTRIBUTION=${RELEASE_DISTRIBUTION}"
+DOCKER_OPTS+=" --env RELEASE_NODE=${RELEASE_NODE}"
+
 
 if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
