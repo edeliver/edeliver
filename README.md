@@ -182,7 +182,7 @@ When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as 
 
     {deps, [
       % ...
-      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.0-rc.3"}}}
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.0"}}}
     ]}.
 
 And link the `edeliver` binary to the root of your project directory:
