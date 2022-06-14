@@ -120,13 +120,13 @@ require_node_config() {
 
 # stops the build container whene deliver exits and a build
 # container was created because the BUILD_HOST is set to "docker".
-# if it exits normally the container is also removed, otherwise 
+# if it exits normally the container is also removed, otherwise
 # it is kept to be able to debug the build failure.
 stop_build_container() {
   local status="$?"
   if [ "$status" = "0" ]; then
     status "Removing build container"
-    _=$( __docker kill $DOCKER_BUILD_CONTAINER ) 
+    _=$( __docker kill $DOCKER_BUILD_CONTAINER )
     __docker rm $DOCKER_BUILD_CONTAINER
   else
     info "Stopping build container $DOCKER_BUILD_CONTAINER"
@@ -340,7 +340,7 @@ relx_generate_relup() {
 erlang_archive_release() {
   __detect_remote_release_dir
   __detect_remote_release_version
-  [[ "$RELEASE_CMD" = "mix" ]] && return 0 # mix archives release automatically
+  [[ "$RELEASE_CMD" = "mix" && "$USING_DISTILLERY" = "true" ]] && return 0 # mix archives release automatically
   status "Building archive of release ${RELEASE_VERSION}"
   # create tar
   __sync_remote "
@@ -349,6 +349,8 @@ erlang_archive_release() {
     cd $DELIVER_TO
     if [ \"$RELEASE_CMD\" = \"rebar\" ] || [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
+    elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
+      tar -zcpf $(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz -C $(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION} ${APP}
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to archive release\"
       $RELX_CMD tar
@@ -369,9 +371,7 @@ copy_release_to_release_store() {
   if [[ "$RELEASE_CMD" = "relx" ]]; then
     local _release_file="$(dirname $RELEASE_DIR)/_rel/${APP}-${RELEASE_VERSION}.tar.gz"
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
-    if [[ "$USING_DISTILLERY" = "true" ]]; then
-      local _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
-    fi
+    local _release_file="$(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz"
   else # used rebar to generate release
     local _release_file="$(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz"
   fi
@@ -474,7 +474,7 @@ EOF
     if [ "$VERBOSE" = "true" ]; then
       docker commit -c="LABEL edeliver.release.command=$_release_command" "$_release_container" "$_committed_image" || error "
 
-Failed to commit release container.      
+Failed to commit release container.
 
 Command 'docker commit -c=\"LABEL edeliver.release.command=$_release_command\" $_release_container $_committed_image'
 
@@ -1114,7 +1114,7 @@ __get_node_command() {
       fi
     "
   fi
-  
+
 }
 
 # starts the deployed release. if release is already running,
@@ -1395,7 +1395,7 @@ __detect_remote_release_dir() {
         exit 1
       fi
     else # built with rebar, mix or distillery
-      local _release_directories 
+      local _release_directories
       if [[ "$RELEASE_CMD" = "mix" && "$USING_DISTILLERY" = "false" ]]; then
         _release_file="start_erl.data"
       else
@@ -1479,7 +1479,7 @@ __show_upgrade_version_does_not_differ_error_message() {
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_SECRET_ACCESS_KEY (for s3)
 # AWS_BUCKET_NAME (for s3)
-# 
+#
 # DOCKER_RUN_IMAGE (for docker)
 __detect_release_store_type() {
   if [[ "$RELEASE_STORE" =~ ^[sS]3://[^@]+@[^:]+:.+$ ]]; then
