@@ -21,3 +21,14 @@ jobs:
     - name: Build Release TAR
       run: test/build-in-docker/build-mix.sh
   
+  build-distillery:
+
+    runs-on: ubuntu-latest
+
+    env:
+      TEST_LOCALLY_AT: /tmp/eco/distillery
+      ECO_PORT: 1883
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build Release Container
+      run: test/build-in-docker/build-distillery.sh
