@@ -351,7 +351,7 @@ erlang_archive_release() {
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
       echo \"using tar -zcpf to archive release\"
-      tar -zcpf $(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
+      tar --exclude=${APP}.tar.gz -zcpf $(dirname $RELEASE_DIR)/${APP}/releases/${RELEASE_VERSION}/${APP}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     elif [ \"$RELEASE_CMD\" = \"relx\" ]; then
       echo \"using relx to archive release\"
       $RELX_CMD tar
