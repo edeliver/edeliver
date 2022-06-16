@@ -1,5 +1,15 @@
 eDeliver Versions
 =================
+__1.9.1__
+
+  - Enhancements
+    - add `DOCKER_HUB_ACCESS_TOKEN` to list releases on Docker Hub
+    - improve listing of releases from Docker registry
+
+  - Fixes 
+    - creating release TAR when building in docker and with mix directly
+    - listing releases on Docker Hub 
+
 __1.9.0__
 
   - Enhancements

@@ -65,7 +65,7 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, ">= 1.9.0"},
+    {:edeliver, ">= 1.9.1"},
     {:distillery, "~> 2.1", warn_missing: false},
   ]
 end
@@ -157,7 +157,7 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver 
 ```exs
 defp deps do
   [
-    {:edeliver, ">= 1.9.0"},
+    {:edeliver, ">= 1.9.1"},
     {:distillery, "~> 2.1", warn_missing: false},
   ]
 end
@@ -182,7 +182,7 @@ When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as 
 
     {deps, [
       % ...
-      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.0"}}}
+      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.1"}}}
     ]}.
 
 And link the `edeliver` binary to the root of your project directory:
@@ -201,7 +201,7 @@ When using rebar, edeliver can be added as [rebar](https://github.com/basho/reba
 
     {deps, [
       % ...
-      {edeliver, "1.9.0",
+      {edeliver, "1.9.1",
         {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
     ]}.
 
