@@ -802,20 +802,31 @@ list_releases_in_store() {
   status "Listing ${APP} releases in ${RELEASE_STORE_TYPE} release store"
   local _release_files=( $(__get_releases_in_store "$_release_type") )
   local _app_column_width=${#APP}
+  [ "$RELEASE_STORE_TYPE" = "docker" ] && local _release_file_type="Image" || local _release_file_type="File"
   [[ $_app_column_width -lt 11 ]] && _app_column_width="11"
-  printf "\n %${_app_column_width}s | Version | Revision |    Type | File\n-" "Application"
+  printf "\n %${_app_column_width}s | Version | Revision |    Type | $_release_file_type\n-" "Application"
   for i in $(seq 1 $_app_column_width); do printf "-"; done
   printf '-' {1.."$_app_column_width"}
   printf "+---------+----------+---------+---------------------\n"
   local _release_file
   for _release_file in "${_release_files[@]}"; do
+    local _release_revision="" _release_version=""
     local _full_release_version=$(__release_version_from_archive_name "$_release_file" "$_release_type")
-    local _release_revision=${_full_release_version##*-}
-    _release_version=${_full_release_version%%-*}
+    if [[ "$_full_release_version" =~ - ]]; then
+      _release_revision=${_full_release_version##*-}
+      _release_version=${_full_release_version%%-*}
+    else
+      _release_version="$_full_release_version"
+    fi
     [[ "$_release_revision" = "$_release_version" ]] && _release_revision=""
-    local _removed_app_name=${_release_file/${APP}_/}
-    local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
-    local _current_release_type=${_removed_archive_extension/$_full_release_version./}
+    if [ "$RELEASE_STORE_TYPE" = "docker" ]; then
+      local _current_release_type="release"
+      local _release_file="${DOCKER_RUN_IMAGE}:${_full_release_version}"
+    else
+      local _removed_app_name=${_release_file/${APP}_/}
+      local _removed_archive_extension=${_removed_app_name/\.tar\.gz/}
+      local _current_release_type=${_removed_archive_extension/$_full_release_version./}
+    fi
     printf " %${_app_column_width}s | %7s | %8s | %7s | %s\n" "$APP" "$_release_version" "$_release_revision" "$_current_release_type" "$_release_file"
   done
 }
@@ -845,14 +856,22 @@ __get_releases_in_store() {
   elif [ "$RELEASE_STORE_TYPE" = "docker" ] && [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
     docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
-    local _registry _name _image _out _status _tags
+    local _registry _name _image _out _status _tags _using_docker_hub
     IFS='/' read _registry _name _image < <(echo "$DOCKER_RUN_IMAGE")
     if [ -n "$_registry" ] && [ -n "$_name" ] && [ -n "$_image" ]; then
       :
-    else
+    else # using DockerHub as registry
       _image="$_name"
       _name="$_registry"
       _registry="index.docker.io"
+      _using_docker_hub="true"
+      # authenticate with DockerHub access token to create a Bearer token used as DOCKER_REGISTRY_TOKEN
+      if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ] && [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
+        DOCKER_REGISTRY_TOKEN="$(curl --silent -u "${_name}:${DOCKER_HUB_ACCESS_TOKEN}" \
+                                      --get --data-urlencode "service=registry.docker.io" \
+                                      --data-urlencode "scope=repository:${_name}/${_image}:pull" \
+                                      "https://auth.docker.io/token" | sed "s/{.*\"token\":\"\([^\"]*\).*}/\1/g")"
+      fi
     fi
     if [ -n "$DOCKER_REGISTRY_TOKEN" ]; then
       _out="$(curl --fail --silent -H "Authorization: Bearer $DOCKER_REGISTRY_TOKEN" "https://${_registry}/v2/${_name}/${_image}/tags/list")"
@@ -864,10 +883,15 @@ __get_releases_in_store() {
       echo "Failed to detect tags of image ${_name}/${_image} from registry ${_registry}" >&2
       if [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
         echo "Maybe it is required to set DOCKER_REGISTRY_TOKEN in your edeliver config for authorization." >&2
+        if [ "$_using_docker_hub" = "true" ] && [ -z "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+          echo "You can also set DOCKER_HUB_ACCESS_TOKEN to generate DOCKER_REGISTRY_TOKEN automatically." >&2
+        fi
       fi
       exit 2
     else
       local _image_info _tag _created_at
+      # e.g. for google container registry containing detaild information about tags and their timestamps:
+      # {"manifest": {"sha256:03302a…": {"timeCreatedMs":…, "tag":["tag1"], …}, "tags":["tag1","tag2"]}
       for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
         _tag="$(echo "$_image_info" | grep -oe '\"tag\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " ")"
         _created_at="$(echo "$_image_info" | grep -oe '\"timeCreatedMs\"\s*:\s*\"[^\"]\+\"' | cut -f2 -d ":" | grep -oe '"[^"]\+"' | tr -d '"')"
@@ -875,6 +899,11 @@ __get_releases_in_store() {
           echo "$_created_at $_tag"
         fi
       done | sort -n | cut -d' ' -f 2-
+      if [ -z "$_tag" ]; then
+        # dockerhub does not have a list of single tags with timestamps, so access the tags direclty
+        # from a struct like: {"name":"user-name/image-name","tags":["tag1","tag2"]}
+        echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " "
+      fi
     fi
   else
     error_message "Cannot detect releases in store for store type ${RELEASE_STORE_TYPE}" >&2; exit 2
