@@ -856,14 +856,22 @@ __get_releases_in_store() {
   elif [ "$RELEASE_STORE_TYPE" = "docker" ] && [ "$DEPLOY_ENVIRONMENT" = "local" ]; then
     docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
-    local _registry _name _image _out _status _tags
+    local _registry _name _image _out _status _tags _using_docker_hub
     IFS='/' read _registry _name _image < <(echo "$DOCKER_RUN_IMAGE")
     if [ -n "$_registry" ] && [ -n "$_name" ] && [ -n "$_image" ]; then
       :
-    else
+    else # using DockerHub as registry
       _image="$_name"
       _name="$_registry"
       _registry="index.docker.io"
+      _using_docker_hub="true"
+      # authenticate with DockerHub access token to create a Bearer token used as DOCKER_REGISTRY_TOKEN
+      if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ] && [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
+        DOCKER_REGISTRY_TOKEN="$(curl --silent -u "${_name}:${DOCKER_HUB_ACCESS_TOKEN}" \
+                                      --get --data-urlencode "service=registry.docker.io" \
+                                      --data-urlencode "scope=repository:${_name}/${_image}:pull" \
+                                      "https://auth.docker.io/token" | sed "s/{.*\"token\":\"\([^\"]*\).*}/\1/g")"
+      fi
     fi
     if [ -n "$DOCKER_REGISTRY_TOKEN" ]; then
       _out="$(curl --fail --silent -H "Authorization: Bearer $DOCKER_REGISTRY_TOKEN" "https://${_registry}/v2/${_name}/${_image}/tags/list")"
@@ -875,6 +883,9 @@ __get_releases_in_store() {
       echo "Failed to detect tags of image ${_name}/${_image} from registry ${_registry}" >&2
       if [ -z "$DOCKER_REGISTRY_TOKEN" ]; then
         echo "Maybe it is required to set DOCKER_REGISTRY_TOKEN in your edeliver config for authorization." >&2
+        if [ "$_using_docker_hub" = "true" ] && [ -z "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+          echo "You can also set DOCKER_HUB_ACCESS_TOKEN to generate DOCKER_REGISTRY_TOKEN automatically." >&2
+        fi
       fi
       exit 2
     else
