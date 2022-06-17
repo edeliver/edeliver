@@ -60,6 +60,7 @@ defmodule Edeliver.Mixfile do
       files: [
         "bin",
         "CHANGELOG.md",
+        "docker",
         "lib",
         "libexec",
         "mix.exs",
