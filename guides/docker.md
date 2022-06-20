@@ -25,6 +25,17 @@ DOCKER_BUILD_IMAGE="elixir:1.13.3" # default
 # `docker push edeliver/echo-server:<version>`.
 RELEASE_STORE="docker://edeliver/echo-server"
 
+# If the release image should be pushed to the Google Container Registry, 
+# access rights can be granted  with a Bearer token generated
+# like this:
+if [[ "$RELEASE_STORE" = *gcr.io* ]]; then
+  DOCKER_REGISTRY_TOKEN="$(gcloud auth print-access-token || :)"
+else
+  # If using Docker Hub, the Bearer token will be be fetched 
+  # by edeliver with the private Docker Hub access token:
+  DOCKER_HUB_ACCESS_TOKEN="****"
+fi
+
 # The image which is used to create the final release image
 # specified in RELEASE_STORE which can be deployed. It should
 # contain anything which is required during runtime. The default
