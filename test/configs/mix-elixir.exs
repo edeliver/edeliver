@@ -22,6 +22,6 @@ defmodule Eco.Mixfile do
     [{:lager, "~> 3.6.7"},
      {:ranch, "~> 1.6.2"},
      {:distillery, "~> 2.0", runtime: false},
-     {:edeliver, "~> 1.9.1"}]
+     {:edeliver, "~> 1.9.2"}]
   end
 end

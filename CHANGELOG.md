@@ -1,5 +1,12 @@
 eDeliver Versions
 =================
+
+__1.9.2__
+
+  - Fixes 
+    - include missing default file to start release containers into hex package
+    - list available releases on google container registry correctly
+
 __1.9.1__
 
   - Enhancements
