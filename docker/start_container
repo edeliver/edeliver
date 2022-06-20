@@ -153,7 +153,10 @@ case "$COMMAND" in
     DOCKER_OPTS+=" --env DEFAULT_DIST_PORT=${ERL_DIST_PORT}" # port to connect remote console to and default ports for all nodes
     DOCKER_OPTS+=" --add-host ${HOST_NAME}:${INTERNAL_INTERFACE}" 
     DOCKER_OPTS+=" --env INET_DIST_USE_INTERFACE={$(echo "$INTERNAL_INTERFACE" | tr "." ",")}"
-    
+    if [ "$COMMAND" = "stop" ]; then
+      # stop command waits for server PID to terminate
+      DOCKER_OPTS+=" --pid=container:${CONTAINER_NAME}"
+    fi    
     ;;
 esac
 
