@@ -892,14 +892,15 @@ __get_releases_in_store() {
       local _image_info _tag _created_at
       # e.g. for google container registry containing detaild information about tags and their timestamps:
       # {"manifest": {"sha256:03302a…": {"timeCreatedMs":…, "tag":["tag1"], …}, "tags":["tag1","tag2"]}
-      for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
-        _tag="$(echo "$_image_info" | grep -oe '\"tag\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " ")"
-        _created_at="$(echo "$_image_info" | grep -oe '\"timeCreatedMs\"\s*:\s*\"[^\"]\+\"' | cut -f2 -d ":" | grep -oe '"[^"]\+"' | tr -d '"')"
-        if [ -n "$_tag" ]; then
-          echo "$_created_at $_tag"
-        fi
-      done | sort -n | cut -d' ' -f 2-
-      if [ -z "$_tag" ]; then
+      if echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+' >/dev/null 2>&1; then
+        for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
+          _tag="$(echo "$_image_info" | grep -oe '\"tag\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " ")"
+          _created_at="$(echo "$_image_info" | grep -oe '\"timeCreatedMs\"\s*:\s*\"[^\"]\+\"' | cut -f2 -d ":" | grep -oe '"[^"]\+"' | tr -d '"')"
+          if [ -n "$_tag" ]; then
+            echo "$_created_at $_tag"
+          fi
+        done | sort -n | cut -d' ' -f 2-
+      else
         # dockerhub does not have a list of single tags with timestamps, so access the tags direclty
         # from a struct like: {"name":"user-name/image-name","tags":["tag1","tag2"]}
         echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " "
