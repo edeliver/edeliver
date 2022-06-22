@@ -444,9 +444,25 @@ EOF
       info "Pulling release base image $DOCKER_RELEASE_BASE_IMAGE"
       __docker pull "$DOCKER_RELEASE_BASE_IMAGE" || error "Failed to pull release base image $DOCKER_RELEASE_BASE_IMAGE"
     fi
-    local _release_container
+    local _release_container _working_dir
     info "Creating release container"
-    _release_container="$(__docker create "$DOCKER_RELEASE_BASE_IMAGE")" || error "Failed to create release container"
+    # get the current working dir of the release base image, because while copying the working dir
+    # must not be set to the release destination /$APP which is expected to be the case
+    if [ -n "$DOCKER_RELEASE_IMAGE_WORKDIR" ]; then
+      _working_dir="$DOCKER_RELEASE_IMAGE_WORKDIR"
+    else
+      _working_dir="$(__docker image inspect --format='{{.Config.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
+      if [ -z "$_working_dir" ]; then
+        _working_dir="$(__docker image inspect --format='{{.ContainerConfig.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
+      fi
+      if [ -z "$_working_dir" ]; then
+        _working_dir="/${APP}"
+      fi
+    fi
+    # ensure that the workdir is not /$APP by settings it to /tmp, because othewiese the docker cp command from
+    # below which copies to /$APP will end up unexpectedly in /$APP/$APP. This workdir would be committed in the
+    # "docker commit" step below, so it will be reset to $_working_dir on commit.
+    _release_container="$(__docker create --workdir=/tmp  "$DOCKER_RELEASE_BASE_IMAGE")" || error "Failed to create release container"
     if [ -z "$RELEASE_DIR" ]; then
       __detect_remote_release_dir || error "Failed to detect release dir"
     fi
@@ -473,7 +489,7 @@ EOF
     # container start script (if no custom script is embedded into the image) because releases built with distillery
     # needs a different ERL_DIST_PORT configuration as releases built with rebar3. See: remote_extract_release_archive()
     if [ "$VERBOSE" = "true" ]; then
-      docker commit -c="LABEL edeliver.release.command=$_release_command" "$_release_container" "$_committed_image" || error "
+      docker commit -c="LABEL edeliver.release.command=$_release_command" -c="WORKDIR $_working_dir" "$_release_container" "$_committed_image" || error "
 
 Failed to commit release container.
 
@@ -485,7 +501,7 @@ Error output is displayed above.
 "
     else # not verbose
       local _stdout
-      _stdout="$(docker commit -c="LABEL edeliver.release.command=$_release_command" "$_release_container" "$_committed_image")" || error "
+      _stdout="$(docker commit -c="LABEL edeliver.release.command=$_release_command" -c="WORKDIR $_working_dir" "$_release_container" "$_committed_image")" || error "
 $_stdout
 
 Failed to commit release container.

@@ -1,6 +1,11 @@
 eDeliver Versions
 =================
 
+__1.9.3__
+
+  - Enhancements
+    - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
+
 __1.9.2__
 
   - Fixes 
