@@ -1,4 +1,4 @@
-# Docker Support 
+# Docker Support
 
 edeliver also provides support for docker containers. It provides
 
@@ -25,13 +25,13 @@ DOCKER_BUILD_IMAGE="elixir:1.13.3" # default
 # `docker push edeliver/echo-server:<version>`.
 RELEASE_STORE="docker://edeliver/echo-server"
 
-# If the release image should be pushed to the Google Container Registry, 
+# If the release image should be pushed to the Google Container Registry,
 # access rights can be granted  with a Bearer token generated
 # like this:
 if [[ "$RELEASE_STORE" = *gcr.io* ]]; then
   DOCKER_REGISTRY_TOKEN="$(gcloud auth print-access-token || :)"
 else
-  # If using Docker Hub, the Bearer token will be be fetched 
+  # If using Docker Hub, the Bearer token will be be fetched
   # by edeliver with the private Docker Hub access token:
   DOCKER_HUB_ACCESS_TOKEN="****"
 fi
@@ -39,7 +39,7 @@ fi
 # The image which is used to create the final release image
 # specified in RELEASE_STORE which can be deployed. It should
 # contain anything which is required during runtime. The default
-# image just contains open ssl and expects that the erts is 
+# image just contains open ssl and expects that the erts is
 # embedded into the release.
 DOCKER_RELEASE_BASE_IMAGE="edeliver/release-base:1.0" # default
 
@@ -51,7 +51,7 @@ DOCKER_RELEASE_BASE_IMAGE="edeliver/release-base:1.0" # default
 # port(s) your app exposes
 DOCKER_OPTS="--publish 8080:8080"
 
-# Links or actually mounts the vm.args file from the (deploy) host 
+# Links or actually mounts the vm.args file from the (deploy) host
 # into the container at /$APP/releases/$VERSION/vm.args
 # It configures the erlang / elixir node and could load e.g. additional
 # config from the host with --config /etc/echo-server/sys.config
@@ -69,7 +69,7 @@ To build the release in a docker container (1.), `BUILD_HOST="docker"` must be s
 ## Building a Docker Image
 To also embed the built release into a docker image (2.), edeliver needs to be configured to use a docker registry as release store by setting it e.g. like this in the `.deliver/config` file: `RELEASE_STORE="docker://<account-name>/<release-image-name>`, e.g. `docker://edeliver/echo-server` or `docker://eu.gcr.io/edeliver/echo-server`.
 
-Edeliver then pulls a (runtime) base image from `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [edeliver/release-base:1.0](https://hub.docker.com/r/edeliver/release-base)), copies the release into it and commits a new docker image as `/<account-name>/<release-image-name>:<release-version>-<git-rev>`, e.g. `edeliver/echo-server:1.0-f5ddf03` which can be pushed manually to the registry or automatically with the `--push` flag. This is the image which can be deployed and started on the staging or production hosts. Ensure the **docker daemon is authenticated** at the (private) registry by running `docker login` before or `gcloud auth login` etc. 
+Edeliver then pulls a (runtime) base image from `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [edeliver/release-base:1.0](https://hub.docker.com/r/edeliver/release-base)), copies the release into it and commits a new docker image as `/<account-name>/<release-image-name>:<release-version>-<git-rev>`, e.g. `edeliver/echo-server:1.0-f5ddf03` which can be pushed manually to the registry or automatically with the `--push` flag. This is the image which can be deployed and started on the staging or production hosts. Ensure the **docker daemon is authenticated** at the (private) registry by running `docker login` before or `gcloud auth login` etc.
 Since it is recommended to embed the erlang runtime into the release, the `DOCKER_RELEASE_BASE_IMAGE` needs to contain only libraries required during runtime, e.g. like the default image provided by edeliver:
 
 ```Docker
@@ -85,7 +85,7 @@ ENV LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8" LANGUAGE="en_US:en"
 
 ## Deploying a Docker Image
 
-`./edeliver deploy release to <staging|production> --version=<release-version>` deploys the release to a staging or production host by **pulling**  the image with the release version as tag and **extracting a script** from the path `/$APP/bin/start_container` in the container to `$DELIVER_TO/bin/$APP` on the host. If no such script is embedded, edeliver copies its own [generic script](https://github.com/edeliver/edeliver/blob/f5ddf03377141cad24af2e9e0fb704e2c06b2411/docker/start_container) there. It can also be used as template and when embedding a modified extended version. The script location in the container can be changed with `CONTAINER_START_SCRIPT`.
+`./edeliver deploy release to <staging|production> --version=<release-version>` deploys the release to a staging or production host by **pulling**  the image with the release version as tag and **extracting a script** from the path `/$APP/bin/start_container` in the container to `$DELIVER_TO/bin/$APP` on the host. If no such script is embedded, edeliver copies its own [generic script](https://github.com/edeliver/edeliver/blob/master/docker/start_container) there. It can also be used as template and when embedding a modified extended version. The script location in the container can be changed with `CONTAINER_START_SCRIPT`.
 
 When extracting the script or copying the default script edeliver pins the deployed version by replacing the string `{{edeliver-version}}` with the deployed version, `{{edeliver-docker-image}}` with the image name from the `RELEASE_STORE` and other tags, like `{{edeliver-app}}` with `$APP` and `{{edeliver-docker-opts}}` with `DOCKER_OPTS` from the `.deliver/config`. They can be used e.g. to **expose ports** used by the release from inside of the container to the host, e.g. `DOCKER_OPTS="--publish 8080"`.
 
@@ -93,9 +93,9 @@ It is required, that the deploy host is also authenticated at the private docker
 
 ## Running a Docker Image
 
-The extracted [script](https://github.com/edeliver/edeliver/blob/f5ddf03377141cad24af2e9e0fb704e2c06b2411/docker/start_container) at `$DELIVER_TO/bin/$APP` can be used to start and control the release as usual, e.g. to start the container in the foreground run `$DELIVER_TO/bin/$APP console` or to connect to a running node `$DELIVER_TO/bin/$APP remote_console`. This script **[configures](https://github.com/edeliver/edeliver/blob/f5ddf03377141cad24af2e9e0fb704e2c06b2411/docker/start_container#L80-L107) the container and the erlang / elixir node** to be able to run in a container and to connect to a running node in the container. 
+The extracted [script](https://github.com/edeliver/edeliver/blob/master/docker/start_container) at `$DELIVER_TO/bin/$APP` can be used to start and control the release as usual, e.g. to start the container in the foreground run `$DELIVER_TO/bin/$APP console` or to connect to a running node `$DELIVER_TO/bin/$APP remote_console`. This script **[configures](https://github.com/edeliver/edeliver/blob/master/docker/start_container#L120-L158) the container and the erlang / elixir node** to be able to run in a container and to connect to a running node in the container.
 
-To achieve this, edeliver starts the release **epmd-les**s and with an own [epmd module](https://github.com/edeliver/edeliver/blob/f5ddf03377141cad24af2e9e0fb704e2c06b2411/src/edeliver_epmd.erl). **Ensure edeliver is embedded as application in your release** to ensure it is available when the release boots. 
+To achieve this, edeliver starts the release **epmd-les**s and with an own [epmd module](https://github.com/edeliver/edeliver/blob/master/src/edeliver_epmd.erl). **Ensure edeliver is embedded as application in your release** to ensure it is available when the release boots.
 
 By default a node started by edeliver in a container **binds to a fixed distribution port** set as `ERL_DIST_PORT` env, by default `4321`. Known nodes which are configured to run on a different port (e.g. because they run on the same host) can be configured by the `nodes` `edeliver` application config e.g. in the `sys.config` file of the release or be passed space-separated in the `EDELIVER_NODES` environment variable. The port can be specified separated by a `:` if it does not listen on the default `ERL_DIST_PORT` or `DEFAULT_DIST_PORT` respectively which precedes the latter.
 e.g.
@@ -177,7 +177,7 @@ When using mix to build a docker release with edeliver, just ensure that edelive
 
 ```elixir
  # ./mix.exs
- 
+
   def application do
     [applications: [:sasl, :edeliver, …],
      mod: {:my_app, []}]
