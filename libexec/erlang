@@ -1185,6 +1185,8 @@ __get_node_command() {
         else
           __edeliver_synchronous_start
         fi
+      elif [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ] && [ \"${_node_command}\" = \"ping\" ]; then
+        __edeliver_node_running && echo pong || echo 'Node is not running!'
       elif [ \"$_is_restart_command\" = \"true\" ]; then
         # use stop / start instead of restart command to
         # not just restart the applications but also the erlang vm
