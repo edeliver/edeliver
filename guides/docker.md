@@ -93,7 +93,7 @@ It is required, that the deploy host is also authenticated at the private docker
 
 ## Running a Docker Image
 
-The extracted [script](https://github.com/edeliver/edeliver/blob/master/docker/start_container) at `$DELIVER_TO/bin/$APP` can be used to start and control the release as usual, e.g. to start the container in the foreground run `$DELIVER_TO/bin/$APP console` or to connect to a running node `$DELIVER_TO/bin/$APP remote_console`. This script **[configures](https://github.com/edeliver/edeliver/blob/master/docker/start_container#L120-L158) the container and the erlang / elixir node** to be able to run in a container and to connect to a running node in the container.
+The extracted [script](https://github.com/edeliver/edeliver/blob/master/docker/start_container) at `$DELIVER_TO/bin/$APP` can be used to start and control the release as usual, e.g. to start the container in the foreground run `$DELIVER_TO/bin/$APP console` or to connect to a running node `$DELIVER_TO/bin/$APP remote_console`. This script **[configures](https://github.com/edeliver/edeliver/blob/466869b9ada66d3c547bed6db3550ceffcb8249c/docker/start_container#L120-L158) the container and the erlang / elixir node** to be able to run in a container and to connect to a running node in the container.
 
 To achieve this, edeliver starts the release **epmd-les**s and with an own [epmd module](https://github.com/edeliver/edeliver/blob/master/src/edeliver_epmd.erl). **Ensure edeliver is embedded as application in your release** to ensure it is available when the release boots.
 
