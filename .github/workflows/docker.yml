@@ -1,6 +1,6 @@
 name: Build Docker Release CI
 
-on: push
+on: [push, pull_request]
 
 env:
   TERM: vt100 
