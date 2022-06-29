@@ -1164,12 +1164,8 @@ __get_node_command() {
         output_filter_command_options=''
       fi
       __edeliver_node_running() {
-        if [ \"$RELEASE_CMD\" = \"mix\" ]; then
-          if [ \"$USING_DISTILLERY\" = \"true\" ]; then
-            bin/${APP} pid 2>/dev/null >/dev/null
-          else 
-            bin/${APP} ping 2>/dev/null >/dev/null
-          fi
+        if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+          bin/${APP} pid 2>/dev/null >/dev/null
         else
           bin/${APP} ping 2>/dev/null >/dev/null
         fi
