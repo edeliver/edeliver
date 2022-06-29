@@ -111,6 +111,6 @@ if [ -z "$RELEASE_CMD" ]; then
 fi
 
 if [ "$RELEASE_CMD" = "mix" ]; then
-    [[ -f "./rel/config.exs" ]] && USING_DISTILLERY="true"
+    [[ -f "./rel/config.exs" ]] && USING_DISTILLERY="${USING_DISTILLERY:-true}"
 fi
 
