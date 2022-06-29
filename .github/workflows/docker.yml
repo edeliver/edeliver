@@ -23,6 +23,7 @@ jobs:
 
     - name: Preparing Local Deploy
       run: |
+        sudo hostnamectl set-hostname rebar3.edeliver.test
         mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
         echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Deploying Image Locally
@@ -60,6 +61,7 @@ jobs:
       run: test/docker/build-distillery.sh
     - name: Preparing Local Deploy
       run: |
+        sudo hostnamectl set-hostname distillery.edeliver.test
         mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
         echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Deploying Image Locally
@@ -98,6 +100,7 @@ jobs:
 
     - name: Preparing Local Deploy
       run: |
+        sudo hostnamectl set-hostname mix.edeliver.test
         mkdir -p /home/runner/.ssh/ && touch /home/runner/.ssh/known_hosts
         echo "internal_ip=$(hostname -I | cut -d' ' -f1)" >> $GITHUB_ENV
     - name: Deploying Image Locally
