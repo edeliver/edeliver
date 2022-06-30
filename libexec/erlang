@@ -1142,7 +1142,7 @@ __get_node_command() {
   if declare -F "get_${_node_command}_node_command" > /dev/null; then
     eval "get_${_node_command}_node_command $@"
   else
-    if [[ "$USING_DISTILLERY" = "true" ]]; then
+    if [[ "$RELEASE_CMD" = "mix" ]]; then
       local _rpc_open_brackets="["
       local _rpc_close_brackets="]"
     else
@@ -1181,7 +1181,7 @@ __get_node_command() {
           __edeliver_node_running && break || :
           sleep 1
         done
-        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress,\"$APP\",:$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
       }
       if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
         if __edeliver_node_running; then
