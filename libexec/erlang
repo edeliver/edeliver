@@ -908,10 +908,12 @@ __get_releases_in_store() {
         if [ -z "$selected_tag" ]; then
           selected_tag="$tag"
         fi
-        if [ "$tag" != "<none>" ] && [[ -z "$max_images" || $i -lt "$max_images" ]]; then
-          echo "$tag"
-          _found_local_tags="true"
-          i=$(( i+1 ))
+        if [ "$tag" != "<none>" ]; then
+          if [ -z "$max_images" ] || [ $i -lt "$max_images" ]; then
+            echo "$tag"
+            _found_local_tags="true"
+            i=$(( i+1 ))
+          fi
         fi
       done
       if [ "$_found_local_tags" = "true" ]; then
@@ -1241,7 +1243,7 @@ remote_extract_release_archive() {
       # for rebar3 it needs to be the port the actual server listens on.
       _release_command=\"\$(docker inspect --format '{{ index .Config.Labels \"edeliver.release.command\"}}' \"${_image_name}\")\"
       # if release command was not found in image labels, fall back to edeliver configuration if available
-      if [[ -z \"${_release_command// }\" ]]; then
+      if [ -z \"${_release_command// }\" ]; then
         _release_command=\"$RELEASE_CMD\"
         if [ \"$_release_command\" = \"mix\" ]; then
           if ! [ \"$USING_DISTILLERY\" = \"false\" ]; then
