@@ -903,7 +903,22 @@ __get_releases_in_store() {
           echo "You can also set DOCKER_HUB_ACCESS_TOKEN to generate DOCKER_REGISTRY_TOKEN automatically." >&2
         fi
       fi
-      exit 2
+      local _found_local_tags="false"
+      for tag in $(docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"); do
+        if [ -z "$selected_tag" ]; then
+          selected_tag="$tag"
+        fi
+        if [ "$tag" != "<none>" ] && [[ -z "$max_images" || $i -lt "$max_images" ]]; then
+          echo "$tag"
+          _found_local_tags="true"
+          i=$(( i+1 ))
+        fi
+      done
+      if [ "$_found_local_tags" = "true" ]; then
+        echo "Using local tags from local docker registry." >&2
+      else
+        exit 2
+      fi
     else
       local _image_info _tag _created_at
       # e.g. for google container registry containing detaild information about tags and their timestamps:
