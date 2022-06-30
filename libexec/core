@@ -298,9 +298,21 @@ __remote() {
 
   __log "${_hosts} : $_remote_job"
 
+  if [ -t 0 ]; then 
+    local _in_a_pipe="false"
+  else 
+    local _in_a_pipe="true"
+    local _piped_data="$(</dev/stdin)"
+  fi
+
   for _host in $_hosts
   do
-    ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    if [ "$_in_a_pipe" = "true" ]; then
+      echo -n "$_piped_data" | ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    else
+      ssh -o ConnectTimeout="$SSH_TIMEOUT" "$_host" "$_remote_job $SILENCE" &
+    fi
+
     background_jobs_pids+=("$!")
     local _background_job="ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_remote_job $SILENCE"
     background_jobs+=("ssh -o ConnectTimeout=$SSH_TIMEOUT $_host $_error_info_for_remote_job $SILENCE")

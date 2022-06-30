@@ -903,7 +903,24 @@ __get_releases_in_store() {
           echo "You can also set DOCKER_HUB_ACCESS_TOKEN to generate DOCKER_REGISTRY_TOKEN automatically." >&2
         fi
       fi
-      exit 2
+      local _found_local_tags="false"
+      for tag in $(docker image ls --format "{{.Tag}}" "${DOCKER_RUN_IMAGE}"); do
+        if [ -z "$selected_tag" ]; then
+          selected_tag="$tag"
+        fi
+        if [ "$tag" != "<none>" ]; then
+          if [ -z "$max_images" ] || [ $i -lt "$max_images" ]; then
+            echo "$tag"
+            _found_local_tags="true"
+            i=$(( i+1 ))
+          fi
+        fi
+      done
+      if [ "$_found_local_tags" = "true" ]; then
+        echo "Using local tags from local docker registry." >&2
+      else
+        exit 2
+      fi
     else
       local _image_info _tag _created_at
       # e.g. for google container registry containing detaild information about tags and their timestamps:
@@ -1013,19 +1030,44 @@ EOF
       error "Uploading release file failed\n  source: ${_release_store_path%%/}/${_release_file} on $_release_store_host\n  destination: $_dest_file_name on deploy hosts"
   elif [ "$RELEASE_STORE_TYPE" = "docker" ]; then
     local _image_name="${DOCKER_RUN_IMAGE}:${_release_version}"
-    __remote "
-      [ -f $PROFILE ] && . $PROFILE
-      set -e
-      mkdir -p ${_destination_directory} $SILENCE
-      cd ${_destination_directory} $SILENCE
-      if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
-        echo \"Pulling release image $_image_name\" $SILENCE
-        docker pull \"$_image_name\" $SILENCE || {
-          echo \"Failed to pull release image $_image_name\" >&2
-          exit 1
-        }
+    if [ "$DOCKER_PUSH" = "true" ]; then
+      # push from local docker registry on local host to local docker registry
+      # on deploy hosts using docker save / load
+      if [ "$VERBOSE" = "true" ]; then
+        echo "Pushing release image $_image_name from local docker registry"
       fi
-    "
+      __docker save "$_image_name" | gzip -c - | base64 | __remote "
+        [ -f $PROFILE ] && . $PROFILE
+        set -e
+        mkdir -p ${_destination_directory} $SILENCE
+        cd ${_destination_directory} $SILENCE
+        if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
+          echo \"Loading release image $_image_name into local registry\" $SILENCE
+          base64 -d | gzip -d | docker load $SILENCE
+          if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
+            echo \"Failed to push release image $_image_name\" >&2
+            exit 1
+          fi
+        fi
+      " || error "Failed to push image from local docker registry to docker registry on deploy host"
+    else
+      __remote "
+        [ -f $PROFILE ] && . $PROFILE
+        set -e
+        mkdir -p ${_destination_directory} $SILENCE
+        cd ${_destination_directory} $SILENCE
+        if [ -z \"\$(docker images -q \"$_image_name\")\" ]; then
+          echo \"Pulling release image $_image_name\" $SILENCE
+          docker pull \"$_image_name\" $SILENCE || {
+            echo \"Failed to pull release image $_image_name\" >&2
+            if [ \"$DOCKER_PUSH\" != \"true\" ]; then
+              echo -e \"\nUse --push flag to push $_image_name \nfrom your local docker registry to the deploy host(s)\" >&2
+            fi
+            exit 1
+          }
+        fi
+      "
+    fi
   else
     error_message "Cannot upload release for store type ${RELEASE_STORE_TYPE}"; exit 2
   fi
@@ -1201,27 +1243,7 @@ remote_extract_release_archive() {
       info "Configure mounting of vm args from $LINK_VM_ARGS to ${_vm_args_dest}"
       DOCKER_OPTS+=" --mount type=bind,source="${LINK_VM_ARGS}",target=${_vm_args_dest}"
     fi
-    # read which release command was used from the docker image lables because
-    # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
-    # as releases built with distillery. For distillery it needs to be a random port (0) while
-    # for rebar3 it needs to be the port the actual server listens on.
-    _release_command="$(docker inspect --format '{{ index .Config.Labels "edeliver.release.command"}}' "${_image_name}")"
-    # if release command was not found in image labels, fall back to edeliver configuration if available
-    if [[ -z "${_release_command// }" ]]; then
-      _release_command="$RELEASE_CMD"
-      if [ "$_release_command" = "mix" ]; then
-        if ! [ "$USING_DISTILLERY" = "false" ]; then
-          _release_command="distillery"
-        fi
-      fi
-    fi
-    cat "${BASE_PATH}/docker/start_container" \
-      | sed "s/{{edeliver-version}}/${_release_version}/g" \
-      | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
-      | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
-      | sed "s\${{edeliver-release-command}}\$${_release_command}\$g" \
-      | sed "s/{{edeliver-app}}/${APP}/g" \
-      | __remote "
+    cat "${BASE_PATH}/docker/start_container" | __remote "
       if [ \"\$0\" = \"/bin/sh\" ]; then
         [ -f $PROFILE ] && . $PROFILE
         set -e
@@ -1232,11 +1254,6 @@ remote_extract_release_archive() {
       mkdir -p \"${_archive_dir}\"
       cd \"${_archive_dir}\" $SILENCE
       docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
-         | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
-         | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
-         | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
-         | sed \"s\\\${{edeliver-release-command}}\\\$${_release_command}\\\$g\" \
-         | sed \"s/{{edeliver-app}}/${APP}/g\" \
          > \"$APP\" && [ -s \"$APP\" ] && { # set -o pipefail is not avialble on non-bash shells, so file might be empty
         echo \"Extracted script\"
       } || {
@@ -1245,7 +1262,26 @@ remote_extract_release_archive() {
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-    " || error "Failed to extract remote start script!"
+      # read which release command was used from the docker image lables because
+      # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
+      # as releases built with distillery. For distillery it needs to be a random port (0) while
+      # for rebar3 it needs to be the port the actual server listens on.
+      _release_command=\"\$(docker inspect --format '{{ index .Config.Labels \"edeliver.release.command\"}}' \"${_image_name}\" | tr -d '[:space:]')\"
+      # if release command was not found in image labels, fall back to edeliver configuration if available
+      if [ -z \"\$_release_command\" ]; then
+        _release_command=\"$RELEASE_CMD\"
+        if [ \"\$_release_command\" = \"mix\" ]; then
+          if ! [ \"$USING_DISTILLERY\" = \"false\" ]; then
+            _release_command=\"distillery\"
+          fi
+        fi
+      fi
+      sed -i \"s/{{edeliver-version}}/${_release_version}/g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-release-command}}\\\$\${_release_command}\\\$g\" \"$APP\"
+      sed -i \"s/{{edeliver-app}}/${APP}/g\" \"$APP\"
+    " || error "Failed to install remote start script!"
   else
     status "Extracting archive ${_archive} into ${_archive_dir}"
     # when building releases with mix, the tar does not contain the app name as subdirectory
