@@ -1155,7 +1155,11 @@ __get_node_command() {
       [ -f \"$PROFILE\" ] && . \"$PROFILE\"
       set -e
       cd ${_app_path}/${APP} $SILENCE
-      output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+      if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+        output_lines=\"\$(bin/${APP} pid | wc -l | tr -d ' ')\"
+      else
+        output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+      fi
       if [ \"\$output_lines\" -gt 1 ]; then
         output_filter_command='tail'
         output_filter_command_options=\"-n+\$output_lines\"
