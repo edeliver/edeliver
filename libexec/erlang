@@ -1201,27 +1201,7 @@ remote_extract_release_archive() {
       info "Configure mounting of vm args from $LINK_VM_ARGS to ${_vm_args_dest}"
       DOCKER_OPTS+=" --mount type=bind,source="${LINK_VM_ARGS}",target=${_vm_args_dest}"
     fi
-    # read which release command was used from the docker image lables because
-    # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
-    # as releases built with distillery. For distillery it needs to be a random port (0) while
-    # for rebar3 it needs to be the port the actual server listens on.
-    _release_command="$(docker inspect --format '{{ index .Config.Labels "edeliver.release.command"}}' "${_image_name}")"
-    # if release command was not found in image labels, fall back to edeliver configuration if available
-    if [[ -z "${_release_command// }" ]]; then
-      _release_command="$RELEASE_CMD"
-      if [ "$_release_command" = "mix" ]; then
-        if ! [ "$USING_DISTILLERY" = "false" ]; then
-          _release_command="distillery"
-        fi
-      fi
-    fi
-    cat "${BASE_PATH}/docker/start_container" \
-      | sed "s/{{edeliver-version}}/${_release_version}/g" \
-      | sed "s\${{edeliver-docker-image}}\$${DOCKER_RUN_IMAGE}\$g" \
-      | sed "s\${{edeliver-docker-opts}}\$${DOCKER_OPTS}\$g" \
-      | sed "s\${{edeliver-release-command}}\$${_release_command}\$g" \
-      | sed "s/{{edeliver-app}}/${APP}/g" \
-      | __remote "
+    cat "${BASE_PATH}/docker/start_container" | __remote "
       if [ \"\$0\" = \"/bin/sh\" ]; then
         [ -f $PROFILE ] && . $PROFILE
         set -e
@@ -1232,11 +1212,6 @@ remote_extract_release_archive() {
       mkdir -p \"${_archive_dir}\"
       cd \"${_archive_dir}\" $SILENCE
       docker run --rm \"${_image_name}\" cat \"$CONTAINER_START_SCRIPT\" 2>/dev/null \
-         | sed \"s/{{edeliver-version}}/${_release_version}/g\" \
-         | sed \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \
-         | sed \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \
-         | sed \"s\\\${{edeliver-release-command}}\\\$${_release_command}\\\$g\" \
-         | sed \"s/{{edeliver-app}}/${APP}/g\" \
          > \"$APP\" && [ -s \"$APP\" ] && { # set -o pipefail is not avialble on non-bash shells, so file might be empty
         echo \"Extracted script\"
       } || {
@@ -1245,7 +1220,26 @@ remote_extract_release_archive() {
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-    " || error "Failed to extract remote start script!"
+      # read which release command was used from the docker image lables because
+      # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
+      # as releases built with distillery. For distillery it needs to be a random port (0) while
+      # for rebar3 it needs to be the port the actual server listens on.
+      _release_command=\"\$(docker inspect --format '{{ index .Config.Labels \"edeliver.release.command\"}}' \"${_image_name}\")\"
+      # if release command was not found in image labels, fall back to edeliver configuration if available
+      if [[ -z \"${_release_command// }\" ]]; then
+        _release_command=\"$RELEASE_CMD\"
+        if [ \"$_release_command\" = \"mix\" ]; then
+          if ! [ \"$USING_DISTILLERY\" = \"false\" ]; then
+            _release_command=\"distillery\"
+          fi
+        fi
+      fi
+      sed -i \"s/{{edeliver-version}}/${_release_version}/g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-release-command}}\\\$${_release_command}\\\$g\" \"$APP\"
+      sed -i \"s/{{edeliver-app}}/${APP}/g\" \"$APP\"
+    " || error "Failed to install remote start script!"
   else
     status "Extracting archive ${_archive} into ${_archive_dir}"
     # when building releases with mix, the tar does not contain the app name as subdirectory
