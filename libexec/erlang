@@ -1243,9 +1243,9 @@ remote_extract_release_archive() {
       # for rebar3 it needs to be the port the actual server listens on.
       _release_command=\"\$(docker inspect --format '{{ index .Config.Labels \"edeliver.release.command\"}}' \"${_image_name}\")\"
       # if release command was not found in image labels, fall back to edeliver configuration if available
-      if [ -z \"${_release_command// }\" ]; then
+      if [ -z \"\${_release_command// }\" ]; then
         _release_command=\"$RELEASE_CMD\"
-        if [ \"$_release_command\" = \"mix\" ]; then
+        if [ \"\$_release_command\" = \"mix\" ]; then
           if ! [ \"$USING_DISTILLERY\" = \"false\" ]; then
             _release_command=\"distillery\"
           fi
@@ -1254,7 +1254,7 @@ remote_extract_release_archive() {
       sed -i \"s/{{edeliver-version}}/${_release_version}/g\" \"$APP\"
       sed -i \"s\\\${{edeliver-docker-image}}\\\$${DOCKER_RUN_IMAGE}\\\$g\" \"$APP\"
       sed -i \"s\\\${{edeliver-docker-opts}}\\\$${DOCKER_OPTS}\\\$g\" \"$APP\"
-      sed -i \"s\\\${{edeliver-release-command}}\\\$${_release_command}\\\$g\" \"$APP\"
+      sed -i \"s\\\${{edeliver-release-command}}\\\$\${_release_command}\\\$g\" \"$APP\"
       sed -i \"s/{{edeliver-app}}/${APP}/g\" \"$APP\"
     " || error "Failed to install remote start script!"
   else
