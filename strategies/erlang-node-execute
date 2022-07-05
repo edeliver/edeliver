@@ -83,10 +83,8 @@ run() {
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" = "mix" ]]; then
     local __up_or_down="up"
     for arg in $ARGS; do [[ "$arg" = "down" ]] && local __up_or_down="down"; done
-    [[ -n "$VERSION" ]] && local __to_version=", \"$VERSION\"" || local __to_version=""
-    NODE_ACTION="${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:migrate, \"$APP\", \"$ECTO_REPOSITORY\", :${__up_or_down}${__to_version}${_rpc_close_brackets})'"
-    #     [[ -n "$VERSION" ]] && local __to_version=",\"$VERSION\"" || local __to_version=""
-    # NODE_ACTION="${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:migrate,\"$APP\",\"$ECTO_REPOSITORY\",:${__up_or_down}${__to_version}${_rpc_close_brackets})'"
+    [[ -n "$VERSION" ]] && local __to_version=",\"$VERSION\"" || local __to_version=""
+    NODE_ACTION="${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:migrate,\"$APP\",\"$ECTO_REPOSITORY\",:${__up_or_down}${__to_version}${_rpc_close_brackets})'"
   elif [[ "$NODE_ACTION" = migrate ]] && [[ "$RELEASE_CMD" != "mix" ]]; then
     error "Executing migrations is only supported when using mix as release command."
   elif [[ "$RELEASE_CMD" = "mix" ]]; then
