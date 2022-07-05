@@ -64,7 +64,7 @@ run() {
   [[ "$NODE_ACTION" = version ]] && status "getting release versions from $NODE_ENVIRONMENT servers" || status "${NODE_ACTION}ing $NODE_ENVIRONMENT servers"
   authorize_hosts
   local _rpc_command="rpc"
-  if [[ "$USING_DISTILLERY" = "true" || "$RELEASE_CMD" = "mix"; ]]; then
+  if [[ "$USING_DISTILLERY" = "true" || "$RELEASE_CMD" = "mix" ]]; then
     local _rpc_open_brackets="["
     local _rpc_close_brackets="]"
   else
