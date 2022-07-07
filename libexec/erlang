@@ -1156,9 +1156,9 @@ __get_node_command() {
       set -e
       cd ${_app_path}/${APP} $SILENCE
       if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
-        output_lines=\"\$(bin/${APP} pid | wc -l | tr -d ' ')\"
+        output_lines=\"\$(bin/${APP} pid 2>/dev/null | wc -l | tr -d ' ')\"
       else
-        output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+        output_lines=\"\$(bin/${APP} ping 2>/dev/null | wc -l | tr -d ' ')\"
       fi
       if [ \"\$output_lines\" -gt 1 ]; then
         output_filter_command='tail'
