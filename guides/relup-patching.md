@@ -20,23 +20,23 @@ To disable the automatic relup modifications you can use the `--skip-relup-mod` 
 
 If you want or need to implement your own `Edeliver.Relup.Modification`, the following instructions provided by edeliver can be used:
 
- - `Edeliver.Relup.Instructions.CheckProcessesRunningOldCode`: aborts the upgrade if processes uses old code from previous upgrades
- - `Edeliver.Relup.Instructions.CheckRanchAcceptors`: checks whether ranch acceptors can be found or aborts the upgrade
- - `Edeliver.Relup.Instructions.CheckRanchConnections`: checks whether ranch connections can be found or aborts the upgrade
- - `Edeliver.Relup.Instructions.CodeChangeOnAppProcesses`: runs `code_change` on suspended processes
- - `Edeliver.Relup.Instructions.FinishRunningRequests`: notifies running phoenix requests that an upgrade starts
- - `Edeliver.Relup.Instructions.Info`: prints info to the log on the nodes and the edeliver upgrade output
- - `Edeliver.Relup.Instructions.ReloadModules`: reloads changed modules
- - `Edeliver.Relup.Instructions.RerunFailedRequests`: reruns phoenix requests that failed during the upgrade
- - `Edeliver.Relup.Instructions.ResumeAppProcesses`: resumes suspended processes
- - `Edeliver.Relup.Instructions.ResumeChannels`: resumes suspended phoenix channels
- - `Edeliver.Relup.Instructions.ResumeRanchAcceptors`: resumes suspended ranch acceptors
- - `Edeliver.Relup.Instructions.Sleep`: sleeps some time. useful for upgrade testing
- - `Edeliver.Relup.Instructions.SoftPurge`: replaces `:brutal_purge` with `:soft_purge` in code-loading instructions
- - `Edeliver.Relup.Instructions.StartSection`: prints info to the log on the nodes and the edeliver upgrade output that a new upgrade section starts
- - `Edeliver.Relup.Instructions.SuspendAppProcesses`: suspends processes using changed code
- - `Edeliver.Relup.Instructions.SuspendChannels`: suspends phoenix channels
- - `Edeliver.Relup.Instructions.SuspendRanchAcceptors`: suspends ranch acceptors
+- `Edeliver.Relup.Instructions.CheckProcessesRunningOldCode`: aborts the upgrade if processes uses old code from previous upgrades
+- `Edeliver.Relup.Instructions.CheckRanchAcceptors`: checks whether ranch acceptors can be found or aborts the upgrade
+- `Edeliver.Relup.Instructions.CheckRanchConnections`: checks whether ranch connections can be found or aborts the upgrade
+- `Edeliver.Relup.Instructions.CodeChangeOnAppProcesses`: runs `code_change` on suspended processes
+- `Edeliver.Relup.Instructions.FinishRunningRequests`: notifies running phoenix requests that an upgrade starts
+- `Edeliver.Relup.Instructions.Info`: prints info to the log on the nodes and the edeliver upgrade output
+- `Edeliver.Relup.Instructions.ReloadModules`: reloads changed modules
+- `Edeliver.Relup.Instructions.RerunFailedRequests`: reruns phoenix requests that failed during the upgrade
+- `Edeliver.Relup.Instructions.ResumeAppProcesses`: resumes suspended processes
+- `Edeliver.Relup.Instructions.ResumeChannels`: resumes suspended phoenix channels
+- `Edeliver.Relup.Instructions.ResumeRanchAcceptors`: resumes suspended ranch acceptors
+- `Edeliver.Relup.Instructions.Sleep`: sleeps some time. useful for upgrade testing
+- `Edeliver.Relup.Instructions.SoftPurge`: replaces `:brutal_purge` with `:soft_purge` in code-loading instructions
+- `Edeliver.Relup.Instructions.StartSection`: prints info to the log on the nodes and the edeliver upgrade output that a new upgrade section starts
+- `Edeliver.Relup.Instructions.SuspendAppProcesses`: suspends processes using changed code
+- `Edeliver.Relup.Instructions.SuspendChannels`: suspends phoenix channels
+- `Edeliver.Relup.Instructions.SuspendRanchAcceptors`: suspends ranch acceptors
 
 #### Custom Instructions
 

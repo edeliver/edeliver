@@ -137,7 +137,7 @@ stop_build_container() {
 # starts the build container with the DOCKER_BUILD_IMAGE image
 # and automatically pulls it if not available locally. Pull output
 # is hidden until executed with --verbose. The container is started
-# detatched and the container id is set to DOCKER_BUILD_CONTAINER
+# detached and the container id is set to DOCKER_BUILD_CONTAINER
 start_build_container() {
   status "Creating build container"
   info "Starting build container with image $DOCKER_BUILD_IMAGE"
@@ -474,7 +474,7 @@ EOF
 
     local _valid_docker_tag
     _valid_docker_tag="$(echo "$RELEASE_VERSION" | sed 's/[^0-9A-Za-z_.-]*//g')"
-    info "Commiting as ${_valid_docker_tag}-latest"
+    info "Committing as ${_valid_docker_tag}-latest"
     local _release_command="$RELEASE_CMD"
     if [ "$_release_command" = "mix" ]; then
       if ! [ "$USING_DISTILLERY" = "false" ]; then
@@ -923,7 +923,7 @@ __get_releases_in_store() {
       fi
     else
       local _image_info _tag _created_at
-      # e.g. for google container registry containing detaild information about tags and their timestamps:
+      # e.g. for google container registry containing detailed information about tags and their timestamps:
       # {"manifest": {"sha256:03302a…": {"timeCreatedMs":…, "tag":["tag1"], …}, "tags":["tag1","tag2"]}
       if echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+' >/dev/null 2>&1; then
         for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
@@ -934,7 +934,7 @@ __get_releases_in_store() {
           fi
         done | sort -n | cut -d' ' -f 2-
       else
-        # dockerhub does not have a list of single tags with timestamps, so access the tags direclty
+        # dockerhub does not have a list of single tags with timestamps, so access the tags directly
         # from a struct like: {"name":"user-name/image-name","tags":["tag1","tag2"]}
         echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " "
       fi
@@ -1262,7 +1262,7 @@ remote_extract_release_archive() {
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-      # read which release command was used from the docker image lables because
+      # read which release command was used from the docker image labels because
       # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
       # as releases built with distillery. For distillery it needs to be a random port (0) while
       # for rebar3 it needs to be the port the actual server listens on.
