@@ -170,8 +170,10 @@ DOCKER_OPTS+=" --env RELEASE_DISTRIBUTION=${RELEASE_DISTRIBUTION}"
 DOCKER_OPTS+=" --env RELEASE_NODE=${RELEASE_NODE}"
 
 
-if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
+if [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
+elif [ "$COMMAND" = "start" ] && [ "$RELEASE_CMD" != "mix" ]; then
+  DOCKER_OPTS+=" --detach --tty"  
 elif [ -t 0 ]; then # terminal attatched
   DOCKER_OPTS+=" --tty --interactive" 
 fi

@@ -1142,7 +1142,7 @@ __get_node_command() {
   if declare -F "get_${_node_command}_node_command" > /dev/null; then
     eval "get_${_node_command}_node_command $@"
   else
-    if [[ "$USING_DISTILLERY" = "true" ]]; then
+    if [[ "$RELEASE_CMD" = "mix" ]]; then
       local _rpc_open_brackets="["
       local _rpc_close_brackets="]"
     else
@@ -1155,7 +1155,11 @@ __get_node_command() {
       [ -f \"$PROFILE\" ] && . \"$PROFILE\"
       set -e
       cd ${_app_path}/${APP} $SILENCE
-      output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+      if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+        output_lines=\"\$(bin/${APP} pid 2>/dev/null | wc -l | tr -d ' ')\"
+      else
+        output_lines=\"\$(bin/${APP} ping 2>/dev/null | wc -l | tr -d ' ')\"
+      fi
       if [ \"\$output_lines\" -gt 1 ]; then
         output_filter_command='tail'
         output_filter_command_options=\"-n+\$output_lines\"
@@ -1164,7 +1168,11 @@ __get_node_command() {
         output_filter_command_options=''
       fi
       __edeliver_node_running() {
-        bin/${APP} ping 2>/dev/null >/dev/null
+        if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+          bin/${APP} pid 2>/dev/null >/dev/null
+        else
+          bin/${APP} ping 2>/dev/null >/dev/null
+        fi
       }
       __edeliver_synchronous_start() {
         bin/${APP} start | \$output_filter_command \$output_filter_command_options
@@ -1173,15 +1181,16 @@ __get_node_command() {
           __edeliver_node_running && break || :
           sleep 1
         done
-        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress,\"$APP\",:$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
       }
       if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
-        ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
         if __edeliver_node_running; then
           echo \"${txtred}already running${txtrst}\" && exit 1
         else
           __edeliver_synchronous_start
         fi
+      elif [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ] && [ \"${_node_command}\" = \"ping\" ]; then
+        __edeliver_node_running && echo pong || echo 'Node is not running!'
       elif [ \"$_is_restart_command\" = \"true\" ]; then
         # use stop / start instead of restart command to
         # not just restart the applications but also the erlang vm
@@ -1258,7 +1267,7 @@ remote_extract_release_archive() {
         echo \"Extracted script\"
       } || {
         echo \"Copied edeliver default script\"
-        echo \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
+        echo -e \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
