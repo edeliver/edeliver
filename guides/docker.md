@@ -2,7 +2,6 @@
 
 edeliver also provides support for docker containers. It provides
 
-
   1. building in a docker container, which makes the need of a build host obsolete and …
   2. building a docker image which contains the release and can run the release as a docker container.
 
@@ -64,9 +63,11 @@ DOCKER_OPTS+=" --mount type=bind,source=/etc/echo-server,target=/etc/echo-server
 ```
 
 ## Building in a Docker Container
+
 To build the release in a docker container (1.), `BUILD_HOST="docker"` must be set and optionally the `DOCKER_BUILD_IMAGE` which will be pulled and used to build the release, similar to a build host and should contain all tools needed. [elixir:1.13.3](https://hub.docker.com/_/elixir) is the default `DOCKER_BUILD_IMAGE` but you could also use [existing extended images](https://hub.docker.com/r/enpedasi/nodejs-phoenix), e.g. to build a [phoenix](https://phoenixframework.org/) app or build an own docker image containing everything required by your app.
 
 ## Building a Docker Image
+
 To also embed the built release into a docker image (2.), edeliver needs to be configured to use a docker registry as release store by setting it e.g. like this in the `.deliver/config` file: `RELEASE_STORE="docker://<account-name>/<release-image-name>`, e.g. `docker://edeliver/echo-server` or `docker://eu.gcr.io/edeliver/echo-server`.
 
 Edeliver then pulls a (runtime) base image from `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [edeliver/release-base:1.0](https://hub.docker.com/r/edeliver/release-base)), copies the release into it and commits a new docker image as `/<account-name>/<release-image-name>:<release-version>-<git-rev>`, e.g. `edeliver/echo-server:1.0-f5ddf03` which can be pushed manually to the registry or automatically with the `--push` flag. This is the image which can be deployed and started on the staging or production hosts. Ensure the **docker daemon is authenticated** at the (private) registry by running `docker login` before or `gcloud auth login` etc.
@@ -99,12 +100,15 @@ To achieve this, edeliver starts the release **epmd-les**s and with an own [epmd
 
 By default a node started by edeliver in a container **binds to a fixed distribution port** set as `ERL_DIST_PORT` env, by default `4321`. Known nodes which are configured to run on a different port (e.g. because they run on the same host) can be configured by the `nodes` `edeliver` application config e.g. in the `sys.config` file of the release or be passed space-separated in the `EDELIVER_NODES` environment variable. The port can be specified separated by a `:` if it does not listen on the default `ERL_DIST_PORT` or `DEFAULT_DIST_PORT` respectively which precedes the latter.
 e.g.
-```
+
+```sh
 EDELIVER_NODES="foo@bar.local baz@bar.local:4323` bin/my-app console
 ```
+
 Starts a my-app node which can connect to `foo@bar.local` at distribution port `4321` and to
 node `baz@bar.local` at port `4323`. Same can be achieved when setting it in the sys.config
-```
+
+```erlang
  [{kernel, [{net_ticktime. 20}, …]},
   {edeliver, [{nodes, ['foo@bar.local', 'baz@bar.local:4323']},
   …]}]
@@ -116,7 +120,7 @@ The docker container listens by default on `127.0.0.1` for connections from othe
 
 When using distillery to build a docker release with edeliver, you must use long node names while edeliver will configre distillery to replace the `$HOST` env in the `vm.args` file, which should look like this:
 
-```
+```erlang
 -name my_app@${HOST_NAME}
 
 +K true
@@ -147,7 +151,7 @@ Ensure edeliver is added as dependency and included into the release:
 
 When using rebar3 to build a docker release with edeliver, you can use short node names but need to configure the `inet_dist_use_interface` in your `vm.args.src` file, while edeliver will configre rebar3 to replace the `$INET_DIST_USE_INTERFACE` env in the `vm.args.src` file. It should look like this:
 
-```
+```erlang
 -sname eco
 
 -kernel inet_dist_use_interface ${INET_DIST_USE_INTERFACE}
@@ -158,7 +162,7 @@ When using rebar3 to build a docker release with edeliver, you can use short nod
 
 Using a `vm.args.src` file which replaces env vars is enabled in the `rebar3.config` like this:
 
-```
+```erlang
 {relx, [{release, { my_app, "0.1.0" }, [sasl, edeliver, …]},
 
         …
@@ -191,5 +195,3 @@ When using mix to build a docker release with edeliver, just ensure that edelive
      {:edeliver, "~> 1.9.2"}]
   end
 ```
-
-

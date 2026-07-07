@@ -11,10 +11,9 @@ _Deployment for Elixir and Erlang_
 [![License](https://img.shields.io/hexpm/l/edeliver.svg)](https://mit-license.org/)
 [![Last Updated](https://img.shields.io/github/last-commit/edeliver/edeliver.svg)](https://github.com/edeliver/edeliver/commits/master)
 
-
 **edeliver** is based on [deliver](https://github.com/gerhard/deliver) and enables you to build and deploy Elixir and Erlang applications and perform hot-code upgrades.
 
-The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a *remote* host that is similar to the production machines - or in a [*docker*](https://www.docker.com/) container. After being built, the release can then be deployed to one or more production machines.
+The [erlang releases](http://www.erlang.org/doc/design_principles/release_handling.html) are built on a _remote_ host that is similar to the production machines - or in a [_docker_](https://www.docker.com/) container. After being built, the release can then be deployed to one or more production machines.
 
 Once built, the [release](http://www.erlang.org/doc/design_principles/release_handling.html) contains the full [erts (erlang runtime system)](http://erlang.org/doc/apps/erts/users_guide.html), all [dependencies (erlang or elixir applications)](http://www.erlang.org/doc/design_principles/applications.html), the Elixir runtime, native port drivers, and your erlang/elixir application(s) in a standalone embedded node.
 
@@ -33,7 +32,6 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 - [#deployment on Slack](https://elixir-lang.slack.com/)
 - [Community Wiki](https://github.com/boldpoker/edeliver/wiki) — _feel free to contribute!_
 
-
 ## Contents
 
 - [Quick Start](#quick-start)
@@ -46,7 +44,6 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 - [Examples](#examples)
 - [License](#license)
 
-
 ## Quick Start
 
 Assuming an Elixir project, you already have a build server and a staging server, and you've created a database on your staging server already (there is no ecto.create, we skip straight to migrations).
@@ -56,7 +53,7 @@ Add edeliver and your build tool ([distillery](https://github.com/bitwalker/dist
 ```exs
 def application, do: [
   applications: [
-  	 ...
+    ...
     # Add edeliver to the END of the list
     :edeliver
   ]
@@ -120,24 +117,23 @@ mix edeliver start
 mix edeliver migrate
 ```
 
-
 ## Installation
 
 Because it is based on [deliver](https://github.com/gerhard/deliver), it uses only shell scripts and has no further dependencies except the Erlang/Elixir build system.
 
 It can be used with any one of these build systems:
 
-  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
-  * [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
-  * [rebar3](https://github.com/erlang/rebar3) for pure erlang releases or in conjunction with [rebar_mix plugin](https://github.com/Supersonido/rebar_mix) to build also Elixir sources and dependencies
-  * [rebar](https://github.com/basho/rebar) for legacy pure erlang releases
+- [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [distillery](https://github.com/bitwalker/distillery) for elixir/erlang releases (recommended)
+- [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) in conjunction with [relx](https://github.com/erlware/relx) for elixir/erlang releases
+- [rebar3](https://github.com/erlang/rebar3) for pure erlang releases or in conjunction with [rebar_mix plugin](https://github.com/Supersonido/rebar_mix) to build also Elixir sources and dependencies
+- [rebar](https://github.com/basho/rebar) for legacy pure erlang releases
 
 Edeliver tries to autodetect which system to use:
 
-  * If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
-  * If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
-  * If a `./rebar.config` file exists but no `./relx.config`, [rebar3](https://github.com/erlang/rebar3) is used to fetch the dependencies, compile the sources and to build the release
-  * Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. It is recommended to [migrate to rebar3](https://rebar3.readme.io/docs/from-rebar-2x-to-rebar3) in that case.
+- If a `./mix.exs` and a `rel/config.exs` file exists, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [distillery](https://github.com/bitwalker/distillery) is used to generate the releases / upgrades.
+- If a `./relx.config` file exists in addition to a `./mix.exs` file, [mix](http://elixir-lang.org/getting_started/mix/1.html) is used fetch the dependencies, compile the sources and [relx](https://github.com/erlware/relx) is used to generate the releases / upgrades.
+- If a `./rebar.config` file exists but no `./relx.config`, [rebar3](https://github.com/erlang/rebar3) is used to fetch the dependencies, compile the sources and to build the release
+- Otherwise [rebar](https://github.com/basho/rebar) is used to fetch the dependencies, compile the sources and generate the releases / upgrades. It is recommended to [migrate to rebar3](https://rebar3.readme.io/docs/from-rebar-2x-to-rebar3) in that case.
 
 This can be overridden by the config variables `BUILD_CMD=rebar3|rebar|mix`, `RELEASE_CMD=rebar3|rebar|mix|relx` and `USING_DISTILLERY=true|false` in `.deliver/config`.
 
@@ -148,7 +144,6 @@ It may be required to install and configure git on your build host. You may also
 The build host must be similar to the production/staging hosts.  For example, if you want to deploy to a production system based on Linux, the release must also be built on a Linux system.
 
 The Erlang runtime (OTP) and the Elixir runtime are packaged with the release—you do not have to install Erlang or Elixir separately on your production/staging servers.
-
 
 ### Mix considerations
 
@@ -180,38 +175,43 @@ def application, do: [
 
 When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as [rebar3 dependency](https://rebar3.readme.io/docs/dependencies). Just add it to your `rebar.config` (and ensure that a `./rebar3` binary/link is in your project directory):
 
-    {deps, [
-      % ...
-      {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.2"}}}
-    ]}.
+```erlang
+{deps, [
+  % ...
+  {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.2"}}}
+]}.
+```
 
 And link the `edeliver` binary to the root of your project directory:
 
-    wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
-    ./rebar3 get-deps
-    ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver 
-
+```sh
+wget https://s3.amazonaws.com/rebar3/rebar3 && chmod +x rebar3
+./rebar3 get-deps
+ln -s ./_build/default/lib/edeliver/bin/edeliver ./edeliver
+```
 
 Then use the linked binary `./edeliver` to build and deploy releases. The `default` [rebar3 profile](https://rebar3.readme.io/docs/profiles) can be overridden by setting the `REBAR_PROFILE` environment variable in the edeliver config e.g. to `prod`.
-
 
 ### Rebar considerations
 
 When using rebar, edeliver can be added as [rebar](https://github.com/basho/rebar) dependency. Just add it to your `rebar.config` (and ensure that a `./rebar` binary/link is in your project directory):
 
-    {deps, [
-      % ...
-      {edeliver, "1.9.2",
-        {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
-    ]}.
+```erlang
+{deps, [
+  % ...
+  {edeliver, "1.9.2",
+    {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
+]}.
+```
 
 And link the `edeliver` binary to the root of your project directory:
 
-    ./rebar get-deps # when using rebar, or ...
-    ln -s ./deps/edeliver/bin/edeliver .
+```sh
+./rebar get-deps # when using rebar, or ...
+ln -s ./deps/edeliver/bin/edeliver .
+```
 
 Then use the linked binary `./edeliver` instead of the `mix edeliver` tasks from the examples.
-
 
 ## Configuration
 
@@ -262,14 +262,15 @@ For build commands the following **configuration** variables must be set:
 
 The built release is then **copied to your local directory** `.deliver/releases` and can then be **delivered to your production servers** by using one of the **deploy commands**.
 
-If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the __local__ `.deliver` __directory__ but you can configure any destination with the `RELEASE_STORE=` environment variables, also __remote ssh destinations__ (in your server network) like `RELEASE_STORE=user@releases.acme.org:/releases/`, **amazon s3** locations like `s3://AWS_ACCESS_KEY_ID@AWS_SECRET_ACCESS_KEY:bucket` or as a __docker image__ like `docker://edeliver/echo-server`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
+If compiling and generating the release build was successful, the release is **copied from the remote build host** to the **release store**. The default release store is the **local** `.deliver` **directory** but you can configure any destination with the `RELEASE_STORE=` environment variables, also **remote ssh destinations** (in your server network) like `RELEASE_STORE=user@releases.acme.org:/releases/`, **amazon s3** locations like `s3://AWS_ACCESS_KEY_ID@AWS_SECRET_ACCESS_KEY:bucket` or as a **docker image** like `docker://edeliver/echo-server`. The release is copied from the remote build host using the `RELEASE_DIR=` environment variable. If this is not set, the default directory is found by finding the subdirectory that contains the generated `RELEASES` file and has the `$APP` name in the path. e.g. if `$APP=myApp` and the `RELEASES` file is found at `rel/myApp/myApp/releases/RELEASE` the `rel/myApp/myApp` is copied to the release store.
 
-To __build releases__ and upgrades __faster__, you might adjust the `GIT_CLEAN_PATHS` variable in your config file e.g. to something like `="_build rel priv/generated"` which defaults to `.`. That value means, that everything from the last build is reset (beam files, release files, deps, generated assets etc.) before the next build is started to ensure that no conflicts with old (e.g. removed or renamed) files might arise. You can also use the command line option `--skip-git-clean` to skip this step completely and in addition with the `--skip-mix-clean` option for full __incremental builds__.
-
+To **build releases** and upgrades **faster**, you might adjust the `GIT_CLEAN_PATHS` variable in your config file e.g. to something like `="_build rel priv/generated"` which defaults to `.`. That value means, that everything from the last build is reset (beam files, release files, deps, generated assets etc.) before the next build is started to ensure that no conflicts with old (e.g. removed or renamed) files might arise. You can also use the command line option `--skip-git-clean` to skip this step completely and in addition with the `--skip-mix-clean` option for full **incremental builds**.
 
 ### Build Initial Release
 
-    mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
+```sh
+mix edeliver build release [--revision=<git-revision>|--tag=<git-tag>] [--branch=<git-branch>]
+```
 
 Builds an initial release that can be deployed to the production hosts. If you want to build a different tag or revision, use the `--revision=` or the `--tag` argument. If you want to build a different branch or the tag / revision is in a different branch, use the `--branch=` argument.
 
@@ -279,7 +280,7 @@ If `BUILD_HOST` is set to `"docker"`, edeliver builds the release in a docker co
 
 ### Build as a docker container
 
-If `RELEASE_STORE` is a (private) docker image in a docker registry like `docker://edeliver/echo-server` the built release will be embedded into a docker image based on `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [`edeliver/release-base:1.0`](https://hub.docker.com/r/edeliver/release-base)) and pushed with that image name from the `RELEASE_STORE` to your registry (if `--push` is used). It creates (and optionally pushes) three image tags: *release version* + `latest`, *release version* + *git sha* and *release version* + *branch*. The release can then be started on a host authenticated at the same docker registry like this:
+If `RELEASE_STORE` is a (private) docker image in a docker registry like `docker://edeliver/echo-server` the built release will be embedded into a docker image based on `DOCKER_RELEASE_BASE_IMAGE` (which defaults to [`edeliver/release-base:1.0`](https://hub.docker.com/r/edeliver/release-base)) and pushed with that image name from the `RELEASE_STORE` to your registry (if `--push` is used). It creates (and optionally pushes) three image tags: _release version_ + `latest`, _release version_ + _git sha_ and _release version_ + _branch_. The release can then be started on a host authenticated at the same docker registry like this:
 
 ```sh
 docker start -ti edeliver/echo-server:1.0-latest -p 8080:8080 echo-server/bin/echo-server console
@@ -287,23 +288,24 @@ docker start -ti edeliver/echo-server:1.0-latest -p 8080:8080 echo-server/bin/ec
 
 ### Build an upgrade package
 
-    mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
-                              [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+```sh
+mix edeliver build upgrade --from=<git-tag-or-revision>|--with=<release-version-from-store>
+  [--to=<git-tag-or-revision>] [--branch=<git-branch>]
+```
 
 Builds an _upgrade_ package that can be deployed to production hosts with running nodes _without restarting_ them. To build an upgrade package you need the release or upgrade package (when using [distillery](https://github.com/bitwalker/distillery)) of the running release. If it is available (in the release store), you can build the upgrade to the new version by passing the old  version to the `--with=<old-version>` option. If not, you can build the old release and the live upgrade from it in a single step by using the `--from=<git-tag-or-revision>` option. If you don't want to build an upgrade to the current head of the given branch (`master` is the default), you can use the `--to=<git-tag-or-revision>` option. If the upgrade package is built, you might want to _modify_ the generated upgrade instructions ([relup](http://www.erlang.org/doc/man/relup.html)) as described in the next section or (more advanced) automatically patch the relup file by implementing your own [`Edeliver.Relup.Modification`](https://github.com/boldpoker/edeliver/blob/master/lib/edeliver/relup/modification.ex)behaviour to automate this step.
 
-
 ### Edit upgrade instructions (relup)
 
-    mix edeliver edit relup [--version=<upgrade-version>]
+```sh
+mix edeliver edit relup [--version=<upgrade-version>]
+```
 
 From the auto-generated appup instructions of all included and updated applications, a [relup](http://www.erlang.org/doc/man/relup.html) file is generated during the `build upgrade` command and included in the upgrade package.  It contains the upgrade instructions for the new release version.  If there are dependencies between modules or applications, it might be necessary to modify this file, e.g. changing the order of the applications or modules that are reloaded.  If there are repeating steps to adjust the relup for your application, you can automate this step by implementing your own [`Edeliver.Relup.Modification`](https://github.com/boldpoker/edeliver/blob/master/lib/edeliver/relup/modification.ex) behavior.
-
 
 ### Auto-Versioning
 
 edeliver provides a way to automatically increment the current version for the current build and/or to append [metadata](http://semver.org/#spec-item-10) to the version (such as the current git sha).  Having unique versions for each release is important especially if you build hot code upgrades.  It also helps to determine exactly which version is running when using `mix edeliver version`.  For more information check the `--auto-version=` option described e.g in `mix edeliver help upgrade` or in the [wiki](https://github.com/boldpoker/edeliver/wiki/Auto-Versioning).
-
 
 ### Build Restrictions (rebar)
 
@@ -311,10 +313,11 @@ To build upgrades, there must be only one release in the release directory (`rel
 You can then pass the config file to use by setting the environment `REBAR_CONFIG=` at the command line.
 The reason for that is, that when the upgrade is build with rebar, rebar tries to find the old version in both release directories.
 
-
 ## Deploy Commands
 
-    mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+```sh
+mix edeliver deploy release|upgrade [[to] staging|production] [--version=<release-version>] [Options]
+```
 
 Deploy commands deliver the builds that were created with a build command to your staging or production hosts.  They can also perform a live code upgrade.  Built releases or upgrades are available in your local directory `.deliver/releases`.  To deploy releases the following configuration variables must be set:
 
@@ -329,7 +332,7 @@ Deploy commands deliver the builds that were created with a build command to you
 
 Deploying to staging can be used to test your releases and upgrades before deploying them to the production hosts.  Staging is the default target if you don't pass the `[to] production` argument.
 
-If the `RELEASE_STORE` is a docker image, the deploy command pulls and starts the image with the given tag as version. See section __Deploy Docker Releases__ below for details.
+If the `RELEASE_STORE` is a docker image, the deploy command pulls and starts the image with the given tag as version. See section **Deploy Docker Releases** below for details.
 
 ### Deploy an initial/clean release
 
@@ -340,7 +343,6 @@ mix edeliver deploy
 Deploys an initial release at the production hosts.  This requires that the `build release` command was executed before.
 
 If there are several releases in the release store, you will be asked which release to deploy or you can pass the version by the `--version=` argument variable.  If the nodes on the remote deploy hosts are up, the running old release is not affected—the new release will be available only after starting or restarting the nodes on the deploy hosts.
-
 
 ### Deploy an upgrade
 
@@ -356,17 +358,19 @@ This command requires that your release start script was **generate** by a **rec
 
 If using rebar, make sure that the [install_upgrade.escript](https://github.com/basho/rebar/blob/master/priv/templates/simplenode.install_upgrade.escript) file which was generated by rebar is included in your release. So ensure, that the following line is in your `reltool.config`:
 
-    {overlay, [ ...
-           {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
-    ]}.
+```erlang
+{overlay, [ ...
+       {copy, "files/install_upgrade.escript", "bin/install_upgrade.escript"}
+]}.
+```
 
 ### Deploy Docker Releases
 
-When embedding releases into docker containers, the deploy command pulls the docker image from the registry defined as `RELEASE_STORE` and __extracts the boot script__ from `/$APP/bin/start_container` (can be configured in `CONTAINER_START_SCRIPT`) to `$DELIVER_TO/bin` while replacing the string `{{edeliver-version}}` with the version which is deployed. The script should use that value to always start that tag of the image.
+When embedding releases into docker containers, the deploy command pulls the docker image from the registry defined as `RELEASE_STORE` and **extracts the boot script** from `/$APP/bin/start_container` (can be configured in `CONTAINER_START_SCRIPT`) to `$DELIVER_TO/bin` while replacing the string `{{edeliver-version}}` with the version which is deployed. The script should use that value to always start that tag of the image.
 
 The start script should handle the same commands as the [extended start script from relx/rebar](https://rebar3.readme.io/docs/releases#extensions), at least the `start`, `stop` and `version` commands.
 
-It could start the container with e.g. like this 
+It could start the container with e.g. like this
 
 ```sh
 VERSION="{{edeliver-version}}"
@@ -391,7 +395,6 @@ mix edeliver migrate production # run database migrations
 mix edeliver restart production # or start or stop
 ```
 
-
 ## Help
 
 If something goes wrong, retry with the `--verbose` option.  If you want to see everything, try the `--debug` option.
@@ -402,40 +405,39 @@ For advanced usage have a look also at the [wiki](https://github.com/boldpoker/e
 
 Definitely join the #deployment channel in the [Elixir Slack community](https://elixir-lang.slack.com/) as well.
 
-
 ### Recommended Project Structure
 
-
-    your-app/                              <- project root dir
-      + rebar                              <- rebar binary
-      + mix                                <- optional mix binary when compiling with mix
-      + relx                               <- optional relx binary if rebar is not used
-      + edeliver                           <- edeliver binary linking to deps/deliver/bin/deliver
-      + rebar.config                       <- should have "rel/your-app" in the sub_dirs section
-      + mix.exs                            <- if present, mix is used for dependencies and compile
-      + relx.config                        <- if present, relx is used for releases
-      + .deliver                           <- default release store
-      |  + releases/*.tar.gz               <- the built releases / upgrade packages
-      |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
-      |  + config                          <- deliver configuration
-      + src/                               <- erlang source files
-      |  + *.erl
-      |  + your-app.app.src
-      + lib/                               <- elixir source files
-      |  + *.ex
-      + priv/
-      + deps/
-      |  + edeliver/
-      + rel/
-         + your-app/
-             + files/
-             |   + your-app                <- binary to start|stop|upgrade your app
-             |   + nodetool                <- helper for your-app binary
-             |   + install-upgrade.escript <- helper for the upgrade task of your-app binary
-             |   + sys.config              <- app configuration for the release build
-             |   + vm.args                 <- erlang vm args for the node
-             + reltool.config              <- should have the install_upgrade.escript in overlay section
-
+```sh
+your-app/                              <- project root dir
+  + rebar                              <- rebar binary
+  + mix                                <- optional mix binary when compiling with mix
+  + relx                               <- optional relx binary if rebar is not used
+  + edeliver                           <- edeliver binary linking to deps/deliver/bin/deliver
+  + rebar.config                       <- should have "rel/your-app" in the sub_dirs section
+  + mix.exs                            <- if present, mix is used for dependencies and compile
+  + relx.config                        <- if present, relx is used for releases
+  + .deliver                           <- default release store
+  |  + releases/*.tar.gz               <- the built releases / upgrade packages
+  |  + appup/OldVsn-NewVsn/*.apppup    <- generated appup files
+  |  + config                          <- deliver configuration
+  + src/                               <- erlang source files
+  |  + *.erl
+  |  + your-app.app.src
+  + lib/                               <- elixir source files
+  |  + *.ex
+  + priv/
+  + deps/
+  |  + edeliver/
+  + rel/
+     + your-app/
+         + files/
+         |   + your-app                <- binary to start|stop|upgrade your app
+         |   + nodetool                <- helper for your-app binary
+         |   + install-upgrade.escript <- helper for the upgrade task of your-app binary
+         |   + sys.config              <- app configuration for the release build
+         |   + vm.args                 <- erlang vm args for the node
+         + reltool.config              <- should have the install_upgrade.escript in overlay section
+```
 
 ## Examples
 
@@ -453,7 +455,7 @@ Or execute the above steps with a single command:
 mix edeliver update production --branch=feature --start-deploy
 ```
 
-Build a *live* upgrade from v1.0 to v2.0 for a release and deploy it to production:
+Build a _live_ upgrade from v1.0 to v2.0 for a release and deploy it to production:
 
 ```sh
 # build upgrade from tag v1.0 to v2.0
@@ -476,23 +478,21 @@ The deployed upgrade will be **available immediately, without restarting** your 
 
 To execute that steps by a single command and upgrade e.g. all production nodes **automatically**  from their running version to the current version using **hot code upgrade** without restarting, you can use the `upgrade` command:
 
-```
+```sh
 mix edeliver upgrade production
 ```
 
 This performs the following steps automatically:
 
-* Detect current version on all running nodes
-* Validate that all nodes run the same version
-* Build new upgrade from that version to the current version
-* Auto-patch the relup file
-* Deploy (hot code) upgrade while nodes are running
-* Validate that all nodes run the upgraded version
-* Deploy the release to not running nodes
-
+- Detect current version on all running nodes
+- Validate that all nodes run the same version
+- Build new upgrade from that version to the current version
+- Auto-patch the relup file
+- Deploy (hot code) upgrade while nodes are running
+- Validate that all nodes run the upgraded version
+- Deploy the release to not running nodes
 
 ---
-
 
 ## LICENSE
 

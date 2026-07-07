@@ -1,7 +1,6 @@
 # Configuration (.deliver/config)
 
-
-### Required Configuration
+## Required Configuration
 
 This options can or must be set in the `.deliver/config` file to configure edeliver:
 
@@ -23,10 +22,9 @@ This options can or must be set in the `.deliver/config` file to configure edeli
 
 See also [Configuration Section](https://github.com/boldpoker/edeliver#user-content-configuration) in the [README](https://github.com/boldpoker/edeliver/blob/master/README.md).
 
-### Use edeliver Options Permanently
+## Use edeliver Options Permanently
 
 This options can be set in the `.deliver/config` file to use the command line option permanently without passing them every time:
-
 
 | environment variable in config file   | edeliver argument    | info                                          |
 |---------------------------------------|----------------------|-----------------------------------------------|
@@ -43,11 +41,9 @@ This options can be set in the `.deliver/config` file to use the command line op
 Passing any of that arguments to edeliver overrides the value set in the config file.
 Try also `edeliver help build release`, `edeliver help build upgrade` or `edeliver help deploy release` for more information.
 
-### Additional Environment Variables available in config file
-
+## Additional Environment Variables available in config file
 
 This environment variables are set by edeliver and can be used `.deliver/config` file to adjust something:
-
 
 | environment variable  | possible values         |
 |-----------------------|-------------------------|

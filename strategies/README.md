@@ -1,15 +1,17 @@
+# Strategy
+
 Deliver will use the ruby strategy by default. If you want to use a different
 one, define it in your `.deliver/config` file. Alternatively, pass it as at runtime:
 
-    $ STRATEGY=nodejs deliver
+```sh
+STRATEGY=nodejs deliver
+```
 
 If you want to implement your own strategy, fork away. Currently,
 deliver only works with strategies defined in the local `strategies`
 directory, but with very little effort it can support any strategy
 specific to your setup.  All strategies in your local
 `.deliver/strategies` directory are automatically available.
-
-
 
 ## Conventions
 

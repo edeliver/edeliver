@@ -407,7 +407,7 @@ __sync_local() {
 
 # Executes a docker command and hides output unless --verbose flag is set.
 # The output is captured and displayed in case of a failure. If this
-# runs in a subshell e.g. to assign the output to a vaiable 
+# runs in a subshell e.g. to assign the output to a variable 
 # (a container id for instance), the output is printed.
 __docker() {
   if [ "$(exec sh -c 'echo "$PPID"')" != "$$" ]; then
