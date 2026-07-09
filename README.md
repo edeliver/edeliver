@@ -226,6 +226,9 @@ BUILD_HOST="build-system.acme.org" # host where to build the release, or "docker
 BUILD_USER="build" # local user at build host
 BUILD_AT="/tmp/erlang/my-app/builds" # build directory on build host
 
+# For monorepos: specify subdirectory where the app is located
+# APP_SUBDIR="apps/my-app" # optional: relative path from repo root
+
 STAGING_HOSTS="test1.acme.org test2.acme.org" # staging / test hosts separated by space
 STAGING_USER="test" # local user at staging hosts
 TEST_AT="/test/my-erlang-app" # deploy directory on staging hosts. default is DELIVER_TO
@@ -234,6 +237,17 @@ PRODUCTION_HOSTS="deploy1.acme.org deploy2.acme.org" # deploy / production hosts
 PRODUCTION_USER="production" # local user at deploy hosts
 DELIVER_TO="/opt/my-erlang-app" # deploy directory on production hosts
 ```
+
+### Monorepo Support
+
+If your application is part of a monorepo (i.e., not located in the root directory of your git repository), you can use the `APP_SUBDIR` configuration variable to specify where your application is located relative to the repository root:
+
+```sh
+# .deliver/config
+APP_SUBDIR="apps/my-app"  # Path to your app relative to repository root
+```
+
+This allows edeliver to properly navigate to your application directory during the build process on the remote build host.
 
 To use different configurations on different hosts, you can [configure edeliver to link](https://github.com/boldpoker/edeliver/wiki/Use-per-host-configuration) the `vm.args` and/or the `sys.config` files in the release package by setting the `LINK_VM_ARGS=/path/to/vm.args` and/or `LINK_SYS_CONFIG=/path/to/sys.config` variables in the edeliver config if you use [mix](http://elixir-lang.org/getting-started/mix-otp/introduction-to-mix.html) and [distillery](https://github.com/bitwalker/distillery) to build the releases.
 

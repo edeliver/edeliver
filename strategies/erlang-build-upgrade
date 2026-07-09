@@ -138,6 +138,7 @@ run() {
     local _version_that_will_be_built=$(__remote "
       [ -f $PROFILE ] && source $PROFILE
       cd $BUILD_AT $SILENCE
+      [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
       MIX_ENV=\"$TARGET_MIX_ENV\" $MIX_CMD $_version_command
     ")
     [[ -n "$WITH" ]] && local _old_version="$WITH" || local _old_version="$OLD_RELEASE_VERSION"
@@ -150,7 +151,9 @@ run() {
     # when generating upgrades with `mix release` (exrm) the old
     # release must be uploaded before generating the release.
     # `erlang_generate_release` generates the upgrade then automatically
-    RELEASE_DIR="${RELEASE_DIR:-"${DELIVER_TO}/_build/${TARGET_MIX_ENV}/rel/${APP}"}"
+    local _app_dir="${DELIVER_TO}"
+    [ -n "$APP_SUBDIR" ] && _app_dir="${DELIVER_TO}/${APP_SUBDIR}"
+    RELEASE_DIR="${RELEASE_DIR:-"${_app_dir}/_build/${TARGET_MIX_ENV}/rel/${APP}"}"
     local _release_destination_path="$(dirname $RELEASE_DIR)"
     [[ "$RELEASE_FILE" =~ upgrade\.tar\.gz$ ]] && _release_destination_path="${_release_destination_path%%/}/${APP}"
     upload_release_archive "$_release_destination_path" "$RELEASE_FILE" "$WITH"

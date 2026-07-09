@@ -165,6 +165,7 @@ erlang_get_and_update_deps() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
+    [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
     if [ \"$BUILD_CMD\" = \"rebar3\" ]; then
       echo \"using rebar3 to fetch and update deps\"
       which $REBAR3_CMD || {
@@ -219,6 +220,7 @@ erlang_clean_compile() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
+    [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
     if [ \"$BUILD_CMD\" = \"rebar3\" ]; then
       echo \"using rebar3 to compile files\"
       [[ \"$SKIP_MIX_CLEAN\" != \"true\" ]] && $REBAR3_CMD clean || :
@@ -290,6 +292,7 @@ erlang_generate_release() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
+    [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
     if [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       echo \"using rebar3 to generate release\"
       REBAR_PROFILE=\"$REBAR_PROFILE\" $REBAR3_CMD $RELEASE_CMD_OPTIONS release -n $APP
@@ -330,6 +333,7 @@ relx_generate_relup() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
+    [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
     $RELX_CMD relup
   "
 
@@ -347,6 +351,7 @@ erlang_archive_release() {
     [ -f $PROFILE ] && source $PROFILE
     set -e
     cd $DELIVER_TO
+    [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
     if [ \"$RELEASE_CMD\" = \"rebar\" ] || [ \"$RELEASE_CMD\" = \"rebar3\" ]; then
       tar -zcpf $(dirname $RELEASE_DIR)/${APP}_${RELEASE_VERSION}.tar.gz -C $(dirname $RELEASE_DIR) ${APP}
     elif [ \"$RELEASE_CMD\" = \"mix\" ]; then
@@ -1463,18 +1468,20 @@ __detect_remote_release_dir() {
   if ! [ -z "$RELEASE_DIR" ]; then
     return
   else
+    local _app_dir="$DELIVER_TO"
+    [ -n "$APP_SUBDIR" ] && _app_dir="${DELIVER_TO}/${APP_SUBDIR}"
     if [ "$RELEASE_CMD" = "relx" ]; then
       local _relx_release_dir_exists
       _relx_release_dir_exists=($(__sync_remote "
         [ -f $PROFILE ] && source $PROFILE
         set -e
-        cd $DELIVER_TO $SILENCE
+        cd $_app_dir $SILENCE
         [[ -d ./_rel ]] && echo true || echo false
       ")) || error "Failed to detect generated release\n"
       if [ "$_relx_release_dir_exists" = "true" ]; then
-        RELEASE_DIR=${DELIVER_TO%%/}/_rel
+        RELEASE_DIR=${_app_dir%%/}/_rel
       else
-        error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$DELIVER_TO/_rel\n"
+        error_message "Failed to detect generated release at\n$APP_USER@$HOSTS:$_app_dir/_rel\n"
         exit 1
       fi
     else # built with rebar, mix or distillery
@@ -1488,6 +1495,7 @@ __detect_remote_release_dir() {
         [ -f $PROFILE ] && source $PROFILE
         set -e
         cd $DELIVER_TO $SILENCE
+        [ -n \"$APP_SUBDIR\" ] && cd \"$APP_SUBDIR\"
         if [ \"$RELEASE_CMD\" = \"rebar3\" ] || [[ \"$RELEASE_CMD\" = \"mix\" && \"$USING_DISTILLERY\" = \"false\" ]]; then
           cd _build
         fi

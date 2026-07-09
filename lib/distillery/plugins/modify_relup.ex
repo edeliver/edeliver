@@ -12,12 +12,30 @@ defmodule Releases.Plugin.ModifyRelup do
     end
     ```
   """
-  use Distillery.Releases.Plugin
+
+  # Manual behavior implementation to avoid circular dependency during compilation
   alias Edeliver.Relup.Instructions
+
+  # Helper functions to replace Distillery.Releases.Shell to avoid circular dependency
+  defp info(msg), do: Mix.shell().info(msg)
+  defp debug(msg), do: if(System.get_env("DEBUG"), do: Mix.shell().info(msg))
 
   def before_assembly(_, _), do: nil
 
-  def after_assembly(release = %Release{is_upgrade: true, version: version, name: name, profile: %Distillery.Releases.Profile{output_dir: output_dir}}, _) do
+  def after_assembly(release, _) do
+    is_upgrade = Map.get(release, :is_upgrade)
+    version = Map.get(release, :version)
+    name = Map.get(release, :name)
+    profile = Map.get(release, :profile)
+    output_dir = if profile, do: Map.get(profile, :output_dir)
+
+    if is_upgrade do
+      do_after_assembly(release, version, name, output_dir)
+    end
+    nil
+  end
+
+  defp do_after_assembly(release, version, name, output_dir) do
     case System.get_env "SKIP_RELUP_MODIFICATIONS" do
       "true" -> nil
       _ ->
@@ -59,7 +77,6 @@ defmodule Releases.Plugin.ModifyRelup do
     end
     nil
   end
-  def after_assembly(_, _), do: nil
 
   def before_package(_, _), do: nil
 
@@ -81,7 +98,7 @@ defmodule Releases.Plugin.ModifyRelup do
     end
   end
 
-  defp get_relup_modification_module(release = %Release{}) do
+  defp get_relup_modification_module(release) do
     case System.get_env "RELUP_MODIFICATION_MODULE" do
       module = <<_,_::binary>> ->
         module = String.to_atom(module)

@@ -7,6 +7,7 @@ This options can or must be set in the `.deliver/config` file to configure edeli
 | environment variable   | required | info                                           |
 |------------------------|----------|------------------------------------------------|
 | `APP`                  |      yes | the lower case name of your app                |
+| `APP_SUBDIR`           |       no | subdirectory in repo where app is located (for monorepos) |
 | `BUILD_AT`             |      yes | the directory on the build host to build at    |
 | `BUILD_CMD`            |       no | tool used to build sources. (mix\|rebar)        |
 | `BUILD_HOST`           |      yes | the host to build at                           |

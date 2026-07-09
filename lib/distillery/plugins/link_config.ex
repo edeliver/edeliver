@@ -14,7 +14,12 @@ defmodule Releases.Plugin.LinkConfig do
     end
     ```
   """
-  use Distillery.Releases.Plugin
+  
+  # Manual behavior implementation to avoid circular dependency during compilation
+
+  # Helper functions to replace Distillery.Releases.Shell to avoid circular dependency
+  defp info(msg), do: Mix.shell().info(msg)
+  defp debug(msg), do: if(System.get_env("DEBUG"), do: Mix.shell().info(msg))
 
 
   def before_assembly(_, _), do: nil
@@ -23,11 +28,14 @@ defmodule Releases.Plugin.LinkConfig do
 
   def before_package(_, _), do: nil
 
-  def after_package(%Release{version: version, profile: profile, name: name}, _) do
+  def after_package(release, _) do
+    version = Map.get(release, :version)
+    profile = Map.get(release, :profile)
+    name = Map.get(release, :name)
     # repackage release tar including link, because tar is generated using `:systools_make.make_tar(...)`
     # which resolves the links using the `:dereference` option when creating the tar using the
     # `:erl_tar` module.
-    output_dir = profile.output_dir
+    output_dir = if profile, do: Map.get(profile, :output_dir)
     tmp_dir = "_edeliver_release_patch"
     tmp_path = Path.join [output_dir, "releases", version, tmp_dir]
     files_to_link = [
