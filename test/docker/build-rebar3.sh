@@ -44,10 +44,14 @@ _info "Applying custom rebar3 config…"
 # copy overwrite rebar.config
 cp "${TESTS_DIR}/../configs/rebar3.config" "${PROJECT_DIR}/rebar.config"
 cp "${TESTS_DIR}/../configs/rebar3-vm.args.src" "${PROJECT_DIR}/config/vm.args.src"
+"${TESTS_DIR}/../configs/use-logger.sh" "$PROJECT_DIR"
+# the lock file still pins lager
+git rm -q "${PROJECT_DIR}/rebar.lock"
 
 # commit new config
 git add "${PROJECT_DIR}/rebar.config"
 git add "${PROJECT_DIR}/config/vm.args.src"
+git add "${PROJECT_DIR}/apps"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
 git commit -m "Add custom rebar3 configs"
@@ -56,6 +60,10 @@ git checkout -b "$BRANCH_NAME"
 
 GIT_REF="$(git rev-parse --short HEAD)"
 
+_info "Building release base image…"
+# from this checkout, so the release runs on the same OS as the build image
+docker build -t edeliver/release-base:test -f "${BASE_DIR}/docker/release-base.dockerfile" "${BASE_DIR}/docker"
+
 _info "Building release…"
 BUILD_HOST="docker" \
 APP="eco" \
@@ -63,7 +71,8 @@ RELEASE_STORE="docker://${DOCKER_IMAGE_NAME}" \
 BUILD_AT="/echo-server" \
 BUILD_USER="root" \
 REBAR_PROFILE="prod" \
-DOCKER_BUILD_IMAGE="elixir:1.11.4" \
+DOCKER_BUILD_IMAGE="elixir:1.20" \
+DOCKER_RELEASE_BASE_IMAGE="edeliver/release-base:test" \
 "$EDELIVER" build release --verbose --branch="$BRANCH_NAME"
 
 _info ""

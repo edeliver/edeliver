@@ -4,24 +4,20 @@ defmodule Eco.Mixfile do
   def project do
     [app: :eco,
      version: "0.1.0",
-     elixir: "~> 1.11",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     compilers: [:app, :erlang],
+     elixir: "~> 1.20",
+     start_permanent: Mix.env() == :prod,
      erlc_paths: ["apps/eco/src"],
-     erlc_options: [:debug_info, {:parse_transform, :lager_transform}],
      deps: deps()]
   end
 
   def application do
-    [applications: [:sasl, :edeliver, :lager, :ranch],
+    [extra_applications: [:sasl, :logger],
      mod: {:eco_app, []}]
   end
 
   defp deps do
-    [{:lager, "~> 3.6.7"},
-     {:ranch, "~> 1.6.2"},
-     {:distillery, "~> 2.0", runtime: false},
-     {:edeliver, "~> 1.9.2"}]
+    [{:ranch, "~> 1.8"},
+     # the edeliver version under test, copied into the project by the test script
+     {:edeliver, path: "vendor/edeliver"}]
   end
 end
