@@ -3,12 +3,16 @@ eDeliver Versions
 
 __1.9.3__
 
+- Backwards incompatible changes
+  - the default `DELIVER_TO` is now `~/apps`, the `apps` directory in the home of the user edeliver logs in as (was `~$APP_USER/app`). Set `DELIVER_TO` in `.deliver/config` to keep deploying to an existing directory
 - Enhancements
   - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
   - edeliver compiles without distillery, so projects using mix releases on current Elixir no longer need distillery as a dependency
   - `docker/release-base.dockerfile` is based on `debian:trixie-slim`, which matches the current official elixir and erlang images (the published `edeliver/release-base:1.0` is still Ubuntu 20.04)
   - CI builds with Elixir 1.20 / OTP 29 and tests mix releases and rebar3 only
 - Fixes
+  - `start`, `restart` and `ping` of releases built with `mix release` (without distillery) use the `pid` command, because those releases have no `ping` command; `ping` exits non-zero when the node is down
+  - `USING_DISTILLERY` can be set in `.deliver/config` to override the autodetection
   - building in a docker container failed with git 2.35.2 or newer ("detected dubious ownership")
   - reading the working dir of `DOCKER_RELEASE_BASE_IMAGE` printed a template error on current docker versions; the `ContainerConfig` fallback for old docker versions was removed
 
