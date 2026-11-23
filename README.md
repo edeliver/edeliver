@@ -21,6 +21,7 @@ Once built, the [release](http://www.erlang.org/doc/design_principles/release_ha
 
 | Edeliver  | Elixir |
 |---------- |--------|
+| 1.10.*    | 1.20.* |
 | 1.9.*     | 1.13.* |
 | 1.8.*     | 1.10.* |
 | 1.7.*     | 1.9.*  |
@@ -62,7 +63,7 @@ def application, do: [
 defp deps do
   [
     ...
-    {:edeliver, ">= 1.9.2"},
+    {:edeliver, "~> 1.10.0"},
     {:distillery, "~> 2.1", warn_missing: false},
   ]
 end
@@ -152,7 +153,7 @@ If using [mix](http://elixir-lang.org/getting_started/mix/1.html), add edeliver 
 ```exs
 defp deps do
   [
-    {:edeliver, ">= 1.9.2"},
+    {:edeliver, "~> 1.10.0"},
     {:distillery, "~> 2.1", warn_missing: false},
   ]
 end
@@ -178,7 +179,7 @@ When using [rebar3](https://github.com/erlang/rebar3), edeliver can be added as 
 ```erlang
 {deps, [
   % ...
-  {edeliver, {git, "git://github.com/edeliver/edeliver.git", {tag, "1.9.2"}}}
+  {edeliver, {git, "https://github.com/edeliver/edeliver.git", {tag, "v1.10.0"}}}
 ]}.
 ```
 
@@ -199,8 +200,8 @@ When using rebar, edeliver can be added as [rebar](https://github.com/basho/reba
 ```erlang
 {deps, [
   % ...
-  {edeliver, "1.9.2",
-    {git, "git://github.com/boldpoker/edeliver.git", {branch, master}}}
+  {edeliver, "1.10.0",
+    {git, "https://github.com/edeliver/edeliver.git", {tag, "v1.10.0"}}}
 ]}.
 ```
 
