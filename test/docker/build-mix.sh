@@ -40,20 +40,30 @@ git clone "$GIT_URL" .
 _info "Checking out $GIT_REF"
 git checkout "$GIT_REF"
 
-_info "Applying distillery config…"
+_info "Applying mix release config…"
 # copy mix.exs and remove rebar.config
 cp "${TESTS_DIR}/../configs/mix-elixir.exs" "${PROJECT_DIR}/mix.exs"
 git rm "${PROJECT_DIR}/rebar.config"
+"${TESTS_DIR}/../configs/use-logger.sh" "$PROJECT_DIR"
+
+# build with the edeliver version under test instead of the one from hex
+mkdir -p "${PROJECT_DIR}/vendor/edeliver"
+cp -R "${BASE_DIR}/mix.exs" "${BASE_DIR}/lib" "${BASE_DIR}/src" "${PROJECT_DIR}/vendor/edeliver/"
 
 # commit new configs
-git add "${PROJECT_DIR}/mix.exs"
+git add "${PROJECT_DIR}/mix.exs" "${PROJECT_DIR}/apps"
+git add -f "${PROJECT_DIR}/vendor"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
-git commit -m "Add distillery mix file"
+git commit -m "Add mix release config"
 git branch -d "$BRANCH_NAME" 2>/dev/null || :
 git checkout -b "$BRANCH_NAME"
 
 GIT_REF="$(git rev-parse --short HEAD)"
+
+_info "Building release base image…"
+# from this checkout, so the release runs on the same OS as the build image
+docker build -t edeliver/release-base:test -f "${BASE_DIR}/docker/release-base.dockerfile" "${BASE_DIR}/docker"
 
 _info "Building release…"
 BUILD_HOST="docker" \
@@ -63,7 +73,8 @@ BUILD_AT="/echo-server" \
 BUILD_USER="root" \
 MIX_ENV="prod" \
 USING_DISTILLERY="false" \
-DOCKER_BUILD_IMAGE="elixir:1.11.4" \
+DOCKER_BUILD_IMAGE="elixir:1.20" \
+DOCKER_RELEASE_BASE_IMAGE="edeliver/release-base:test" \
 "$EDELIVER" build release --verbose --branch="$BRANCH_NAME"
 
 _info ""
