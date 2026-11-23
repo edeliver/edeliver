@@ -28,7 +28,7 @@ defmodule Releases.Plugin.LinkConfig do
 
   def before_package(_, _), do: nil
 
-  def after_package(release, _) do
+  def after_package(release, _) when is_map(release) do
     version = Map.get(release, :version)
     profile = Map.get(release, :profile)
     name = Map.get(release, :name)
