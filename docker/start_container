@@ -170,9 +170,10 @@ DOCKER_OPTS+=" --env RELEASE_DISTRIBUTION=${RELEASE_DISTRIBUTION}"
 DOCKER_OPTS+=" --env RELEASE_NODE=${RELEASE_NODE}"
 
 
-if [ "$COMMAND" = "daemon" ]; then
-  DOCKER_OPTS+=" --detach --tty"
-elif [ "$COMMAND" = "start" ] && [ "$RELEASE_CMD" != "mix" ]; then
+# `start` must return once the node is up, so the container is detached for
+# every release type. For mix releases both `start` and `daemon` run
+# `bin/$APP start` in the foreground inside the container (see ARGS above).
+if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
 elif [ -t 0 ]; then # terminal attached
   DOCKER_OPTS+=" --tty --interactive" 
