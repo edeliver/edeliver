@@ -137,7 +137,7 @@ stop_build_container() {
 # starts the build container with the DOCKER_BUILD_IMAGE image
 # and automatically pulls it if not available locally. Pull output
 # is hidden until executed with --verbose. The container is started
-# detatched and the container id is set to DOCKER_BUILD_CONTAINER
+# detached and the container id is set to DOCKER_BUILD_CONTAINER
 start_build_container() {
   status "Creating build container"
   info "Starting build container with image $DOCKER_BUILD_IMAGE"
@@ -152,6 +152,14 @@ start_build_container() {
   info "Started container $DOCKER_BUILD_CONTAINER"
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
     trap stop_build_container EXIT
+    # The bind-mounted build dir belongs to the local user, but git runs as
+    # root in the container. Since git 2.35.2 it then refuses to work in it
+    # ("detected dubious ownership"), so mark the build dir as safe.
+    __sync_remote "
+      if command -v git >/dev/null 2>&1; then
+        git config --global --add safe.directory \"$CONTAINER_BUILD_DIR\"
+      fi
+    "
   fi
 }
 
@@ -458,9 +466,6 @@ EOF
     else
       _working_dir="$(__docker image inspect --format='{{.Config.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
       if [ -z "$_working_dir" ]; then
-        _working_dir="$(__docker image inspect --format='{{.ContainerConfig.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
-      fi
-      if [ -z "$_working_dir" ]; then
         _working_dir="/${APP}"
       fi
     fi
@@ -479,7 +484,7 @@ EOF
 
     local _valid_docker_tag
     _valid_docker_tag="$(echo "$RELEASE_VERSION" | sed 's/[^0-9A-Za-z_.-]*//g')"
-    info "Commiting as ${_valid_docker_tag}-latest"
+    info "Committing as ${_valid_docker_tag}-latest"
     local _release_command="$RELEASE_CMD"
     if [ "$_release_command" = "mix" ]; then
       if ! [ "$USING_DISTILLERY" = "false" ]; then
@@ -928,7 +933,7 @@ __get_releases_in_store() {
       fi
     else
       local _image_info _tag _created_at
-      # e.g. for google container registry containing detaild information about tags and their timestamps:
+      # e.g. for google container registry containing detailed information about tags and their timestamps:
       # {"manifest": {"sha256:03302a…": {"timeCreatedMs":…, "tag":["tag1"], …}, "tags":["tag1","tag2"]}
       if echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+' >/dev/null 2>&1; then
         for _image_info in $(echo "$_out" | grep -oe '{[^}]\+\"tag\"\s*:\s*\[[^}]\+'); do
@@ -939,7 +944,7 @@ __get_releases_in_store() {
           fi
         done | sort -n | cut -d' ' -f 2-
       else
-        # dockerhub does not have a list of single tags with timestamps, so access the tags direclty
+        # dockerhub does not have a list of single tags with timestamps, so access the tags directly
         # from a struct like: {"name":"user-name/image-name","tags":["tag1","tag2"]}
         echo "$_out" | grep -oe '\"tags\"\s*:\s*\[[^]]\+' | cut -f2 -d "[" | grep -oe '"[^"]\+"' | tr -d '"' | tr "\n" " "
       fi
@@ -1147,7 +1152,7 @@ __get_node_command() {
   if declare -F "get_${_node_command}_node_command" > /dev/null; then
     eval "get_${_node_command}_node_command $@"
   else
-    if [[ "$USING_DISTILLERY" = "true" ]]; then
+    if [[ "$RELEASE_CMD" = "mix" ]]; then
       local _rpc_open_brackets="["
       local _rpc_close_brackets="]"
     else
@@ -1160,7 +1165,11 @@ __get_node_command() {
       [ -f \"$PROFILE\" ] && . \"$PROFILE\"
       set -e
       cd ${_app_path}/${APP} $SILENCE
-      output_lines=\"\$(bin/${APP} ping | wc -l | tr -d ' ')\"
+      if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+        output_lines=\"\$(bin/${APP} pid 2>/dev/null | wc -l | tr -d ' ')\"
+      else
+        output_lines=\"\$(bin/${APP} ping 2>/dev/null | wc -l | tr -d ' ')\"
+      fi
       if [ \"\$output_lines\" -gt 1 ]; then
         output_filter_command='tail'
         output_filter_command_options=\"-n+\$output_lines\"
@@ -1169,7 +1178,11 @@ __get_node_command() {
         output_filter_command_options=''
       fi
       __edeliver_node_running() {
-        bin/${APP} ping 2>/dev/null >/dev/null
+        if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ]; then
+          bin/${APP} pid 2>/dev/null >/dev/null
+        else
+          bin/${APP} ping 2>/dev/null >/dev/null
+        fi
       }
       __edeliver_synchronous_start() {
         bin/${APP} start | \$output_filter_command \$output_filter_command_options
@@ -1178,15 +1191,16 @@ __get_node_command() {
           __edeliver_node_running && break || :
           sleep 1
         done
-        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress, \"$APP\", :$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
+        bin/${APP} ${_rpc_command} 'Elixir.Edeliver.run_command(${_rpc_open_brackets}:monitor_startup_progress,\"$APP\",:$MODE${_rpc_close_brackets})' | \$output_filter_command \$output_filter_command_options | grep -e 'Started\\|^ok' || :
       }
       if [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$_is_start_command\" = \"true\" ]; then
-        ping_result=\"\$(bin/${APP} ping | \$output_filter_command \$output_filter_command_options || :)\"
         if __edeliver_node_running; then
           echo \"${txtred}already running${txtrst}\" && exit 1
         else
           __edeliver_synchronous_start
         fi
+      elif [ \"$RELEASE_CMD\" = \"mix\" ] && [ \"$USING_DISTILLERY\" = \"false\" ] && [ \"${_node_command}\" = \"ping\" ]; then
+        __edeliver_node_running && echo pong || { echo 'Node is not running!'; exit 1; }
       elif [ \"$_is_restart_command\" = \"true\" ]; then
         # use stop / start instead of restart command to
         # not just restart the applications but also the erlang vm
@@ -1263,11 +1277,11 @@ remote_extract_release_archive() {
         echo \"Extracted script\"
       } || {
         echo \"Copied edeliver default script\"
-        echo \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
+        echo -e \"${bldylw}Using edeliver default script.\nPlease consider to add your own version at $CONTAINER_START_SCRIPT.\n${txtrst}\" >&2
         cat >\"$APP\"
       }
       chmod 700 \"$APP\"
-      # read which release command was used from the docker image lables because
+      # read which release command was used from the docker image labels because
       # releases built with rebar3 needs a different ERL_DIST_PORT set when starting the remote console
       # as releases built with distillery. For distillery it needs to be a random port (0) while
       # for rebar3 it needs to be the port the actual server listens on.

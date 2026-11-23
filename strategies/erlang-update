@@ -105,7 +105,7 @@ run() {
     set_deploy_hosts
     update_hosts_app_user
     local _validate_upgrade_error_message
-    for _host in "${HOSTS_APP_USER}"
+    for _host in ${HOSTS_APP_USER}
     do
       __verbose -n "Checking updated version on host $_host"
       _installed_release_version=$(__get_installed_version_on_host $_host)

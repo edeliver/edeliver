@@ -31,3 +31,6 @@ gh-pages/*
 .idea
 edeliver.iml
 .test/
+
+# Skopos review output
+.skopos/

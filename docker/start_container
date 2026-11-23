@@ -142,7 +142,7 @@ case "$COMMAND" in
   *) # e.g. remote | remote_console | ping
     DOCKER_OPTS=" --network host"
     if [ "$RELEASE_CMD" = "rebar3" ]; then
-      # extended start script from rebar uses this to connecto to the
+      # extended start script from rebar uses this to connect to the
       # remote node for ping or remote_console command
       DOCKER_OPTS+=" --env ERL_DIST_PORT=${ERL_DIST_PORT}" 
     else
@@ -170,9 +170,12 @@ DOCKER_OPTS+=" --env RELEASE_DISTRIBUTION=${RELEASE_DISTRIBUTION}"
 DOCKER_OPTS+=" --env RELEASE_NODE=${RELEASE_NODE}"
 
 
+# `start` must return once the node is up, so the container is detached for
+# every release type. For mix releases both `start` and `daemon` run
+# `bin/$APP start` in the foreground inside the container (see ARGS above).
 if [ "$COMMAND" = "start" ] || [ "$COMMAND" = "daemon" ]; then
   DOCKER_OPTS+=" --detach --tty"
-elif [ -t 0 ]; then # terminal attatched
+elif [ -t 0 ]; then # terminal attached
   DOCKER_OPTS+=" --tty --interactive" 
 fi
 

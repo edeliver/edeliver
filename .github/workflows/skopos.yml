@@ -1,0 +1,45 @@
+# AI pull request review with Skopos (https://github.com/johannesE/skopos).
+# Project checklists live in .github/skopos/checklists/.
+#
+# Prerequisites (once per org or repository, see
+# https://github.com/johannesE/skopos/blob/main/docs/usage.md):
+#   secret   SKOPOS_LLM_API_KEY         API key of the model provider
+#   variable SKOPOS_APP_CLIENT_ID       Client ID of your Skopos GitHub App   (optional)
+#   secret   SKOPOS_APP_PRIVATE_KEY     Private key of that GitHub App        (optional)
+name: Skopos review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# One review per PR at a time; a newer push cancels the older run.
+concurrency:
+  group: skopos-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Used unless both GitHub App values are set. contents: write lets Skopos
+# resolve its own review threads; GitHub requires it for that.
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  review:
+    if: >-
+      !github.event.pull_request.draft &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-skopos') &&
+      github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true # a review must never block a merge
+    steps:
+      # Pinned to a commit, because this job gets a write token; Dependabot
+      # (.github/dependabot.yml) proposes updates as pull requests.
+      - uses: johannesE/skopos@1a6d2d495213f50b37058aa46a6845d2df489301 # v1.1.0
+        with:
+          llm_api_key: ${{ secrets.SKOPOS_LLM_API_KEY }}
+          app_client_id: ${{ vars.SKOPOS_APP_CLIENT_ID }}
+          app_private_key: ${{ secrets.SKOPOS_APP_PRIVATE_KEY }}
+          # model: glm-5.3
+          # provider_base_url: https://ollama.com/v1
+          # max_changed_lines: "3000"

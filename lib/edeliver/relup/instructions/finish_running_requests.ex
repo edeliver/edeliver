@@ -13,7 +13,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
 
     `Edeliver.Relup.Instructions.SuspendRanchAcceptors`
 
-    instruction which avoids that new requets are accepted
+    instruction which avoids that new requests are accepted
     during the upgrade.
 
     To make sure that the http request connections can
@@ -135,7 +135,7 @@ defmodule Edeliver.Relup.Instructions.FinishRunningRequests do
       info "Waiting for #{inspect requests_count} requests..."
       remaining_requests = bulk_wait_for_termination(request_connections, timeout)
       remaining_requests_count = Enum.count(remaining_requests)
-      info "#{inspect requests_count-remaining_requests_count} requets finished."
+      info "#{inspect requests_count-remaining_requests_count} requests finished."
       if remaining_requests_count > 0 do
         info "#{inspect remaining_requests_count} requests will be restarted after upgrade if they failed."
         notify_running_requests(remaining_requests, :upgrade_started)

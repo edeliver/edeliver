@@ -3,71 +3,81 @@ eDeliver Versions
 
 __1.9.3__
 
-  - Enhancements
-    - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
+- Backwards incompatible changes
+  - the default `DELIVER_TO` is now `~/apps`, the `apps` directory in the home of the user edeliver logs in as (was `~$APP_USER/app`). Set `DELIVER_TO` in `.deliver/config` to keep deploying to an existing directory
+- Enhancements
+  - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
+  - edeliver compiles without distillery, so projects using mix releases on current Elixir no longer need distillery as a dependency
+  - `docker/release-base.dockerfile` is based on `debian:trixie-slim`, which matches the current official elixir and erlang images (the published `edeliver/release-base:1.0` is still Ubuntu 20.04)
+  - CI builds with Elixir 1.20 / OTP 29 and tests mix releases and rebar3 only
+- Fixes
+  - `start`, `restart` and `ping` of releases built with `mix release` (without distillery) use the `pid` command, because those releases have no `ping` command; `ping` exits non-zero when the node is down
+  - `USING_DISTILLERY` can be set in `.deliver/config` to override the autodetection
+  - building in a docker container failed with git 2.35.2 or newer ("detected dubious ownership")
+  - reading the working dir of `DOCKER_RELEASE_BASE_IMAGE` printed a template error on current docker versions; the `ContainerConfig` fallback for old docker versions was removed
 
 __1.9.2__
 
-  - Fixes 
-    - include missing default file to start release containers into hex package
-    - list available releases on google container registry correctly
+- Fixes
+  - include missing default file to start release containers into hex package
+  - list available releases on google container registry correctly
 
 __1.9.1__
 
-  - Enhancements
-    - add `DOCKER_HUB_ACCESS_TOKEN` to list releases on Docker Hub
-    - improve listing of releases from Docker registry
+- Enhancements
+  - add `DOCKER_HUB_ACCESS_TOKEN` to list releases on Docker Hub
+  - improve listing of releases from Docker registry
 
-  - Fixes 
-    - creating release TAR when building in docker and with mix directly
-    - listing releases on Docker Hub 
+- Fixes
+  - creating release TAR when building in docker and with mix directly
+  - listing releases on Docker Hub
 
 __1.9.0__
 
-  - Enhancements
-    - support building in docker instead on a build host
-    - support building deployable docker containers containing the built release
-    - support `mix release` task
-    - run epmd-less in docker
-    - rebar3 support
+- Enhancements
+  - support building in docker instead on a build host
+  - support building deployable docker containers containing the built release
+  - support `mix release` task
+  - run epmd-less in docker
+  - rebar3 support
 
-  - Fixes 
-    - consider env when fetching deps
-    - consider DEPLOY_ENVIRONMENT when globally set
+- Fixes
+  - consider env when fetching deps
+  - consider DEPLOY_ENVIRONMENT when globally set
 
 __1.8.0__
 
-  - Backwards incompatible changes
-    - Elixir 1.10 compatibility by @progsmile. This is minimum required version now.
-    
+- Backwards incompatible changes
+  - Elixir 1.10 compatibility by @progsmile. This is minimum required version now.
+
 __1.7.0__
 
-  - Backwards incompatible changes
-    - Elixir 1.9 compatibility by @pablo-meier. This is minimum required version now.
-    - Distillery 2.1.0 compatibility by @nifoc. This is minimum required version now.
+- Backwards incompatible changes
+  - Elixir 1.9 compatibility by @pablo-meier. This is minimum required version now.
+  - Distillery 2.1.0 compatibility by @nifoc. This is minimum required version now.
 
 __1.6.0__
 
-  - Enhancements
-    - Support Distillery 2.x
-  - Backwards incompatible changes
-    - Distillery 1.x is not supported anymore
+- Enhancements
+  - Support Distillery 2.x
+- Backwards incompatible changes
+  - Distillery 1.x is not supported anymore
 
 __1.5.3__
 
-  - Fixes
-    - Truly fixes broken distillery compatibility by @TokiTori
+- Fixes
+  - Truly fixes broken distillery compatibility by @TokiTori
 
 __1.5.2__
 
-  - Fixes
-    - Fix broken distillery compatibility by @TokiTori
+- Fixes
+  - Fix broken distillery compatibility by @TokiTori
 
 __1.5.1__
 
-  - Enhancements
-    - Warnings cleanup by @kanmo
-    - New autoversion option "-time" by @tejanium
+- Enhancements
+  - Warnings cleanup by @kanmo
+  - New autoversion option "-time" by @tejanium
 
 __1.4.6__
 
@@ -82,7 +92,7 @@ _Good news everyone! Distillery compatibility is restored!_
   - Fix profile output dir (#254)
   - Fix posix compatibility (#147)
 - Backwards incompatible changes
-  - Exrm support removed . As discussed here: https://elixirforum.com/t/edeliver-plans-to-remove-exrm-support-any-objections/12416
+  - Exrm support removed . As discussed here: <https://elixirforum.com/t/edeliver-plans-to-remove-exrm-support-any-objections/12416>
 
 __1.4.5__
 
@@ -240,7 +250,6 @@ __1.1.0__
 - deploy release non-interactively if also upgrade exists
 - install hex non-interactive
 
-
 __1.0.0__
 
- - initial version with elixir support
+- initial version with elixir support
