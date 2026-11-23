@@ -1,4 +1,0 @@
--name eco@${HOST_NAME}
-
-+K true
-+A30

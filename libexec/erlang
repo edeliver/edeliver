@@ -461,9 +461,6 @@ EOF
     else
       _working_dir="$(__docker image inspect --format='{{.Config.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
       if [ -z "$_working_dir" ]; then
-        _working_dir="$(__docker image inspect --format='{{.ContainerConfig.WorkingDir}}' "$DOCKER_RELEASE_BASE_IMAGE")"
-      fi
-      if [ -z "$_working_dir" ]; then
         _working_dir="/${APP}"
       fi
     fi

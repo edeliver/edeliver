@@ -5,8 +5,12 @@ __1.9.3__
 
 - Enhancements
   - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
+  - edeliver compiles without distillery, so projects using mix releases on current Elixir no longer need distillery as a dependency
+  - `docker/release-base.dockerfile` is based on `debian:trixie-slim`, which matches the current official elixir and erlang images (the published `edeliver/release-base:1.0` is still Ubuntu 20.04)
+  - CI builds with Elixir 1.20 / OTP 29 and tests mix releases and rebar3 only
 - Fixes
   - building in a docker container failed with git 2.35.2 or newer ("detected dubious ownership")
+  - reading the working dir of `DOCKER_RELEASE_BASE_IMAGE` printed a template error on current docker versions; the `ContainerConfig` fallback for old docker versions was removed
 
 __1.9.2__
 
