@@ -142,7 +142,7 @@ Ensure edeliver is added as dependency and included into the release:
   defp deps do
     […
      {:distillery, "~> 2.0"},
-     {:edeliver, "~> 1.10"}]
+     {:edeliver, "~> 1.10.0"}]
   end
 
 ```
@@ -192,6 +192,6 @@ When using mix to build a docker release with edeliver, just ensure that edelive
   defp deps do
     […
      {:distillery, "~> 2.0", runtime: false},
-     {:edeliver, "~> 1.10"}]
+     {:edeliver, "~> 1.10.0"}]
   end
 ```
