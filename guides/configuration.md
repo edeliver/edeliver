@@ -12,7 +12,7 @@ This options can or must be set in the `.deliver/config` file to configure edeli
 | `BUILD_CMD`            |       no | tool used to build sources. (mix\|rebar)        |
 | `BUILD_HOST`           |      yes | the host to build at                           |
 | `BUILD_USER`           |      yes | the ssh user for the host to build at          |
-| `DELIVER_TO`           |      yes | the directory on production hosts to deploy to |
+| `DELIVER_TO`           |       no | the directory on production hosts to deploy to (default: `~/apps`) |
 | `GIT_CLEAN_PATHS`      |       no | don't clean everything when building           |
 | `PRODUCTION_HOSTS`     |      yes | the production hosts to deploy to              |
 | `PRODUCTION_USER`      |      yes | the ssh user for the production hosts          |

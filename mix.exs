@@ -2,7 +2,7 @@ defmodule Edeliver.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/boldpoker/edeliver"
-  @version "1.9.2"
+  @version "1.10.0"
 
   def project do
     [
