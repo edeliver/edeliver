@@ -152,6 +152,14 @@ start_build_container() {
   info "Started container $DOCKER_BUILD_CONTAINER"
   if [ -n "$DOCKER_BUILD_CONTAINER" ]; then
     trap stop_build_container EXIT
+    # The bind-mounted build dir belongs to the local user, but git runs as
+    # root in the container. Since git 2.35.2 it then refuses to work in it
+    # ("detected dubious ownership"), so mark the build dir as safe.
+    __sync_remote "
+      if command -v git >/dev/null 2>&1; then
+        git config --global --add safe.directory \"$CONTAINER_BUILD_DIR\"
+      fi
+    "
   fi
 }
 

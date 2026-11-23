@@ -5,6 +5,8 @@ __1.9.3__
 
 - Enhancements
   - handle `DOCKER_RELEASE_BASE_IMAGE` with `WORKDIR` set or set it automatically
+- Fixes
+  - building in a docker container failed with git 2.35.2 or newer ("detected dubious ownership")
 
 __1.9.2__
 
