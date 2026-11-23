@@ -1,6 +1,8 @@
-# Copy to .github/workflows/skopos.yml in any repository.
+# AI pull request review with Skopos (https://github.com/johannesE/skopos).
+# Project checklists live in .github/skopos/checklists/.
 #
-# Prerequisites (once per org or repository, see docs/usage.md):
+# Prerequisites (once per org or repository, see
+# https://github.com/johannesE/skopos/blob/main/docs/usage.md):
 #   secret   SKOPOS_LLM_API_KEY         API key of the model provider
 #   variable SKOPOS_APP_CLIENT_ID       Client ID of your Skopos GitHub App   (optional)
 #   secret   SKOPOS_APP_PRIVATE_KEY     Private key of that GitHub App        (optional)
@@ -31,7 +33,9 @@ jobs:
     timeout-minutes: 30
     continue-on-error: true # a review must never block a merge
     steps:
-      - uses: johannesE/skopos@v1
+      # Pinned to a commit, because this job gets a write token; Dependabot
+      # (.github/dependabot.yml) proposes updates as pull requests.
+      - uses: johannesE/skopos@1a6d2d495213f50b37058aa46a6845d2df489301 # v1.1.0
         with:
           llm_api_key: ${{ secrets.SKOPOS_LLM_API_KEY }}
           app_client_id: ${{ vars.SKOPOS_APP_CLIENT_ID }}
