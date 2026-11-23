@@ -6,6 +6,7 @@ set -e -o pipefail
 GIT_URL="${GIT_URL:-"https://github.com/xduludulu/erlang.eco"}"
 GIT_REF="16da11b"
 RELEASE_VERSION="0.1.0"
+REBAR3_VERSION="3.18.0" # supports OTP 22-24; the build image runs OTP 23
 BASE_DIR="$( cd "${0%/*}/../.." && pwd -P )"
 TESTS_DIR="$( cd "${0%/*}" && pwd -P )"
 DEFAULT_PROJECT_DIR="${BASE_DIR}/.test/echo-server-rebar3"
@@ -45,9 +46,17 @@ _info "Applying custom rebar3 config…"
 cp "${TESTS_DIR}/../configs/rebar3.config" "${PROJECT_DIR}/rebar.config"
 cp "${TESTS_DIR}/../configs/rebar3-vm.args.src" "${PROJECT_DIR}/config/vm.args.src"
 
+# The latest rebar3, which edeliver downloads when the project has none,
+# no longer runs on the OTP 23 of the build image. Ship a compatible one.
+_info "Adding rebar3 ${REBAR3_VERSION}…"
+curl -fsSL -o "${PROJECT_DIR}/rebar3" \
+  "https://github.com/erlang/rebar3/releases/download/${REBAR3_VERSION}/rebar3"
+chmod +x "${PROJECT_DIR}/rebar3"
+
 # commit new config
 git add "${PROJECT_DIR}/rebar.config"
 git add "${PROJECT_DIR}/config/vm.args.src"
+git add -f "${PROJECT_DIR}/rebar3"
 git config user.email "edeliver-test@github.com"
 git config user.name "Edeliver Test"
 git commit -m "Add custom rebar3 configs"
