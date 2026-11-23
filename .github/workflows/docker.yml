@@ -17,7 +17,7 @@ jobs:
       ECO_PORT: 1883
       DOCKER_OPTS: --publish 1883:1883
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Build Release Container
       run: test/docker/build-rebar3.sh
 
@@ -55,7 +55,7 @@ jobs:
       DOCKER_OPTS: --publish 1883:1883    
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Build Release Container
       run: test/docker/build-mix.sh
 
